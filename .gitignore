@@ -1,0 +1,5 @@
+# lokale Test- und Debug-Artefakte
+test_*.py
+shots/
+ff_shot.png
+.DS_Store
