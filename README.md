@@ -23,7 +23,7 @@ automatisch über dem Boden.
   weiche Echtzeit-Schatten, Canvas-Textur für die Monarch-Flügel
 - Getestet headless (Playwright) – ohne Console-Errors; Optik per Vision-Selbstprüfung iteriert
 
-*Für Alessia, Livia & Emilia – mit Liebe gebaut. 🌸*
+*Gebaut mit Liebe als Überraschung für die Familie. 🌸*
 
 ## Lizenz
 
