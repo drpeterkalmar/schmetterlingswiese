@@ -9,6 +9,7 @@
   html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#9ed1ff;
     font-family:-apple-system,"SF Pro Rounded","Segoe UI",Roboto,sans-serif;
     touch-action:none;overscroll-behavior:none;-webkit-user-select:none;user-select:none;
+    -webkit-touch-callout:none;-webkit-user-drag:none;
     -webkit-tap-highlight-color:transparent;}
   #c{position:fixed;inset:0;display:block;touch-action:none;}
   #hud{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:50%;transform:translateX(-50%);
@@ -188,7 +189,7 @@ var fBase=[];
 for(var i=0;i<FLOWER_N;i++){
   var r=6+95*Math.cbrt(Math.random()),a=Math.random()*6.2832;
   var fx=Math.cos(a)*r,fz=Math.sin(a)*r,fh=gH(fx,fz);
-  var s=0.75+Math.random()*0.9;
+  var s=0.55+Math.random()*1.15;   /* Zufallsgröße 0.55x-1.7x */
   dummy.position.set(fx,fh+0.27*s,fz);dummy.rotation.set(0,0,0);dummy.scale.setScalar(s);dummy.updateMatrix();
   stems.setMatrixAt(i,dummy.matrix);
   var hy=fh+0.58*s,yaw=Math.random()*6.28;
@@ -233,7 +234,7 @@ var daisies=new V.InstancedMesh(new V.IcosahedronGeometry(0.07,0),
 for(var i=0;i<DAISY_N;i++){
   var r=4+100*Math.cbrt(Math.random()),an=Math.random()*6.2832;
   var dx=Math.cos(an)*r,dz=Math.sin(an)*r;
-  dummy.position.set(dx,gH(dx,dz)+0.35,dz);dummy.scale.setScalar(0.7+Math.random());dummy.updateMatrix();
+  dummy.position.set(dx,gH(dx,dz)+0.35,dz);dummy.scale.setScalar(0.45+Math.random()*1.05);dummy.updateMatrix();
   daisies.setMatrixAt(i,dummy.matrix);
 }
 scene.add(daisies);
@@ -273,11 +274,11 @@ function makeWalker(kind){
   head.position.set(0,0.62,0.55);head.castShadow=true;g.add(head);
   var snoutM=new V.Mesh(new V.SphereGeometry(0.13,8,6),smat);
   snoutM.position.set(0,0.55,0.80);snoutM.scale.set(1,0.75,0.9);g.add(snoutM);
-  var eyeG2=new V.SphereGeometry(0.038,6,5);
-  var eyeM2=new V.MeshStandardMaterial({color:0x1a1008,roughness:0.35});
+  var eyeG2=new V.SphereGeometry(0.05,6,5);
+  var eyeM2=new V.MeshStandardMaterial({color:0x1a1008,roughness:0.25});
   for(var ey2=-1;ey2<=1;ey2+=2){
     var eye2=new V.Mesh(eyeG2,eyeM2);
-    eye2.position.set(0.16*ey2,0.72,0.71);g.add(eye2);
+    eye2.position.set(0.185*ey2,0.71,0.8);g.add(eye2);
   }
   var earGeo=new V.SphereGeometry(0.07,6,5);
   for(var e=-1;e<=1;e+=2){
@@ -300,8 +301,8 @@ function makeWalker(kind){
   var wx=Math.cos(an)*rr,wz=Math.sin(an)*rr;
   g.position.set(wx,gH(wx,wz),wz);
   g.rotation.y=Math.random()*6.28;
-  var sc=kind==='bear'?0.62:1.0;
-  g.scale.setScalar(sc*(0.9+Math.random()*0.2));
+  var sc=kind==='bear'?(0.55+Math.random()*0.32):(0.82+Math.random()*0.45);
+  g.scale.setScalar(sc);
   scene.add(g);
   walkers.push({g:g,kind:kind,legs:legs,head:head,
     a:Math.atan2(wz,wx),r:rr,dir:Math.random()<0.5?1:-1,
@@ -431,6 +432,7 @@ var crownMat=new V.MeshStandardMaterial({color:0x3f9644,roughness:1,flatShading:
 for(var i=0;i<7;i++){
   var r=48+100*Math.random(),an=Math.random()*6.2832;
   var tx=Math.cos(an)*r,tz=Math.sin(an)*r,th=gH(tx,tz);
+  var treeSc=0.62+Math.random()*0.85;   /* Zufallsgröße 0.62x-1.47x */
   var g=new V.Group();
   var trunk=new V.Mesh(new V.CylinderGeometry(0.22,0.36,3.6,7),trunkMat);
   trunk.position.y=1.8;trunk.castShadow=true;
@@ -438,6 +440,7 @@ for(var i=0;i<7;i++){
   crown.position.y=4.5;crown.scale.set(1.2,0.9+Math.random()*0.5,1.2);crown.castShadow=true;
   g.add(trunk);g.add(crown);
   g.position.set(tx,th,tz);g.rotation.y=Math.random()*6.28;
+  g.scale.setScalar(treeSc);
   scene.add(g);
 }
 
@@ -474,7 +477,8 @@ for(var i=0;i<TARGETS;i++){
   var rr=13+58*Math.cbrt(Math.random());
   var aa=(i/TARGETS)*6.2832+Math.random()*0.5;
   var cx2=Math.cos(aa)*rr,cz2=Math.sin(aa)*rr,ch=gH(cx2,cz2);
-  var g=new V.Group();g.position.set(cx2,ch,cz2);
+  var sizeRand=0.78+Math.random()*0.65;   /* Zufallsgröße 0.78x-1.43x */
+  var g=new V.Group();g.position.set(cx2,ch,cz2);g.scale.setScalar(sizeRand);
   var st2=new V.Mesh(stemGeo2,stemMat2);st2.position.y=0.45;g.add(st2);
   var head=new V.Group();head.position.y=1.0;g.add(head);
   var pm=new V.MeshStandardMaterial({color:flowerPalette[i%flowerPalette.length],roughness:0.55});
@@ -490,7 +494,7 @@ for(var i=0;i<TARGETS;i++){
   var spr=new V.Sprite(new V.SpriteMaterial({map:glowTex,transparent:true,depthWrite:false,blending:V.AdditiveBlending,opacity:0.8}));
   spr.position.y=1.5;spr.scale.setScalar(2.0);g.add(spr);
   scene.add(g);
-  collectibles.push({group:g,head:head,spr:spr,taken:false,ph:Math.random()*6.28,center:new V.Vector3(cx2,ch+1.0,cz2),padY:ch+0.62});
+  collectibles.push({group:g,head:head,spr:spr,taken:false,ph:Math.random()*6.28,center:new V.Vector3(cx2,ch+1.0*sizeRand,cz2),padY:ch+0.62*sizeRand});
 }
 
 /* ---------- Funken ---------- */
@@ -539,24 +543,25 @@ function wingTexture(c1,c2,c3){
   return t;
 }
 function eyePair(parent,dist,fr){
+  var eyeG=new V.SphereGeometry(0.04,6,5);
   var wm=new V.MeshStandardMaterial({color:0xffffff,roughness:0.3});
   var pm=new V.MeshStandardMaterial({color:0x140d08,roughness:0.4});
   for(var s=-1;s<=1;s+=2){
-    var e=new V.Mesh(new V.SphereGeometry(0.035,6,5),wm);
+    var e=new V.Mesh(eyeG,wm);
     e.position.set(dist*s,0.045,fr);e.scale.set(1,1,0.72);parent.add(e);
-    var p=new V.Mesh(new V.SphereGeometry(0.017,5,4),pm);
-    p.position.set(0.058*s,0.045,fr+0.014);parent.add(p);
+    var p=new V.Mesh(new V.SphereGeometry(0.019,5,4),pm);
+    p.position.set(0.062*s,0.045,fr+0.016);parent.add(p);
   }
 }
 function antennaPair(parent,m,club){
   for(var s=-1;s<=1;s+=2){
-    var a=new V.Mesh(new V.CylinderGeometry(0.006,0.010,0.34,4),m);
-    a.position.set(0.075*s,0.10,0.52);
-    a.rotation.set(-0.5,0,-0.5*s);
+    var a=new V.Mesh(new V.CylinderGeometry(0.0045,0.008,0.26,4),m);
+    a.position.set(0.06*s,0.09,0.5);
+    a.rotation.set(-0.35,0,-0.45*s);
     parent.add(a);
     if(club){
-      var c=new V.Mesh(new V.SphereGeometry(0.024,6,5),m);
-      c.position.set(0,0.18,0);
+      var c=new V.Mesh(new V.SphereGeometry(0.022,6,5),m);
+      c.position.set(0,0.135,0);
       a.add(c);
     }
   }
@@ -574,8 +579,9 @@ function segBody(parent,r1,r2,r3,mat){
 /* --- Charakter 1: Monarch-Schmetterling (2 Flügelpaare) --- */
 var bBfly=new V.Group();
 var bodyB=new V.Mesh(new V.SphereGeometry(0.105,8,6),darkMat);bodyB.position.z=-0.02;bodyB.scale.set(0.8,0.85,1.7);bBfly.add(bodyB);
-var headB=new V.Mesh(new V.SphereGeometry(0.115,8,6),darkMat);headB.position.z=0.50;bBfly.add(headB);
-eyePair(bBfly,0.062,0.54);
+var neckB=new V.Mesh(new V.SphereGeometry(0.075,8,6),darkMat);neckB.position.z=0.22;neckB.scale.set(0.8,0.8,1.4);bBfly.add(neckB);
+var headB=new V.Mesh(new V.SphereGeometry(0.115,8,6),darkMat);headB.position.z=0.335;bBfly.add(headB);
+eyePair(bBfly,0.062,0.36);
 antennaPair(bBfly,darkMat,true);
 var wtexM=wingTexture('#ffb347','#ff8c42','#e8590c');
 var wingMatM=new V.MeshStandardMaterial({map:wtexM,alphaTest:0.35,side:V.DoubleSide,roughness:0.85});
@@ -601,7 +607,8 @@ function domeBody(kind,darkM){
   var yellow=new V.MeshStandardMaterial({color:0xffc61a,roughness:0.5});
   var shell=kind==='lady'?red:yellow;
   var abd=new V.Mesh(new V.SphereGeometry(0.30,10,8),shell);
-  abd.scale.set(1.2,0.80,1.25);abd.position.z=-0.10;abd.castShadow=true;g.add(abd);
+  var segLen=(kind==='lady')?1.25:1.35;
+  abd.scale.set(1.2,0.80,segLen);abd.position.z=-0.22;abd.castShadow=true;g.add(abd);
   /* 3D-Punkte bzw. Streifen */
   if(kind==='lady'){
     var spPos=[[0.14,0.17,0.02],[-0.14,0.17,0.02],[0.20,0.10,-0.20],[-0.20,0.10,-0.20],[0.07,0.21,-0.28],[-0.07,0.21,-0.28],[0.19,0.14,-0.09],[-0.19,0.14,-0.09]];
@@ -625,8 +632,8 @@ function domeBody(kind,darkM){
   var thorax=new V.Mesh(new V.SphereGeometry(0.145,8,7),new V.MeshStandardMaterial({color:0x23150f,roughness:0.85}));
   thorax.position.z=0.22;thorax.scale.set(1,0.8,1);g.add(thorax);
   var headG=new V.Mesh(new V.SphereGeometry(0.10,8,7),new V.MeshStandardMaterial({color:0x1c120c,roughness:0.5}));
-  headG.position.z=0.46;g.add(headG);
-  eyePair(g,0.07,0.48);
+  headG.position.z=0.36;g.add(headG);
+  eyePair(g,0.07,0.385);
   antennaPair(g,darkM,kind==='lady');
   return g;
 }
@@ -658,7 +665,7 @@ var abdB=new V.Mesh(new V.SphereGeometry(0.27,10,8),new V.MeshStandardMaterial({
 abdB.scale.set(1.0,0.85,1.35);abdB.position.z=-0.14;abdB.castShadow=true;mBee.add(abdB);
 var stripeMat=new V.MeshStandardMaterial({color:0x2e1c08,roughness:0.6});
 for(var st2=0;st2<2;st2++){
-  var ringB=new V.Mesh(new V.TorusGeometry(0.25-st2*0.065,0.032,6,14),stripeMat);
+  var ringB=new V.Mesh(new V.TorusGeometry(0.285-st2*0.07,0.034,6,14),stripeMat);
   ringB.position.set(0,0,-0.26-st2*0.14);
   ringB.scale.set(1,1,0.9);
   mBee.add(ringB);
@@ -669,7 +676,7 @@ var thoB=new V.Mesh(new V.SphereGeometry(0.15,8,7),new V.MeshStandardMaterial({c
 thoB.position.z=0.18;thoB.scale.set(1,0.85,1);mBee.add(thoB);
 var headBe=new V.Mesh(new V.SphereGeometry(0.10,8,7),new V.MeshStandardMaterial({color:0x23150f,roughness:0.55}));
 headBe.position.z=0.44;mBee.add(headBe);
-eyePair(mBee,0.065,0.47);
+eyePair(mBee,0.075,0.52);
 antennaPair(mBee,darkMat,false);
 var beePivR=new V.Group(),beePivL=new V.Group();
 var beeWingMat=new V.MeshStandardMaterial({color:0xffffff,transparent:true,opacity:0.4,side:V.DoubleSide,roughness:0.18});
@@ -698,7 +705,6 @@ function switchChar(kind){
 }
 B.castShadow=true;
 B.add(mLady);B.add(mBee);
-mLady.rotation.y=Math.PI;mBee.rotation.y=Math.PI;
 mLady.visible=false;mBee.visible=false;
 scene.add(B);
 /* --- Spieler-Schatten --- */
@@ -735,7 +741,11 @@ function computeZone(x,y){
   if(y<h*0.52)return 'U';
   return 'D';
 }
-var longPressT=null,pickOpen=false;
+var longPressT=null,pickOpen=false,pressStart={};
+function openPicker(){
+  document.getElementById('pick').style.display='flex';
+  pickOpen=true;ding(880);
+}
 document.getElementById('pkB').addEventListener('click',function(){pickOpen=false;document.getElementById('pick').style.display='none';switchChar('butterfly');showToast('🦋 Schmetterling!');ding(660);});
 document.getElementById('pkL').addEventListener('click',function(){pickOpen=false;document.getElementById('pick').style.display='none';switchChar('lady');showToast('🐞 Marienkäfer!');ding(660);});
 document.getElementById('pkBee').addEventListener('click',function(){pickOpen=false;document.getElementById('pick').style.display='none';switchChar('bee');showToast('🐝 Biene!');ding(660);});
@@ -743,26 +753,33 @@ canvas.addEventListener('pointerdown',function(e){
   e.preventDefault();
   var z=computeZone(e.clientX,e.clientY);
   zones[e.pointerId]=z;
-  if(z==='M'){
-    longPressT=setTimeout(function(){
-      if(zones[e.pointerId]==='M'){
-        delete zones[e.pointerId];
-        document.getElementById('pick').style.display='flex';
-        pickOpen=true;ding(880);
-      }
-    },600);
-  }
+  /* Lang drücken OHNE Bewegung (egal wo) = Tier wechseln */
+  pressStart[e.pointerId]={x:e.clientX,y:e.clientY};
+  if(longPressT)clearTimeout(longPressT);
+  longPressT=setTimeout(function(){
+    if(zones[e.pointerId]!==undefined&&!pickOpen){
+      delete zones[e.pointerId];
+      openPicker();
+    }
+    longPressT=null;
+  },550);
   hideHint();ensureAC();started=true;
 });
 window.addEventListener('pointermove',function(e){
-  if(zones[e.pointerId]!==undefined)zones[e.pointerId]=computeZone(e.clientX,e.clientY);
+  if(zones[e.pointerId]!==undefined){
+    zones[e.pointerId]=computeZone(e.clientX,e.clientY);
+    var ps=pressStart[e.pointerId];
+    if(ps&&(Math.abs(e.clientX-ps.x)>30||Math.abs(e.clientY-ps.y)>30)&&longPressT){
+      clearTimeout(longPressT);longPressT=null;   /* gezogen = Steuerung, kein Menü */
+    }
+  }
 });
 window.addEventListener('pointerup',function(e){
-  delete zones[e.pointerId];
+  delete zones[e.pointerId];delete pressStart[e.pointerId];
   if(longPressT){clearTimeout(longPressT);longPressT=null;}
 });
 window.addEventListener('pointercancel',function(e){
-  delete zones[e.pointerId];
+  delete zones[e.pointerId];delete pressStart[e.pointerId];
   if(longPressT){clearTimeout(longPressT);longPressT=null;}
 });
 window.addEventListener('keydown',function(e){
