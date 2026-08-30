@@ -735,7 +735,7 @@ function showToast(txt,dur){
 function computeZone(x,y){
   var w=innerWidth,h=innerHeight;
   var cx=w/2,cy=h*0.42;
-  if(Math.abs(x-cx)<w*0.16&&Math.abs(y-cy)<h*0.16)return 'M';
+  if(Math.abs(x-cx)<w*0.10&&Math.abs(y-cy)<h*0.09)return 'M';
   if(x<w*0.34)return 'L';
   if(x>w*0.66)return 'R';
   if(y<h*0.30)return 'U';
@@ -934,6 +934,7 @@ function animate(){
         st.pos.y+=2.2*dt*Math.sin(Math.PI*prog);}
       if(prog>=1){
         stunt.active=false;
+        _loopAng=0;_rollAng=0;_fovT=62;   /* Winkel HART nullen */
         sparkle(B.position.clone(),12);
       }
     }else{_loopAng=0;_rollAng=0;_fovT=62;}
@@ -971,7 +972,12 @@ function animate(){
       var sinkingNow=(inY<-0.25&&!stunt.active);
       if(!sinkingNow){
         var gy=gH(st.pos.x,st.pos.z)+1.1;
-        if(st.pos.y<gy){st.pos.y=gy;if(st.pitch<0.2)st.pitch+=(0.2-st.pitch)*Math.min(1,dt*4);}
+        if(st.pos.y<gy){
+          st.pos.y=gy;
+          /* Aufprall: Rest-Fehlrotation hart killen (Fühler-only-Prävention) */
+          if(st.pitch<0.12)st.pitch+=(0.12-st.pitch)*Math.min(1,dt*4);
+          st.yawRate*=(1-Math.min(1,dt*2));
+        }
       }
       if(st.pos.y>46){st.pos.y=Math.min(st.pos.y,47);if(st.pitch>-0.05)st.pitch+=(-0.05-st.pitch)*Math.min(1,dt*4);}
 
