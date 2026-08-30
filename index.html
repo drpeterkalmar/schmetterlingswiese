@@ -1019,15 +1019,15 @@ function animate(){
     if(curChar===charLady)angL=0.58+Math.sin(flapT)*0.36*amp;
     curChar.pR.rotation.z=angL;
     curChar.pL.rotation.z=-angL;
-    /* Nebenfalter-Flügel leicht gegenphasig */
+    /* Nebenfalter-Flügel leicht gegenphasig (NIEMALS den aktiven Charakter überschreiben) */
     if(curChar!==charBfly){
       if(charBfly.grp.visible){
         charBfly.pR.rotation.z=Math.sin(flapT)*amp*0.6+0.55;
         charBfly.pL.rotation.z=-charBfly.pR.rotation.z;}
-      if(charLady.grp.visible){
+      if(curChar!==charLady&&charLady.grp.visible){
         charLady.pR.rotation.z=Math.sin(flapT*charLady.flapMul)*0.4*amp+0.2;
         charLady.pL.rotation.z=-charLady.pR.rotation.z;}
-      if(charBee.grp.visible){
+      if(curChar!==charBee&&charBee.grp.visible){
         charBee.pR.rotation.z=Math.sin(flapT*charBee.flapMul)*0.8;
         charBee.pL.rotation.z=-charBee.pR.rotation.z;}
     }
