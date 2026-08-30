@@ -54,7 +54,7 @@
 <body>
 <canvas id="c"></canvas>
 <div id="hud">🌸 0 / 10 &nbsp;·&nbsp; ⏱️ 0 s</div>
-<div id="hint"> fingertippen &amp; halten:<br>links/rechts drehen · Mitte ▲ abheben ▼ sinken<br>Unten: 🤸 Loop &nbsp; 🌀 Schraube &nbsp;·&nbsp; Gedrückt halten = Tier wechseln</div>
+<div id="hint"> fingertippen &amp; halten:<br>links/rechts drehen · Mitte ▲ abheben ▼ sinken<br>Unten: 🤸 Loop &nbsp; 🌀 Schraube &nbsp;·&nbsp; Bildmitte halten = Tier wechseln</div>
 <div id="toast"></div>
 <div id="pick"><div class="row">
   <button id="pkB" aria-label="Schmetterling">🦋</button>
@@ -734,11 +734,11 @@ function showToast(txt,dur){
 }
 function computeZone(x,y){
   var w=innerWidth,h=innerHeight;
-  var cx=w/2,cy=h/2;
-  if(Math.abs(x-cx)<w*0.13&&Math.abs(y-cy)<h*0.14)return 'M';
-  if(x<w*0.35)return 'L';
-  if(x>w*0.65)return 'R';
-  if(y<h*0.52)return 'U';
+  var cx=w/2,cy=h*0.42;
+  if(Math.abs(x-cx)<w*0.16&&Math.abs(y-cy)<h*0.16)return 'M';
+  if(x<w*0.34)return 'L';
+  if(x>w*0.66)return 'R';
+  if(y<h*0.30)return 'U';
   return 'D';
 }
 var longPressT=null,pickOpen=false,pressStart={};
@@ -753,16 +753,18 @@ canvas.addEventListener('pointerdown',function(e){
   e.preventDefault();
   var z=computeZone(e.clientX,e.clientY);
   zones[e.pointerId]=z;
-  /* Lang drücken OHNE Bewegung (egal wo) = Tier wechseln */
+  /* Lang drücken OHNE Bewegung in der MITTE = Tier wechseln (nicht beim Lenken!) */
   pressStart[e.pointerId]={x:e.clientX,y:e.clientY};
-  if(longPressT)clearTimeout(longPressT);
-  longPressT=setTimeout(function(){
-    if(zones[e.pointerId]!==undefined&&!pickOpen){
-      delete zones[e.pointerId];
-      openPicker();
-    }
-    longPressT=null;
-  },550);
+  if(z==='M'&&!pickOpen){
+    if(longPressT)clearTimeout(longPressT);
+    longPressT=setTimeout(function(){
+      if(zones[e.pointerId]==='M'&&!pickOpen){
+        delete zones[e.pointerId];
+        openPicker();
+      }
+      longPressT=null;
+    },550);
+  }
   hideHint();ensureAC();started=true;
 });
 window.addEventListener('pointermove',function(e){
@@ -1050,6 +1052,8 @@ function animate(){
     if(camGoal.y<gy2)camGoal.y=gy2;
     camera.position.lerp(camGoal,1-Math.pow(0.0012,dt));
     lookAt.copy(B.position).addScaledVector(flat,4.0);lookAt.y+=0.6;
+    if(stunt.active&&stunt.type==='loop')lookAt.y+=-Math.sin(_loopAng)*1.6;
+    else if(stunt.active&&stunt.type==='roll')lookAt.y+=-Math.sin(_rollAng)*1.6;
     camera.lookAt(lookAt);
     var fovNow=camera.fov;
     if(Math.abs(fovNow-fovTargetGlobal())>0.1){camera.fov+=(fovTargetGlobal()-fovNow)*Math.min(1,dt*4);camera.updateProjectionMatrix();}
