@@ -514,7 +514,7 @@ function animate(){
       if(z==='L')nL++;else if(z==='R')nR++;
       else if(z==='U')nU++;else if(z==='D')nD++;
     }
-    zx=(nL>0?1:0)+(nR>0?-1:0);
+    zx=(nL>0?-1:0)+(nR>0?1:0);
     zy=(nU>0?1:0)+(nD>0?-1:0);
     if(keys.ArrowLeft||keys.KeyA)zx-=1;
     if(keys.ArrowRight||keys.KeyD)zx+=1;
@@ -536,9 +536,8 @@ function animate(){
       var ease=0.5-0.5*Math.cos(Math.PI*prog);
       if(stunt.type==='loop'){_loopAng=-Math.PI*2*ease;_fovT=52;}
       else{_rollAng=Math.PI*2*ease;_fovT=56;
-        /* Schraube: leichte Steige + Drall */
-        st.pos.y+=2.2*dt*Math.sin(Math.PI*prog);
-        st.yaw+=dt*2.4;}
+        /* Schraube: leichte Steige, geradeaus (kein Yaw-Drift) */
+        st.pos.y+=2.2*dt*Math.sin(Math.PI*prog);}
       if(prog>=1){
         stunt.active=false;
         sparkle(B.position.clone(),12);
