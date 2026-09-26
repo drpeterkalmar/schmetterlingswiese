@@ -1,5 +1,8 @@
 # lokale Test- und Debug-Artefakte
-test_*.py
-shots/
-ff_shot.png
+tests/shots/*
+!tests/shots/final/
+tests/out/
+__pycache__/
+*.pyc
 .DS_Store
+proto*.html

@@ -1,0 +1,379 @@
+// Offline-Synthese: alle Klänge werden EINMAL per OfflineAudioContext in AudioBuffer gerendert.
+// Zur Laufzeit werden nur Buffer abgespielt (Lehre aus Koboldkeller: Live-Oszillatoren ruckeln am Handy).
+
+const SR = 44100;
+const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+export { mtof };
+
+// ---------------------------------------------------------------- Hilfen
+const irCache = new Map(), noiseCache = new Map();
+function makeIR(ctx, seconds = 1.9, decay = 2.2, bright = 0.5) {
+  const key = ctx.sampleRate + ':' + seconds + ':' + decay + ':' + bright;
+  if (irCache.has(key)) return irCache.get(key);
+  const sr = ctx.sampleRate, len = Math.floor(seconds * sr);
+  const buf = new AudioBuffer({ length: len, sampleRate: sr, numberOfChannels: 2 });
+  let seed = 12345;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff * 2 - 1; };
+  for (let ch = 0; ch < 2; ch++) {
+    const d = buf.getChannelData(ch);
+    let lp = 0;
+    const pre = Math.floor(0.012 * sr);
+    for (let i = 0; i < len; i++) {
+      const t = i / sr;
+      const env = i < pre ? 0 : Math.exp(-(t - 0.012) * 6.9 / decay);
+      // Tiefpass wird mit der Zeit dunkler (natürlicher Hallausklang)
+      const a = Math.max(0.04, bright * Math.exp(-t * 1.6));
+      lp += (rnd() - lp) * a;
+      d[i] = lp * env * (0.9 + 0.1 * Math.sin(i * 0.0007 + ch));
+    }
+    // frühe Reflexionen
+    [0.013, 0.019, 0.027, 0.034, 0.047].forEach((tt, k) => { const i = Math.floor((tt + ch * 0.0031) * sr); if (i < len) d[i] += (k % 2 ? -0.5 : 0.6) * (1 - k * 0.12); });
+  }
+  // normieren
+  let e = 0; for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < len; i++) e += d[i] * d[i]; }
+  const k = 1 / Math.sqrt(e / 2 + 1e-9) * 0.9;
+  for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < len; i++) d[i] *= k; }
+  irCache.set(key, buf);
+  return buf;
+}
+function noiseBuf(ctx, seconds = 2) {
+  const key = ctx.sampleRate + ':' + seconds;
+  if (noiseCache.has(key)) return noiseCache.get(key);
+  const len = Math.floor(seconds * ctx.sampleRate);
+  const b = new AudioBuffer({ length: len, sampleRate: ctx.sampleRate, numberOfChannels: 1 });
+  const d = b.getChannelData(0); let s = 987654;
+  for (let i = 0; i < len; i++) { s = (s * 1664525 + 1013904223) >>> 0; d[i] = s / 4294967296 * 2 - 1; }
+  noiseCache.set(key, b);
+  return b;
+}
+function noise(ctx, t0, t1, rate = 1) {
+  const n = ctx.createBufferSource(); n.buffer = noiseBuf(ctx, 2); n.loop = true; n.playbackRate.value = rate;
+  n.start(t0, Math.random() * 1.5); n.stop(t1); return n;
+}
+function osc(ctx, type, f, t0, t1, detune = 0) {
+  const o = ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t0); o.detune.value = detune;
+  o.start(t0); o.stop(t1); return o;
+}
+function g(ctx, v = 0) { const x = ctx.createGain(); x.gain.value = v; return x; }
+function filt(ctx, type, f, Q = 0.7) { const x = ctx.createBiquadFilter(); x.type = type; x.frequency.value = f; x.Q.value = Q; return x; }
+// Hüllkurve: Attack linear, dann exponentieller Abfall, sauberes Ende
+function env(param, t0, a, peak, tau, end, sustain = 0) {
+  param.setValueAtTime(0.0001, t0);
+  param.linearRampToValueAtTime(peak, t0 + a);
+  param.setTargetAtTime(sustain, t0 + a, tau);
+  param.setTargetAtTime(0, Math.max(t0 + a, end - 0.05), 0.012);
+}
+function chain(...nodes) { for (let i = 0; i < nodes.length - 1; i++) nodes[i].connect(nodes[i + 1]); return nodes[nodes.length - 1]; }
+
+async function render(dur, ch, build, o = {}) {
+  const sr = o.sr || SR;
+  const ctx = new OfflineAudioContext(ch, Math.ceil(dur * sr), sr);
+  const dry = g(ctx, 1), out = g(ctx, 1);
+  dry.connect(out);
+  if (o.wet) {
+    const cv = ctx.createConvolver(); cv.normalize = false; cv.buffer = makeIR(ctx, o.irLen || 1.9, o.decay || 2.2, o.bright ?? 0.5);
+    const wg = g(ctx, o.wet); dry.connect(cv); cv.connect(wg); wg.connect(out);
+  }
+  const hp = filt(ctx, 'highpass', o.hp || 70, 0.7);
+  out.connect(hp); hp.connect(ctx.destination);
+  build(ctx, dry, 0.005);
+  const buf = await ctx.startRendering();
+  if (o.norm !== false) normalize(buf, o.peak ?? 0.7);
+  return buf;
+}
+function normalize(buf, peak) {
+  let m = 0;
+  for (let c = 0; c < buf.numberOfChannels; c++) { const d = buf.getChannelData(c); for (let i = 0; i < d.length; i++) { const v = Math.abs(d[i]); if (v > m) m = v; } }
+  if (m < 1e-6) return;
+  const k = peak / m;
+  for (let c = 0; c < buf.numberOfChannels; c++) { const d = buf.getChannelData(c); for (let i = 0; i < d.length; i++) d[i] *= k; }
+  // kurzes Fade-out gegen Knackser
+  const n = Math.min(256, buf.length);
+  for (let c = 0; c < buf.numberOfChannels; c++) { const d = buf.getChannelData(c); for (let i = 0; i < n; i++) d[d.length - 1 - i] *= i / n; }
+}
+
+// ---------------------------------------------------------------- Instrument-Stimmen (in Offline-Kontexten)
+function bell(ctx, out, t, f, amp = 1, o = {}) {
+  const dur = o.dur || 2.2, end = t + dur;
+  const car = osc(ctx, 'sine', f, t, end), mod = osc(ctx, 'sine', f * (o.ratio || 3.5), t, end);
+  const md = g(ctx, 0); env(md.gain, t, 0.002, f * (o.index || 2.2), o.modTau || 0.12, end);
+  mod.connect(md); md.connect(car.frequency);
+  const a = g(ctx, 0); env(a.gain, t, 0.002, amp, o.tau || 0.55, end);
+  car.connect(a); a.connect(out);
+  // zweiter Teilton (Glockenspiel-Schimmer)
+  const p2 = osc(ctx, 'sine', f * (o.p2 || 2.76), t, end);
+  const a2 = g(ctx, 0); env(a2.gain, t, 0.001, amp * 0.35, (o.tau || 0.55) * 0.35, end);
+  p2.connect(a2); a2.connect(out);
+}
+function kalimba(ctx, out, t, f, amp = 1, o = {}) {
+  const dur = o.dur || 1.8, end = t + dur;
+  const car = osc(ctx, 'sine', f, t, end), mod = osc(ctx, 'sine', f, t, end);
+  const md = g(ctx, 0); env(md.gain, t, 0.001, f * 0.9, 0.035, end); mod.connect(md); md.connect(car.frequency);
+  const a = g(ctx, 0); env(a.gain, t, 0.003, amp, o.tau || 0.38, end); car.connect(a); a.connect(out);
+  const tine = osc(ctx, 'sine', f * 5.4, t, end); const at = g(ctx, 0); env(at.gain, t, 0.001, amp * 0.22, 0.03, end); tine.connect(at); at.connect(out);
+  const oct = osc(ctx, 'sine', f * 2, t, end); const ao = g(ctx, 0); env(ao.gain, t, 0.002, amp * 0.12, 0.2, end); oct.connect(ao); ao.connect(out);
+}
+function harp(ctx, out, t, f, amp = 1, o = {}) {
+  const dur = o.dur || 2.4, end = t + dur;
+  for (let n = 1; n <= 7; n++) {
+    if (f * n > 12000) break;
+    const p = osc(ctx, n % 2 ? 'sine' : 'triangle', f * n * (1 + (n - 1) * 0.0007), t, end);
+    const a = g(ctx, 0); env(a.gain, t, 0.004, amp / Math.pow(n, 1.35), 1.1 / Math.pow(n, 0.75), end);
+    p.connect(a); a.connect(out);
+  }
+  const click = noise(ctx, t, t + 0.02, 1); const cf = filt(ctx, 'bandpass', Math.min(8000, f * 4), 2); const ca = g(ctx, 0); env(ca.gain, t, 0.001, amp * 0.15, 0.004, t + 0.02);
+  chain(click, cf, ca, out);
+}
+function pluckBass(ctx, out, t, f, amp = 1) {
+  const end = t + 1.6;
+  const s = osc(ctx, 'sine', f, t, end), s2 = osc(ctx, 'sine', f * 2, t, end), tr = osc(ctx, 'triangle', f * 3, t, end);
+  const a = g(ctx, 0); env(a.gain, t, 0.008, amp, 0.45, end);
+  const a2 = g(ctx, 0); env(a2.gain, t, 0.006, amp * 0.45, 0.3, end);
+  const a3 = g(ctx, 0); env(a3.gain, t, 0.004, amp * 0.18, 0.12, end);
+  const lp = filt(ctx, 'lowpass', 1100, 0.6);
+  s.connect(a); s2.connect(a2); tr.connect(a3); a.connect(lp); a2.connect(lp); a3.connect(lp); lp.connect(out);
+}
+function pad(ctx, out, t, freqs, dur, amp = 1) {
+  const end = t + dur;
+  const lp = filt(ctx, 'lowpass', 1500, 0.4);
+  const lfo = osc(ctx, 'sine', 0.13, t, end); const lg = g(ctx, 420); lfo.connect(lg); lg.connect(lp.frequency);
+  const vca = g(ctx, 0);
+  vca.gain.setValueAtTime(0.0001, t); vca.gain.linearRampToValueAtTime(amp, t + 0.9);
+  vca.gain.setValueAtTime(amp, end - 2.2); vca.gain.linearRampToValueAtTime(0, end);
+  const L = ctx.createStereoPanner(), R = ctx.createStereoPanner(); L.pan.value = -0.55; R.pan.value = 0.55;
+  freqs.forEach((f) => {
+    [-8, 7].forEach((det, k) => { const o = osc(ctx, 'sawtooth', f, t, end, det + (Math.random() - 0.5) * 3); const og = g(ctx, 0.16); o.connect(og); og.connect(k ? R : L); });
+    const tri = osc(ctx, 'triangle', f, t, end); const tg = g(ctx, 0.2); tri.connect(tg); tg.connect(L); tg.connect(R);
+  });
+  L.connect(lp); R.connect(lp); lp.connect(vca); vca.connect(out);
+}
+
+// ---------------------------------------------------------------- Bibliothek
+// Musik-Samples (werden per playbackRate transponiert)
+export const CHORDS = {
+  maj7: [0, 4, 7, 11], min7: [0, 3, 7, 10], add9: [0, 4, 7, 14], sus2: [0, 2, 7, 12], maj: [0, 4, 7, 12], min: [0, 3, 7, 12], six: [0, 4, 7, 9],
+};
+export async function renderMusic(onProgress) {
+  const out = { pad: {}, inst: {}, perc: {} };
+  const root = 48; // C3
+  const jobs = [];
+  for (const [q, iv] of Object.entries(CHORDS)) {
+    const fr = [mtof(root), mtof(root + 12 + iv[1]), mtof(root + 12 + iv[2]), mtof(root + 12 + iv[3])];
+    jobs.push(render(6.5, 2, (c, o, t) => pad(c, o, t, fr, 6.4, 0.5), { wet: 0.35, decay: 2.6, sr: 32000, peak: 0.5 }).then(b => { out.pad[q] = b; }));
+  }
+  // Instrument-Samples je Oktave (C4, C5, C6)
+  for (const oc of [60, 72, 84]) {
+    jobs.push(render(2.6, 2, (c, o, t) => kalimba(c, o, t, mtof(oc)), { wet: 0.25, decay: 1.8, sr: 44100 }).then(b => { out.inst['kalimba' + oc] = b; }));
+    jobs.push(render(3.0, 2, (c, o, t) => bell(c, o, t, mtof(oc), 1, { dur: 2.8 }), { wet: 0.3, decay: 2.2 }).then(b => { out.inst['bell' + oc] = b; }));
+    jobs.push(render(3.0, 2, (c, o, t) => harp(c, o, t, mtof(oc), 1, { dur: 2.8 }), { wet: 0.28, decay: 2.2 }).then(b => { out.inst['harp' + oc] = b; }));
+  }
+  jobs.push(render(1.8, 1, (c, o, t) => pluckBass(c, o, t, mtof(48)), { sr: 32000, hp: 60 }).then(b => { out.inst.bass48 = b; }));
+  // Percussion
+  for (let v = 0; v < 3; v++) {
+    jobs.push(render(0.25, 1, (c, o, t) => {
+      const n = noise(c, t, t + 0.2, 1 + v * 0.1); const bp = filt(c, 'bandpass', 6500 + v * 700, 1.2); const a = g(c, 0); env(a.gain, t, 0.004 + v * 0.002, 0.8, 0.035, t + 0.2); chain(n, bp, a, o);
+    }, { peak: 0.5 }).then(b => { out.perc['shaker' + v] = b; }));
+    jobs.push(render(0.35, 1, (c, o, t) => {
+      const s = osc(c, 'sine', 820 + v * 60, t, t + 0.3); s.frequency.exponentialRampToValueAtTime(560, t + 0.05); const a = g(c, 0); env(a.gain, t, 0.001, 0.9, 0.035, t + 0.3); chain(s, a, o);
+      const n = noise(c, t, t + 0.02); const hp = filt(c, 'highpass', 3000); const na = g(c, 0); env(na.gain, t, 0.001, 0.4, 0.004, t + 0.02); chain(n, hp, na, o);
+    }, { wet: 0.2, peak: 0.55 }).then(b => { out.perc['wood' + v] = b; }));
+  }
+  let done = 0; jobs.forEach(j => j.then(() => onProgress && onProgress(++done / jobs.length)));
+  await Promise.all(jobs);
+  return out;
+}
+
+// Sammel-Pling: Transient + Körper (FM-Glocke) + Schimmer, pro Skalenstufe vorgerendert
+const PENTA = [0, 2, 4, 7, 9];
+export function degreeToSemi(d) { return PENTA[((d % 5) + 5) % 5] + 12 * Math.floor(d / 5); }
+export async function renderSfx(onProgress) {
+  const S = {};
+  const jobs = [];
+  const add = (name, dur, ch, fn, o) => jobs.push(render(dur, ch, fn, o).then(b => { (S[name] || (S[name] = [])).push(b); }));
+  // Pling-Leiter (C5-Pentatonik, 12 Stufen, je 2 Varianten)
+  for (let d = 0; d < 12; d++) for (let v = 0; v < 2; v++) {
+    const f = mtof(72 + degreeToSemi(d));
+    add('pling' + d, 1.6, 2, (c, o, t) => {
+      const n = noise(c, t, t + 0.015); const hp = filt(c, 'highpass', 4000); const na = g(c, 0); env(na.gain, t, 0.0005, 0.35, 0.003, t + 0.015); chain(n, hp, na, o);
+      bell(c, o, t, f, 0.9, { ratio: v ? 3.5 : 2.0, index: v ? 1.6 : 2.4, tau: 0.42, dur: 1.5 });
+      const sh = osc(c, 'sine', f * 2, t, t + 1.5); const sv = osc(c, 'sine', 5.5, t, t + 1.5); const svg = g(c, f * 0.004); sv.connect(svg); svg.connect(sh.frequency);
+      const sa = g(c, 0); env(sa.gain, t + 0.02, 0.05, 0.16, 0.35, t + 1.5); chain(sh, sa, o);
+    }, { wet: 0.32, decay: 1.6, peak: 0.7 });
+  }
+  // Ring: Luftzug + Akkord-Glöckchen
+  for (let v = 0; v < 3; v++) add('ring', 1.4, 2, (c, o, t) => {
+    const n = noise(c, t, t + 0.6); const bp = filt(c, 'bandpass', 800, 1.4); bp.frequency.setValueAtTime(600 + v * 100, t); bp.frequency.exponentialRampToValueAtTime(3200, t + 0.35);
+    const a = g(c, 0); env(a.gain, t, 0.12, 0.6, 0.12, t + 0.6); chain(n, bp, a, o);
+    [0, 4, 7].forEach((s, i) => bell(c, o, t + 0.05 + i * 0.025, mtof(79 + s + v * 2), 0.4, { ratio: 3.5, tau: 0.35, dur: 1.2 }));
+  }, { wet: 0.3 });
+  // Looping: Wusch-Schwelle + Glitzer-Glissando
+  for (let v = 0; v < 2; v++) add('loop', 1.9, 2, (c, o, t) => {
+    const n = noise(c, t, t + 1.5); const bp = filt(c, 'bandpass', 500, 2.5);
+    bp.frequency.setValueAtTime(400, t); bp.frequency.exponentialRampToValueAtTime(2400 + v * 300, t + 0.65); bp.frequency.exponentialRampToValueAtTime(500, t + 1.35);
+    const a = g(c, 0); a.gain.setValueAtTime(0, t); a.gain.linearRampToValueAtTime(0.9, t + 0.6); a.gain.linearRampToValueAtTime(0, t + 1.4);
+    const am = osc(c, 'sine', 16, t, t + 1.5); const amg = g(c, 0.3); am.connect(amg); amg.connect(a.gain);
+    const p = c.createStereoPanner(); p.pan.setValueAtTime(-0.6, t); p.pan.linearRampToValueAtTime(0.6, t + 1.3);
+    chain(n, bp, a, p, o);
+    for (let i = 0; i < 6; i++) bell(c, o, t + 0.45 + i * 0.06, mtof(84 + degreeToSemi(i + v)), 0.22, { tau: 0.25, dur: 1.0 });
+  }, { wet: 0.35 });
+  // Schraube: wirbelnder Luftzug
+  for (let v = 0; v < 2; v++) add('roll', 1.5, 2, (c, o, t) => {
+    const n = noise(c, t, t + 1.2); const bp = filt(c, 'bandpass', 1200, 3);
+    const lfo = osc(c, 'sine', 7 + v, t, t + 1.2); const lg = g(c, 700); lfo.connect(lg); lg.connect(bp.frequency);
+    const a = g(c, 0); a.gain.setValueAtTime(0, t); a.gain.linearRampToValueAtTime(0.8, t + 0.3); a.gain.linearRampToValueAtTime(0, t + 1.1);
+    const p = c.createStereoPanner(); const pl = osc(c, 'sine', 3.5, t, t + 1.2); const pg = g(c, 0.8); pl.connect(pg); pg.connect(p.pan);
+    chain(n, bp, a, p, o);
+    [0, 4, 7, 12].forEach((s, i) => kalimba(c, o, t + 0.8 + i * 0.05, mtof(79 + s), 0.25, { dur: 0.7 }));
+  }, { wet: 0.3 });
+  // Landen: weicher Plopp + Rascheln + Glöckchen
+  for (let v = 0; v < 3; v++) add('land', 1.2, 2, (c, o, t) => {
+    const s = osc(c, 'sine', 240 - v * 15, t, t + 0.25); s.frequency.exponentialRampToValueAtTime(130, t + 0.12); const a = g(c, 0); env(a.gain, t, 0.004, 0.8, 0.05, t + 0.25); chain(s, a, o);
+    for (let k = 0; k < 4; k++) { const n = noise(c, t + k * 0.03, t + k * 0.03 + 0.06); const hp = filt(c, 'highpass', 2500 + k * 500); const na = g(c, 0); env(na.gain, t + k * 0.03, 0.002, 0.25, 0.012, t + k * 0.03 + 0.06); chain(n, hp, na, o); }
+    bell(c, o, t + 0.06, mtof(88 + v * 2), 0.25, { tau: 0.3, dur: 0.9 });
+  }, { wet: 0.25 });
+  // Abheben: Flattern + Aufwärts-Zwitschern
+  for (let v = 0; v < 2; v++) add('takeoff', 0.9, 2, (c, o, t) => {
+    const n = noise(c, t, t + 0.5); const bp = filt(c, 'bandpass', 1500, 1.5); const a = g(c, 0); env(a.gain, t, 0.02, 0.6, 0.15, t + 0.5);
+    const am = osc(c, 'square', 20 + v * 3, t, t + 0.5); const amg = g(c, 0.5); am.connect(amg); amg.connect(a.gain); chain(n, bp, a, o);
+    const s = osc(c, 'sine', 700, t, t + 0.4); s.frequency.exponentialRampToValueAtTime(1500, t + 0.25); const sa = g(c, 0); env(sa.gain, t, 0.01, 0.2, 0.08, t + 0.4); chain(s, sa, o);
+  }, { wet: 0.2 });
+  // Boing (Wespe schubst – lustig, nicht erschreckend)
+  for (let v = 0; v < 3; v++) add('boing', 0.9, 2, (c, o, t) => {
+    const s = osc(c, 'sine', 330 + v * 30, t, t + 0.7); s.frequency.linearRampToValueAtTime(520 + v * 40, t + 0.08); s.frequency.linearRampToValueAtTime(380, t + 0.6);
+    const vib = osc(c, 'sine', 14, t, t + 0.7); const vg = g(c, 60); vg.gain.setTargetAtTime(0, t + 0.05, 0.2); vib.connect(vg); vg.connect(s.frequency);
+    const a = g(c, 0); env(a.gain, t, 0.005, 0.8, 0.2, t + 0.7); chain(s, a, o);
+    const bz = osc(c, 'sawtooth', 190 + v * 10, t, t + 0.25); const bl = filt(c, 'lowpass', 1200); const ba = g(c, 0); env(ba.gain, t, 0.01, 0.2, 0.06, t + 0.25); chain(bz, bl, ba, o);
+  }, { wet: 0.15 });
+  // Windböe
+  add('gust', 2.8, 2, (c, o, t) => {
+    const n = noise(c, t, t + 2.6); const lp = filt(c, 'lowpass', 400, 0.8); lp.frequency.setValueAtTime(350, t); lp.frequency.exponentialRampToValueAtTime(1900, t + 1.1); lp.frequency.exponentialRampToValueAtTime(450, t + 2.5);
+    const a = g(c, 0); a.gain.setValueAtTime(0, t); a.gain.linearRampToValueAtTime(0.9, t + 0.9); a.gain.linearRampToValueAtTime(0, t + 2.6);
+    const p = c.createStereoPanner(); p.pan.setValueAtTime(-0.7, t); p.pan.linearRampToValueAtTime(0.7, t + 2.5);
+    chain(n, lp, a, p, o);
+  }, { wet: 0.2 });
+  // Platsch (Regen)
+  add('splash', 1.0, 2, (c, o, t) => {
+    for (let k = 0; k < 7; k++) { const tt = t + k * 0.06 + Math.random() * 0.03; const s = osc(c, 'sine', 1400 + Math.random() * 900, tt, tt + 0.1); s.frequency.exponentialRampToValueAtTime(500, tt + 0.07); const a = g(c, 0); env(a.gain, tt, 0.002, 0.4, 0.02, tt + 0.1); chain(s, a, o); }
+    const n = noise(c, t, t + 0.5); const hp = filt(c, 'highpass', 3000); const na = g(c, 0); env(na.gain, t, 0.01, 0.3, 0.12, t + 0.5); chain(n, hp, na, o);
+  }, { wet: 0.25 });
+  // Pflücken, Schlürfen, Tierchen-"Uii"
+  add('pick', 0.9, 2, (c, o, t) => {
+    const s = osc(c, 'sine', 500, t, t + 0.12); s.frequency.exponentialRampToValueAtTime(1100, t + 0.05); const a = g(c, 0); env(a.gain, t, 0.002, 0.7, 0.03, t + 0.12); chain(s, a, o);
+    kalimba(c, o, t + 0.06, mtof(84), 0.5, { dur: 0.7 });
+  }, { wet: 0.25 });
+  for (let v = 0; v < 3; v++) add('aww', 0.9, 2, (c, o, t) => {
+    const s = osc(c, 'sawtooth', 380 + v * 50, t, t + 0.5); s.frequency.linearRampToValueAtTime(620 + v * 60, t + 0.28); s.frequency.linearRampToValueAtTime(560 + v * 50, t + 0.45);
+    const f1 = filt(c, 'bandpass', 800, 5), f2 = filt(c, 'bandpass', 2300, 6);
+    const a = g(c, 0); env(a.gain, t, 0.04, 0.9, 0.15, t + 0.5);
+    s.connect(f1); s.connect(f2); f1.connect(a); f2.connect(a); a.connect(o);
+  }, { wet: 0.2 });
+  // Glitzerstern: magische Aufwärts-Kaskade
+  add('glitter', 2.4, 2, (c, o, t) => {
+    for (let i = 0; i < 10; i++) bell(c, o, t + i * 0.055, mtof(79 + degreeToSemi(i)), 0.3, { tau: 0.4, dur: 1.6 });
+    const n = noise(c, t, t + 1.2); const hp = filt(c, 'highpass', 7000); const a = g(c, 0); env(a.gain, t, 0.3, 0.2, 0.3, t + 1.2); chain(n, hp, a, o);
+  }, { wet: 0.4 });
+  // Fanfare (Levelende) – Harfe + Glocken + Pad-Schwelle
+  add('fanfare', 4.2, 2, (c, o, t) => {
+    const seq = [0, 4, 7, 12, 16, 19, 24];
+    seq.forEach((s, i) => harp(c, o, t + i * 0.07, mtof(60 + s), 0.35, { dur: 2.6 }));
+    [[0, 4, 7], [5, 9, 12], [7, 11, 14], [12, 16, 19]].forEach((ch, k) => ch.forEach((s) => bell(c, o, t + 0.55 + k * 0.32, mtof(72 + s), 0.28, { tau: 0.6, dur: 2.2 })));
+    pad(c, o, t + 0.5, [mtof(60), mtof(64), mtof(67), mtof(72)], 3.6, 0.5);
+  }, { wet: 0.35, peak: 0.8 });
+  // Sterne auf der Ergebnis-Karte
+  for (let k = 0; k < 3; k++) add('star' + k, 1.8, 2, (c, o, t) => {
+    [0, 7, 12].forEach((s, i) => bell(c, o, t + i * 0.04, mtof(76 + k * 4 + s), 0.5, { tau: 0.5, dur: 1.6 }));
+    const n = noise(c, t, t + 0.4); const hp = filt(c, 'highpass', 6000); const a = g(c, 0); env(a.gain, t, 0.05, 0.2, 0.1, t + 0.4); chain(n, hp, a, o);
+  }, { wet: 0.35 });
+  // Freischaltung
+  add('unlock', 2.4, 2, (c, o, t) => {
+    [[0, 4, 7], [5, 9, 12, 16]].forEach((ch, k) => ch.forEach(s => harp(c, o, t + k * 0.28, mtof(67 + s), 0.35, { dur: 2 })));
+    for (let i = 0; i < 8; i++) bell(c, o, t + 0.5 + i * 0.05, mtof(91 + degreeToSemi(i % 5)), 0.15, { tau: 0.3, dur: 1.2 });
+  }, { wet: 0.35 });
+  // Zählen, Los!, Oh-oh
+  for (let v = 0; v < 2; v++) add('tick', 0.5, 2, (c, o, t) => { const s = osc(c, 'sine', 1250 + v * 40, t, t + 0.2); const a = g(c, 0); env(a.gain, t, 0.001, 0.6, 0.03, t + 0.2); chain(s, a, o); kalimba(c, o, t, mtof(84), 0.3, { dur: 0.4 }); }, { wet: 0.2 });
+  add('go', 1.6, 2, (c, o, t) => { [0, 4, 7, 12].forEach(s => bell(c, o, t, mtof(72 + s), 0.35, { tau: 0.45, dur: 1.4 })); }, { wet: 0.3 });
+  add('fail', 1.6, 2, (c, o, t) => { kalimba(c, o, t, mtof(72), 0.6, { dur: 0.9 }); kalimba(c, o, t + 0.22, mtof(67), 0.6, { dur: 1.2 }); }, { wet: 0.3 });
+  // UI
+  for (let v = 0; v < 3; v++) add('tap', 0.4, 2, (c, o, t) => {
+    const s = osc(c, 'sine', 620 + v * 70, t, t + 0.15); s.frequency.exponentialRampToValueAtTime(980 + v * 90, t + 0.04); const a = g(c, 0); env(a.gain, t, 0.002, 0.8, 0.03, t + 0.15); chain(s, a, o);
+    const n = noise(c, t, t + 0.01); const hp = filt(c, 'highpass', 5000); const na = g(c, 0); env(na.gain, t, 0.0005, 0.2, 0.002, t + 0.01); chain(n, hp, na, o);
+  }, { wet: 0.12, peak: 0.6 });
+  add('back', 0.4, 2, (c, o, t) => { const s = osc(c, 'sine', 900, t, t + 0.15); s.frequency.exponentialRampToValueAtTime(520, t + 0.06); const a = g(c, 0); env(a.gain, t, 0.002, 0.8, 0.03, t + 0.15); chain(s, a, o); }, { wet: 0.12, peak: 0.6 });
+  add('combo', 1.4, 2, (c, o, t) => { [0, 2, 4, 5, 7].forEach((d, i) => kalimba(c, o, t + i * 0.045, mtof(84 + degreeToSemi(d)), 0.35, { dur: 0.8 })); }, { wet: 0.3 });
+  add('sip', 0.9, 2, (c, o, t) => { for (let k = 0; k < 4; k++) { const tt = t + k * 0.12; const s = osc(c, 'sine', 380, tt, tt + 0.1); s.frequency.exponentialRampToValueAtTime(900, tt + 0.07); const a = g(c, 0); env(a.gain, tt, 0.004, 0.5, 0.025, tt + 0.1); chain(s, a, o); } }, { wet: 0.2 });
+  let done = 0; jobs.forEach(j => j.then(() => onProgress && onProgress(++done / jobs.length)));
+  await Promise.all(jobs);
+  return S;
+}
+
+// ---------------------------------------------------------------- Ambience (Loops + Einzelrufe)
+function loopify(buf, xf) {
+  // Ende in den Anfang überblenden → nahtloser Loop
+  const sr = buf.sampleRate, n = Math.floor(xf * sr), len = buf.length - n;
+  const out = new AudioBuffer({ length: len, sampleRate: sr, numberOfChannels: buf.numberOfChannels });
+  for (let c = 0; c < buf.numberOfChannels; c++) {
+    const src = buf.getChannelData(c), d = out.getChannelData(c);
+    for (let i = 0; i < len; i++) d[i] = src[i];
+    for (let i = 0; i < n; i++) { const k = i / n; d[i] = src[i] * Math.sqrt(k) + src[len + i] * Math.sqrt(1 - k); }
+  }
+  return out;
+}
+export async function renderAmbience(onProgress) {
+  const A = {};
+  const jobs = [];
+  const add = (name, p) => jobs.push(p.then(b => { (A[name] || (A[name] = [])).push(b); }));
+  add('wind', render(14, 2, (c, o, t) => {
+    for (const [pan, ph] of [[-0.7, 0], [0.7, 1.7]]) {
+      const n = noise(c, t, t + 14, 0.97 + ph * 0.02); const lp = filt(c, 'lowpass', 520, 0.5); const bp = filt(c, 'highpass', 140, 0.5);
+      const lfo = osc(c, 'sine', 0.09 + ph * 0.02, t, t + 14); const lg = g(c, 260); lfo.connect(lg); lg.connect(lp.frequency);
+      const a = g(c, 0.5); const al = osc(c, 'sine', 0.07 + ph * 0.03, t, t + 14); const alg = g(c, 0.25); al.connect(alg); alg.connect(a.gain);
+      const p = c.createStereoPanner(); p.pan.value = pan; chain(n, bp, lp, a, p, o);
+    }
+  }, { sr: 32000, peak: 0.5, hp: 110 }).then(b => loopify(b, 2)));
+  add('water', render(10, 2, (c, o, t) => {
+    for (let k = 0; k < 40; k++) {
+      const tt = t + Math.random() * 9.5, f = 500 + Math.random() * 900;
+      const s = osc(c, 'sine', f, tt, tt + 0.12); s.frequency.exponentialRampToValueAtTime(f * 1.6, tt + 0.08);
+      const a = g(c, 0); env(a.gain, tt, 0.01, 0.12 + Math.random() * 0.1, 0.03, tt + 0.12);
+      const p = c.createStereoPanner(); p.pan.value = Math.random() * 1.6 - 0.8; chain(s, a, p, o);
+    }
+    const n = noise(c, t, t + 10); const bp = filt(c, 'bandpass', 900, 0.6); const a = g(c, 0.12); chain(n, bp, a, o);
+  }, { sr: 32000, peak: 0.45, wet: 0.2, hp: 150 }).then(b => loopify(b, 1.5)));
+  add('bees', render(6, 1, (c, o, t) => {
+    for (const f of [212, 219, 331]) {
+      const s = osc(c, 'sawtooth', f, t, t + 6); const v = osc(c, 'sine', 5 + f % 3, t, t + 6); const vg = g(c, 6); v.connect(vg); vg.connect(s.frequency);
+      const bp = filt(c, 'bandpass', 900, 1.2); const a = g(c, 0.2); const am = osc(c, 'sine', 0.3 + f % 5 * 0.1, t, t + 6); const amg = g(c, 0.12); am.connect(amg); amg.connect(a.gain);
+      chain(s, bp, a, o);
+    }
+  }, { sr: 32000, peak: 0.4, hp: 150 }).then(b => loopify(b, 1)));
+  // Vogelrufe
+  for (let v = 0; v < 5; v++) add('bird', render(1.4, 1, (c, o, t) => {
+    const notes = 2 + v % 3;
+    for (let k = 0; k < notes; k++) {
+      const tt = t + k * (0.13 + v * 0.02), f0 = 2400 + v * 350 + k * 120;
+      const s = osc(c, 'sine', f0, tt, tt + 0.12); s.frequency.exponentialRampToValueAtTime(f0 * (v % 2 ? 1.45 : 0.7), tt + 0.09);
+      const fm = osc(c, 'sine', 60 + v * 20, tt, tt + 0.12); const fg = g(c, 180); fm.connect(fg); fg.connect(s.frequency);
+      const a = g(c, 0); env(a.gain, tt, 0.008, 0.6, 0.03, tt + 0.12); chain(s, a, o);
+    }
+  }, { wet: 0.35, decay: 1.8, peak: 0.5, hp: 400 }));
+  // Grillen
+  for (let v = 0; v < 3; v++) add('cricket', render(1.6, 1, (c, o, t) => {
+    const s = osc(c, 'sine', 4300 + v * 250, t, t + 1.4); const a = g(c, 0);
+    const pulses = 10 + v * 3;
+    for (let k = 0; k < pulses; k++) { const tt = t + k * 0.075; a.gain.setValueAtTime(0, tt); a.gain.linearRampToValueAtTime(0.5, tt + 0.008); a.gain.linearRampToValueAtTime(0, tt + 0.035); }
+    chain(s, a, o);
+  }, { wet: 0.3, peak: 0.35, hp: 1000 }));
+  // Flügelflattern (Loop, Tempo via playbackRate)
+  add('flutter', render(2.2, 1, (c, o, t) => {
+    const n = noise(c, t, t + 2.2); const bp = filt(c, 'bandpass', 700, 0.9); const a = g(c, 0.0);
+    for (let k = 0; k < 22; k++) { const tt = t + k * 0.1; a.gain.setValueAtTime(0.02, tt); a.gain.linearRampToValueAtTime(0.5, tt + 0.03); a.gain.linearRampToValueAtTime(0.02, tt + 0.09); }
+    chain(n, bp, a, o);
+  }, { sr: 32000, peak: 0.4, hp: 200 }));
+  add('buzz', render(2.0, 1, (c, o, t) => {
+    const s = osc(c, 'sawtooth', 240, t, t + 2); const v = osc(c, 'sine', 7, t, t + 2); const vg = g(c, 5); v.connect(vg); vg.connect(s.frequency);
+    const bp = filt(c, 'bandpass', 1100, 1.4); const a = g(c, 0.4); chain(s, bp, a, o);
+  }, { sr: 32000, peak: 0.4, hp: 200 }).then(b => loopify(b, 0.4)));
+  let done = 0; jobs.forEach(j => j.then(() => onProgress && onProgress(++done / jobs.length)));
+  await Promise.all(jobs);
+  return A;
+}
