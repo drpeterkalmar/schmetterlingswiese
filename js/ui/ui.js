@@ -280,7 +280,7 @@ export class UI {
 
   // ------------------------------------------------------------ HUD
   hudTasks(tasks) {
-    const html = tasks.map(t => `<div class="chip ${t.done ? 'done' : ''}"><span class="ic">${t.done ? '✅' : t.icon}</span>${t.detail ? t.detail() : `${Math.min(t.cur, t.max)}/${t.max}`}</div>`).join('');
+    const html = tasks.map(t => `<div class="chip ${t.done ? 'done' : ''}">${t.done ? '<span class="ic">✅</span>' : t.detail ? '' : `<span class="ic">${t.icon}</span>`}${t.detail ? t.detail() : `${Math.min(t.cur, t.max)}/${t.max}`}</div>`).join('');
     if (html !== this._lastTasks) {
       this.el.tasks.innerHTML = html; this._lastTasks = html;
       this.el.tasks.querySelectorAll('.chip').forEach(c => { c.classList.add('pop'); });

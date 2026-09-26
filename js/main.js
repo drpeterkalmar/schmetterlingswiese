@@ -10,7 +10,7 @@ import { Game } from './game/game.js';
 import { LEVELS, DIFFS, levelById, worldOf, dailyLevel, todayStr } from './game/levels.js';
 import { WORLDS } from './game/worlds.js';
 import { Progress, ALBUM } from './game/progress.js';
-import { AudioEngine, Haptics } from './audio/audio.js';
+import { AudioEngine, Haptics, renderOffline, wavBase64 } from './audio/audio.js';
 import { Input } from './input.js';
 import { UI } from './ui/ui.js';
 
@@ -227,6 +227,26 @@ class App {
     for (const w of this.game.wasps.list) if (w.pos.distanceToSquared(P) < 100) { this.album('wespe'); break; }
     if (this.game.race && this.game.race.rival.kind === 'libelle') this.album('libelle');
   }
+  // Test-Autopilot: fliegt echt (über die Eingabe) zum nächsten Ziel
+  autoSteer() {
+    const g = this.game, pl = this.player;
+    const task = g.tasks.find(t => !t.done);
+    if (task && task.cfg.type === 'stunts' && !pl.stunt && !pl.landed && g.state === 'play') {
+      const alt = pl.pos.y - height(pl.pos.x, pl.pos.z);
+      if (alt < 5) { this.input.injected = { turn: 0, climb: 1 }; return; }
+      this.input.actions.push(task.l < task.needL ? 'loop' : 'roll'); this.input.injected = { turn: 0, climb: 0 }; return;
+    }
+    const tg = g.guideTarget() || (g.glitter && !g.glitter.found ? g.glitter.pos : null);
+    if (!tg || g.state !== 'play') { this.input.injected = { turn: 0, climb: 0 }; return; }
+    const dx = tg.x - pl.pos.x, dz = tg.z - pl.pos.z, dh = Math.hypot(dx, dz);
+    let d = Math.atan2(dx, dz) - pl.yaw; d = Math.atan2(Math.sin(d), Math.cos(d));
+    const turn = THREE.MathUtils.clamp(-d * 2.2, -1, 1);
+    let climb = THREE.MathUtils.clamp((tg.y - pl.pos.y) * 0.6, -1, 1);
+    if (task && task.cfg.type === 'land') climb = dh < 2.4 ? -1 : THREE.MathUtils.clamp((tg.y + 2 - pl.pos.y) * 0.6, -1, 1);
+    if (pl.landed) climb = pl.landT > 1.6 ? 1 : 0;
+    // Zielkreis vermeiden: zu nah und seitlich → etwas wegfliegen
+    this.input.injected = { turn: Math.abs(d) > 1.2 && dh < 6 ? 0 : turn, climb };
+  }
   screenPan(pos) {
     const v = pos.clone().project(this.camera);
     return THREE.MathUtils.clamp(v.x * 0.8, -0.9, 0.9);
@@ -243,6 +263,7 @@ class App {
     if (!window.__freeze) {
       this.t += dt;
       G.uTime.value = this.t;
+      if (this.autopilot && this.mode === 'game') this.autoSteer();
       this.input.update(dt);
       if (this.mode === 'game') {
         this.game.update(dt, this.t, this.input);
@@ -302,8 +323,10 @@ window.__game = {
   freeze: (on = true) => { window.__freeze = on ? 1 : undefined; },
   start: (id, diff) => { if (diff) app.setDiff(diff); app.startLevel(id); },
   step: () => app.game.debugStep(),
+  autopilot: (on = true) => { app.autopilot = on; if (!on) app.input.injected = null; },
   levels: () => LEVELS.map(l => l.id),
   daily: () => dailyLevel().id,
   show: (s, d) => app.ui.show(s, d),
   setQuality: (q) => app.setSetting('quality', q),
+  renderWav: async (mode, wid = 'wiese', sec = 60, inten = 0.6) => wavBase64(await renderOffline(app.audio.bufs, WORLDS.find(w => w.id === wid), mode, sec, inten)),
 };

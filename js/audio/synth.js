@@ -65,13 +65,21 @@ function env(param, t0, a, peak, tau, end, sustain = 0) {
 }
 function chain(...nodes) { for (let i = 0; i < nodes.length - 1; i++) nodes[i].connect(nodes[i + 1]); return nodes[nodes.length - 1]; }
 
+// max. 3 gleichzeitige Offline-Renders (Speicher/Handy-CPU schonen)
+let active = 0; const waiters = [];
+async function slot() { if (active < 3) { active++; return; } await new Promise(r => waiters.push(r)); active++; }
+function release() { active--; const w = waiters.shift(); if (w) w(); }
 async function render(dur, ch, build, o = {}) {
+  await slot();
+  try { return await renderNow(dur, ch, build, o); } finally { release(); }
+}
+async function renderNow(dur, ch, build, o = {}) {
   const sr = o.sr || SR;
   const ctx = new OfflineAudioContext(ch, Math.ceil(dur * sr), sr);
   const dry = g(ctx, 1), out = g(ctx, 1);
   dry.connect(out);
   if (o.wet) {
-    const cv = ctx.createConvolver(); cv.normalize = false; cv.buffer = makeIR(ctx, o.irLen || 1.9, o.decay || 2.2, o.bright ?? 0.5);
+    const cv = ctx.createConvolver(); cv.normalize = false; cv.buffer = makeIR(ctx, o.irLen || 1.5, o.decay || 2.0, o.bright ?? 0.5);
     const wg = g(ctx, o.wet); dry.connect(cv); cv.connect(wg); wg.connect(out);
   }
   const hp = filt(ctx, 'highpass', o.hp || 70, 0.7);
@@ -159,13 +167,13 @@ export async function renderMusic(onProgress) {
   const jobs = [];
   for (const [q, iv] of Object.entries(CHORDS)) {
     const fr = [mtof(root), mtof(root + 12 + iv[1]), mtof(root + 12 + iv[2]), mtof(root + 12 + iv[3])];
-    jobs.push(render(6.5, 2, (c, o, t) => pad(c, o, t, fr, 6.4, 0.5), { wet: 0.35, decay: 2.6, sr: 32000, peak: 0.5 }).then(b => { out.pad[q] = b; }));
+    jobs.push(render(6.5, 2, (c, o, t) => pad(c, o, t, fr, 6.4, 0.5), { wet: 0.35, decay: 2.4, sr: 24000, peak: 0.5 }).then(b => { out.pad[q] = b; }));
   }
   // Instrument-Samples je Oktave (C4, C5, C6)
   for (const oc of [60, 72, 84]) {
-    jobs.push(render(2.6, 2, (c, o, t) => kalimba(c, o, t, mtof(oc)), { wet: 0.25, decay: 1.8, sr: 44100 }).then(b => { out.inst['kalimba' + oc] = b; }));
-    jobs.push(render(3.0, 2, (c, o, t) => bell(c, o, t, mtof(oc), 1, { dur: 2.8 }), { wet: 0.3, decay: 2.2 }).then(b => { out.inst['bell' + oc] = b; }));
-    jobs.push(render(3.0, 2, (c, o, t) => harp(c, o, t, mtof(oc), 1, { dur: 2.8 }), { wet: 0.28, decay: 2.2 }).then(b => { out.inst['harp' + oc] = b; }));
+    jobs.push(render(2.6, 2, (c, o, t) => kalimba(c, o, t, mtof(oc)), { wet: 0.25, decay: 1.8, sr: 32000 }).then(b => { out.inst['kalimba' + oc] = b; }));
+    jobs.push(render(3.0, 2, (c, o, t) => bell(c, o, t, mtof(oc), 1, { dur: 2.8 }), { wet: 0.3, decay: 2.0, sr: 32000 }).then(b => { out.inst['bell' + oc] = b; }));
+    jobs.push(render(3.0, 2, (c, o, t) => harp(c, o, t, mtof(oc), 1, { dur: 2.8 }), { wet: 0.28, decay: 2.0, sr: 32000 }).then(b => { out.inst['harp' + oc] = b; }));
   }
   jobs.push(render(1.8, 1, (c, o, t) => pluckBass(c, o, t, mtof(48)), { sr: 32000, hp: 60 }).then(b => { out.inst.bass48 = b; }));
   // Percussion

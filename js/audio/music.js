@@ -31,7 +31,7 @@ export class Music {
     this.out = outNode;
     this.stems = {};
     for (const k of ['pad', 'bass', 'arp', 'mel', 'perc']) { const g = ctx.createGain(); g.gain.value = 0; g.connect(outNode); this.stems[k] = g; }
-    this.stemLevel = { pad: 0.55, bass: 0.55, arp: 0.42, mel: 0.34, perc: 0.3 };
+    this.stemLevel = { pad: 0.34, bass: 0.4, arp: 0.3, mel: 0.26, perc: 0.2 };
     this.intensity = 0.35;
     this.voices = 0; this.maxVoices = 28;
     this.playing = false;

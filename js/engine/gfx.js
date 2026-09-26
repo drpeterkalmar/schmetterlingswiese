@@ -251,8 +251,9 @@ void main(){
   float gh = terrainH(p);
   float dist = length(p - uCam.xz);
   float s = aOff.w * (1.0 - smoothstep(uField * 0.30, uField * 0.48, length(p - c)));
-  s *= smoothstep(uWaterY + 0.15, uWaterY + 0.55, gh);
+  s *= smoothstep(uWaterY + 0.45, uWaterY + 0.95, gh);
   s *= 1.0 - smoothstep(uEdge.x + 25.0, uEdge.x + 50.0, length(p));
+  s *= smoothstep(0.8, 3.2, length(p - uCam.xz)); // keine Riesenhalme direkt vor der Kamera
   float ang = aOff.z * 6.2831;
   float ca = cos(ang), sa = sin(ang);
   vec3 lp = position * vec3(1.0 + aOff.z * 0.6, s, 1.0);
@@ -316,7 +317,7 @@ void main(){
   float h = d.y;
   vec3 col = mix(uHorizon, uZenith, pow(smoothstep(-0.05, 0.75, h), 0.8));
   float sd = max(dot(d, uSunDir), 0.0);
-  col += uGlow * (pow(sd, 8.0) * 0.28 + pow(sd, 48.0) * 0.45);
+  col += uGlow * (pow(sd, 10.0) * 0.2 + pow(sd, 64.0) * 0.35);
   col += uGlow * 0.25 * pow(1.0 - abs(h), 6.0) * pow(sd * 0.5 + 0.5, 4.0);
   float disk = smoothstep(cos(uSunSize * 1.15), cos(uSunSize), dot(d, uSunDir));
   col += uSunCol * disk * 5.0;
@@ -479,7 +480,7 @@ export class Post {
     this.mComp = new THREE.ShaderMaterial({
       uniforms: {
         tCol: { value: null }, tBlur: { value: null }, tBlur2: { value: null }, tDepth: { value: null }, uNF: { value: new THREE.Vector2(0.1, 1000) },
-        uBloom: { value: 0.45 }, uThresh: { value: 0.85 }, uDof: { value: 0.75 }, uFocus: { value: 26 }, uVig: { value: 0.45 },
+        uBloom: { value: 0.4 }, uThresh: { value: 0.9 }, uDof: { value: 0.75 }, uFocus: { value: 26 }, uVig: { value: 0.45 },
         uSat: { value: 1.12 }, uLift: { value: new THREE.Color(0.35, 0.3, 0.55) }, uGain: { value: new THREE.Vector3(1, 1, 1) },
         uFlash: { value: 0 }, uFlashCol: { value: new THREE.Color(1, 0.97, 0.85) }, uUseDepth: { value: 1 },
       },

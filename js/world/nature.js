@@ -72,17 +72,17 @@ function flowerGeos() {
   // 1) Margerite: viele schmale Blätter, gelbe Mitte
   {
     const b = new Build();
-    b.add(P.cyl(0.016, 0.024, 0.34, 4), 0x4f9a3a, { p: [0, 0.17, 0] });
-    b.add(P.sphere(0.075, 8, 5), 0xffc92e, { p: [0, 0.35, 0], s: [1, 0.55, 1], unlit: 0.15 });
-    const pg = petalGeo(0.2, 0.075, 0.025, 3);
-    for (let i = 0; i < 12; i++) b.add(pg, 0xffffff, { p: [0, 0.34, 0], r: [0, i / 12 * Math.PI * 2, 0.12], order: 'YXZ', tint: 1 });
-    leaf(b, 0.06, 1.2); leaf(b, 0.1, 4.0, 0.16);
+    b.add(new THREE.CylinderGeometry(0.016, 0.024, 0.34, 4, 1, true), 0x4f9a3a, { p: [0, 0.17, 0] });
+    b.add(P.sphere(0.075, 6, 4), 0xffc92e, { p: [0, 0.35, 0], s: [1, 0.55, 1], unlit: 0.15 });
+    const pg = petalGeo(0.2, 0.085, 0.025, 2);
+    for (let i = 0; i < 9; i++) b.add(pg, 0xffffff, { p: [0, 0.34, 0], r: [0, i / 9 * Math.PI * 2, 0.12], order: 'YXZ', tint: 1 });
+    leaf(b, 0.06, 1.2);
     types.daisy = b.build();
   }
   // 2) Tulpe: Kelch aus 6 Blättern
   {
     const b = new Build();
-    b.add(P.cyl(0.018, 0.026, 0.42, 4), 0x4f9a3a, { p: [0, 0.21, 0] });
+    b.add(new THREE.CylinderGeometry(0.018, 0.026, 0.42, 4, 1, true), 0x4f9a3a, { p: [0, 0.21, 0] });
     for (let i = 0; i < 6; i++) {
       const a = i / 6 * Math.PI * 2;
       b.add(petalGeo(0.24, 0.17, 0.06, 3), 0xffffff, { p: [0, 0.4, 0], r: [0, a, 1.15 + (i % 2) * 0.12], order: 'YXZ', tint: 1 });
@@ -94,22 +94,22 @@ function flowerGeos() {
   // 3) Runde Fünfblattblüte (Primel)
   {
     const b = new Build();
-    b.add(P.cyl(0.016, 0.022, 0.3, 4), 0x4f9a3a, { p: [0, 0.15, 0] });
-    b.add(P.sphere(0.06, 8, 5), 0xfff1a8, { p: [0, 0.31, 0], s: [1, 0.6, 1], unlit: 0.3 });
+    b.add(new THREE.CylinderGeometry(0.016, 0.022, 0.3, 4, 1, true), 0x4f9a3a, { p: [0, 0.15, 0] });
+    b.add(P.sphere(0.06, 6, 4), 0xfff1a8, { p: [0, 0.31, 0], s: [1, 0.6, 1], unlit: 0.3 });
     for (let i = 0; i < 5; i++) b.add(petalGeo(0.2, 0.19, 0.04, 3), 0xffffff, { p: [0, 0.3, 0], r: [0, i / 5 * Math.PI * 2, 0.2], order: 'YXZ', tint: 1 });
-    leaf(b, 0.04, 0.4, 0.22); leaf(b, 0.04, 2.6, 0.2); leaf(b, 0.04, 4.6, 0.2);
+    leaf(b, 0.04, 0.4, 0.22); leaf(b, 0.04, 3.2, 0.2);
     types.round = b.build();
   }
   // 4) Lupine/Lavendel-Rispe
   {
     const b = new Build();
-    b.add(P.cyl(0.014, 0.022, 0.5, 4), 0x4f9a3a, { p: [0, 0.25, 0] });
-    for (let i = 0; i < 8; i++) {
+    b.add(new THREE.CylinderGeometry(0.014, 0.022, 0.5, 4, 1, true), 0x4f9a3a, { p: [0, 0.25, 0] });
+    for (let i = 0; i < 7; i++) {
       const y = 0.3 + i * 0.042, a = i * 2.3, r = 0.045 - i * 0.004;
-      b.add(P.sphere(0.042 - i * 0.003, 6, 4), 0xffffff, { p: [Math.cos(a) * r, y, Math.sin(a) * r], s: [1, 1.2, 1], tint: 1 });
-      b.add(P.sphere(0.04 - i * 0.003, 6, 4), 0xffffff, { p: [-Math.cos(a) * r, y + 0.02, -Math.sin(a) * r], s: [1, 1.2, 1], tint: 1 });
+      b.add(P.sphere(0.042 - i * 0.003, 5, 3), 0xffffff, { p: [Math.cos(a) * r, y, Math.sin(a) * r], s: [1, 1.2, 1], tint: 1 });
+      b.add(P.sphere(0.04 - i * 0.003, 5, 3), 0xffffff, { p: [-Math.cos(a) * r, y + 0.02, -Math.sin(a) * r], s: [1, 1.2, 1], tint: 1 });
     }
-    leaf(b, 0.05, 0.9, 0.2); leaf(b, 0.05, 3.9, 0.2);
+    leaf(b, 0.05, 0.9, 0.2);
     types.spike = b.build();
   }
   return types;
@@ -139,15 +139,15 @@ function treeGeo(kind, rnd) {
     b.add(P.cyl(0.12, 0.2, 2.0, 6), 0x7b5140, { p: [0.7, 3.4, 0], r: [0, 0, -0.7] });
     b.add(P.cyl(0.1, 0.18, 1.8, 6), 0x7b5140, { p: [-0.6, 3.3, 0.3], r: [0.3, 0, 0.8] });
     const blobs = [[0, 4.6, 0, 2.1], [1.6, 4.1, 0.4, 1.5], [-1.5, 4.0, 0.6, 1.5], [0.4, 4.3, -1.5, 1.4], [-0.3, 5.5, 0.2, 1.4], [0.9, 3.6, 1.4, 1.1]];
-    blobs.forEach(([x, y, z, r], i) => b.add(P.ico(r, 2), i % 2 ? 0xffc2d6 : 0xffd7e4, { p: [x, y, z], s: [1, 0.85, 1], tint: 1 }));
+    blobs.forEach(([x, y, z, r], i) => b.add(P.ico(r, i ? 1 : 2), i % 2 ? 0xffc2d6 : 0xffd7e4, { p: [x, y, z], s: [1, 0.85, 1], tint: 1 }));
   } else if (kind === 'birch') {
     b.add(P.cyl(0.14, 0.24, 5.2, 7), 0xf2efe6, { p: [0, 2.6, 0] });
     for (let i = 0; i < 6; i++) b.add(P.cyl(0.25, 0.25, 0.08, 7), 0x3a3530, { p: [0, 0.6 + i * 0.75, 0], s: [1, 1, 0.6] });
-    [[0, 5.6, 0, 1.6], [0.9, 4.8, 0.3, 1.2], [-0.8, 4.9, -0.2, 1.2], [0.1, 6.5, 0, 1.1]].forEach(([x, y, z, r]) => b.add(P.ico(r, 2), 0xffffff, { p: [x, y, z], s: [1, 1.2, 1], tint: 1 }));
+    [[0, 5.6, 0, 1.6], [0.9, 4.8, 0.3, 1.2], [-0.8, 4.9, -0.2, 1.2], [0.1, 6.5, 0, 1.1]].forEach(([x, y, z, r], i) => b.add(P.ico(r, i ? 1 : 2), 0xffffff, { p: [x, y, z], s: [1, 1.2, 1], tint: 1 }));
   } else {
     b.add(P.cyl(0.26, 0.44, 3.4, 7), 0x7a5232, { p: [0, 1.7, 0] });
     const blobs = [[0, 4.4, 0, 2.2], [1.4, 3.8, 0.3, 1.5], [-1.3, 3.9, -0.4, 1.6], [0.2, 3.7, 1.4, 1.4], [-0.2, 5.4, 0.1, 1.5], [0.3, 3.8, -1.4, 1.3]];
-    blobs.forEach(([x, y, z, r], i) => b.add(P.ico(r, 2), i % 3 ? 0xffffff : 0xe8f0d0, { p: [x, y, z], s: [1, 0.9, 1], tint: 1 }));
+    blobs.forEach(([x, y, z, r], i) => b.add(P.ico(r, i ? 1 : 2), i % 3 ? 0xffffff : 0xe8f0d0, { p: [x, y, z], s: [1, 0.9, 1], tint: 1 }));
   }
   return b.build();
 }
@@ -165,7 +165,7 @@ export function buildTrees(world, rnd, avoid) {
 // ---------------------------------------------------------------- Büsche (mit Beeren)
 export function buildBushes(world, rnd, n, avoid) {
   const b = new Build();
-  [[0, 0.7, 0, 1.0], [0.8, 0.55, 0.2, 0.75], [-0.75, 0.55, -0.1, 0.8], [0.1, 0.5, 0.75, 0.7], [0, 0.5, -0.7, 0.7]].forEach(([x, y, z, r]) => b.add(P.ico(r, 2), 0xffffff, { p: [x, y, z], tint: 1 }));
+  [[0, 0.7, 0, 1.0], [0.8, 0.55, 0.2, 0.75], [-0.75, 0.55, -0.1, 0.8], [0.1, 0.5, 0.75, 0.7], [0, 0.5, -0.7, 0.7]].forEach(([x, y, z, r], i) => b.add(P.ico(r, i ? 1 : 2), 0xffffff, { p: [x, y, z], tint: 1 }));
   const geo = b.build();
   const mat = toonMat({ vc: true, tint: true, rim: 0.6, soft: 0.2 });
   const pts = scatter(n, rnd, { rMin: 12, rMax: 140, sMin: 0.8, sMax: 1.8, minDist: 4, avoid });
@@ -176,7 +176,7 @@ export function buildBushes(world, rnd, n, avoid) {
 export function buildMushrooms(rnd, n, avoid) {
   const b = new Build();
   b.add(P.cyl(0.09, 0.12, 0.3, 8), 0xfff4e6, { p: [0, 0.15, 0] });
-  b.add(new THREE.SphereGeometry(0.26, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), 0xffffff, { p: [0, 0.28, 0], s: [1, 0.75, 1], tint: 1 });
+  b.add(new THREE.SphereGeometry(0.26, 10, 5, 0, Math.PI * 2, 0, Math.PI / 2), 0xffffff, { p: [0, 0.28, 0], s: [1, 0.75, 1], tint: 1 });
   for (let i = 0; i < 6; i++) { const a = i * 1.1, r = 0.12 + (i % 2) * 0.06; b.add(P.sphere(0.035, 6, 4), 0xfffaf0, { p: [Math.cos(a) * r, 0.43 - r * 0.5, Math.sin(a) * r], s: [1, 0.5, 1] }); }
   const pts = scatter(n, rnd, { rMin: 6, rMax: 120, sMin: 0.8, sMax: 1.8, avoid });
   return instanced(b.build(), toonMat({ vc: true, tint: true, rim: 0.5, gloss: 0.3 }), pts, (p) => [0xe8453c, 0xf07b3f, 0xc86bd6][(p.k * 7 | 0) % 3]);
@@ -201,11 +201,11 @@ export function sunflowerGeo() {
   const head = new THREE.Matrix4().makeRotationX(-0.25).premultiply(new THREE.Matrix4().makeTranslation(0, 2.25, 0.1));
   const disc = P.cyl(0.36, 0.3, 0.16, 16); disc.rotateX(Math.PI / 2);
   b.add(disc, 0x4f8a30, { post: head });
-  b.add(P.sphere(0.34, 14, 6), 0x5a3214, { post: head, p: [0, 0, 0.07], s: [1, 1, 0.3] });
-  b.add(P.sphere(0.2, 10, 5), 0x3e220c, { post: head, p: [0, 0, 0.14], s: [1, 1, 0.3] });
-  for (let ring = 0; ring < 2; ring++) for (let i = 0; i < 14; i++) {
-    const a = (i + ring * 0.5) / 14 * Math.PI * 2;
-    const pg = petalGeo(0.46 - ring * 0.06, 0.2, 0.04, 3);
+  b.add(P.sphere(0.34, 12, 5), 0x5a3214, { post: head, p: [0, 0, 0.07], s: [1, 1, 0.3] });
+  b.add(P.sphere(0.2, 8, 4), 0x3e220c, { post: head, p: [0, 0, 0.14], s: [1, 1, 0.3] });
+  for (let ring = 0; ring < 2; ring++) for (let i = 0; i < 11; i++) {
+    const a = (i + ring * 0.5) / 11 * Math.PI * 2;
+    const pg = petalGeo(0.46 - ring * 0.06, 0.24, 0.04, 2);
     pg.rotateX(Math.PI / 2);
     const m = new THREE.Matrix4().makeRotationZ(a).premultiply(head);
     b.add(pg, ring ? 0xffd23a : 0xffb81a, { post: m, p: [0.28, 0, 0.03 - ring * 0.03], r: [0, -0.18, 0] });

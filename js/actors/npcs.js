@@ -20,7 +20,7 @@ export class Flyers {
     const bb = new Build();
     bb.add(P.sphere(0.13, 10, 8), 0x3a2838, { p: [0, 0.03, 0.2] });
     bb.add(P.sphere(0.08, 8, 6), 0x3a2838, { p: [0, 0, -0.1], s: [1, 1, 2.6] });
-    face(bb, bb, new Build(), [0, 0.03, 0.2], 0.13, { eye: 0.42 });
+    face(bb, bb, new Build(), [0, 0.03, 0.2], 0.13, { eye: 0.42, lod: 1 });
     const wg = new THREE.PlaneGeometry(0.8, 0.8); wg.rotateX(Math.PI / 2); wg.translate(0.4, 0, -0.1);
     const wl = wg.clone(); wl.rotateZ(Math.PI);
     const wgeo = new Build(); wgeo.add(wg, 0xffffff); wgeo.add(wl, 0xffffff);
@@ -31,7 +31,7 @@ export class Flyers {
     const lb = new Build();
     lb.add(P.sphere(0.2, 12, 8), 0xe8303a, { s: [1, 0.8, 1.1], cf: (x, y, z) => (Math.abs(x) < 0.012 && y > 0 ? 0x1c1418 : ((((x * 30 | 0) + (z * 30 | 0)) % 3 === 0 && y > 0.1) ? 0x1c1418 : undefined)) });
     lb.add(P.sphere(0.12, 10, 8), 0x1c1418, { p: [0, -0.01, 0.2] });
-    face(lb, lb, new Build(), [0, -0.01, 0.2], 0.12, { eye: 0.44 });
+    face(lb, lb, new Build(), [0, -0.01, 0.2], 0.12, { eye: 0.44, lod: 1 });
     const lw = new Build(); const g1 = new THREE.PlaneGeometry(0.4, 0.25); g1.rotateX(Math.PI / 2); g1.translate(0.2, 0.1, 0);
     const g2 = g1.clone(); g2.rotateZ(Math.PI); g2.translate(0, 0.2, 0);
     lw.add(g1, 0xffffff); lw.add(g2, 0xffffff);
@@ -75,10 +75,10 @@ function animalGeo(kind, sleepy) {
   const eyes = (c, r, o) => { if (sleepy) face(b, dummy, b, c, r, o); else face(b, b, dummy, c, r, o); };
   if (kind === 'baer') {
     const fur = 0xa0703f, light = 0xe7c79c, dark = 0x6a4424;
-    b.add(P.sphere(0.46, 16, 12), fur, { p: [0, 0.48, -0.05], s: [1, 0.95, 1.1] });
+    b.add(P.sphere(0.46, 12, 9), fur, { p: [0, 0.48, -0.05], s: [1, 0.95, 1.1] });
     b.add(P.sphere(0.3, 12, 8), light, { p: [0, 0.44, 0.24], s: [1, 1.1, 0.6] });
     const hc = [0, 0.98, 0.18];
-    b.add(P.sphere(0.4, 18, 14), fur, { p: hc });
+    b.add(P.sphere(0.4, 14, 10), fur, { p: hc });
     for (const s of [-1, 1]) {
       b.add(P.sphere(0.13, 10, 8), fur, { p: [s * 0.3, 1.32, 0.12] });
       b.add(P.sphere(0.075, 8, 6), 0xf0a0a8, { p: [s * 0.3, 1.33, 0.2], s: [1, 1, 0.5] });
@@ -92,9 +92,9 @@ function animalGeo(kind, sleepy) {
     eyes(hc, 0.4, { eye: 0.26, sep: 0.4, up: 0.28, iris: 0x2a1a14, cheek: 0xff9aa8 });
   } else if (kind === 'capy') {
     const fur = 0xb9814c, dark = 0x8a5a32;
-    b.add(P.sphere(0.45, 16, 12), fur, { p: [0, 0.5, -0.1], s: [0.95, 0.85, 1.4] });
+    b.add(P.sphere(0.45, 12, 9), fur, { p: [0, 0.5, -0.1], s: [0.95, 0.85, 1.4] });
     const hc = [0, 0.78, 0.5];
-    b.add(P.sphere(0.3, 16, 12), fur, { p: hc, s: [0.9, 0.9, 1.25] });
+    b.add(P.sphere(0.3, 12, 9), fur, { p: hc, s: [0.9, 0.9, 1.25] });
     b.add(P.sphere(0.2, 12, 8), dark, { p: [0, 0.72, 0.8], s: [1, 0.85, 0.7] });
     for (const s of [-1, 1]) {
       b.add(P.sphere(0.07, 8, 6), dark, { p: [s * 0.2, 1.04, 0.36] });
@@ -114,9 +114,9 @@ function animalGeo(kind, sleepy) {
     b.add(petalGeo(0.1, 0.06, 0.01, 2), 0x4f9a3a, { p: [0, 1.23, 0.45], r: [0, 0.5, 0.4], order: 'YXZ' });
   } else if (kind === 'hase') {
     const fur = 0xf4eee8, pink = 0xffb6c8;
-    b.add(P.sphere(0.36, 16, 12), fur, { p: [0, 0.38, -0.05], s: [1, 1, 1.1] });
+    b.add(P.sphere(0.36, 12, 9), fur, { p: [0, 0.38, -0.05], s: [1, 1, 1.1] });
     const hc = [0, 0.82, 0.14];
-    b.add(P.sphere(0.32, 18, 14), fur, { p: hc });
+    b.add(P.sphere(0.32, 14, 10), fur, { p: hc });
     for (const s of [-1, 1]) {
       b.add(P.sphere(0.1, 10, 8), fur, { p: [s * 0.12, 1.28, 0.05], s: [0.8, 2.6, 0.5], r: [0, 0, -s * 0.18] });
       b.add(P.sphere(0.06, 8, 6), pink, { p: [s * 0.12, 1.28, 0.1], s: [0.7, 2.6, 0.3], r: [0, 0, -s * 0.18] });
@@ -219,7 +219,7 @@ export class Wasps {
     b.add(P.sphere(0.12, 10, 8), k, { p: [0, 0.02, 0.05] });
     const hc = [0, 0.06, 0.22];
     b.add(P.sphere(0.16, 14, 10), y, { p: hc });
-    face(b, b, new Build(), hc, 0.16, { eye: 0.36, sep: 0.44, iris: 0x2a1010, cheek: 0xff8060 });
+    face(b, b, new Build(), hc, 0.16, { eye: 0.36, sep: 0.44, iris: 0x2a1010, cheek: 0xff8060, lod: 1 });
     // freche Augenbrauen
     for (const s of [-1, 1]) b.add(P.box(0.08, 0.018, 0.02), k, { p: surf(hc, 0.16, [s * 0.4, 0.62, 1], 1.02), r: [0, 0, s * 0.35] });
     b.add(P.cone(0.03, 0.08, 6), k, { p: [0, -0.02, -0.52], r: [-Math.PI / 2, 0, 0] });

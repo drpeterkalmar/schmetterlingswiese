@@ -47,7 +47,8 @@ export class Player {
   }
   emit(ev, a) { const f = this.on[ev]; if (f) f(a); }
   tryStunt(type) {
-    if (this.landed || this.stunt || this.frozen) return false;
+    if (this.landed && !this.frozen) { this.takeoff(); return false; }
+    if (this.stunt || this.frozen) return false;
     const dur = type === 'loop' ? 1.35 : 1.0;
     this.stunt = { type, t: 0, dur, dir: this.yawRate > 0.2 ? -1 : 1 };
     if (type === 'loop') this.pos.y = Math.max(this.pos.y, height(this.pos.x, this.pos.z) + 1.6);
@@ -120,11 +121,14 @@ export class Player {
         }
         if (best) {
           this.landing = best;
-          this.pos.x += (best.pos.x - this.pos.x) * Math.min(1, dt * 3);
-          this.pos.z += (best.pos.z - this.pos.z) * Math.min(1, dt * 3);
-          this.pos.y += (best.pos.y - this.pos.y) * Math.min(1, dt * 3.2);
-          tp = -0.2;
-          if (Math.abs(this.pos.y - best.pos.y) < 0.35 && bd < 1.2) this.land(best);
+          // sanft in den Landeplatz gleiten (fast schweben)
+          this.pos.x += (best.pos.x - this.pos.x) * Math.min(1, dt * 4.5);
+          this.pos.z += (best.pos.z - this.pos.z) * Math.min(1, dt * 4.5);
+          this.pos.y += (best.pos.y - this.pos.y) * Math.min(1, dt * 3.4);
+          const want = Math.atan2(best.pos.x - this.pos.x, best.pos.z - this.pos.z);
+          if (bd > 0.4) { let dd = want - this.yaw; dd = Math.atan2(Math.sin(dd), Math.cos(dd)); this.yaw += dd * Math.min(1, dt * 3); }
+          tp = -0.15;
+          if (Math.abs(this.pos.y - best.pos.y) < 0.4 && bd < 1.4) this.land(best);
         } else if (alt < 1.3) {
           this.pos.y += (gh + 0.35 - this.pos.y) * Math.min(1, dt * 4);
           if (this.pos.y - gh < 0.5) this.land(null);
@@ -132,11 +136,11 @@ export class Player {
       }
       this.pitch += (tp - this.pitch) * Math.min(1, dt * 4);
       const wet = this.wetT > 0 ? 0.7 : 1;
-      this.speed += (this.baseSpeed * (1 - this.pitch * 0.28) * wet * (this.landing ? 0.5 : 1) - this.speed) * Math.min(1, dt * 2);
+      this.speed += (this.baseSpeed * (1 - this.pitch * 0.28) * wet * (this.landing ? 0.08 : 1) - this.speed) * Math.min(1, dt * (this.landing ? 5 : 2));
       this.forward(_v);
       this.pos.addScaledVector(_v, this.speed * dt);
       visPitch = this.pitch * 0.8;
-      visRoll = THREE.MathUtils.clamp(-this.yawRate * 0.42, -0.7, 0.7);
+      visRoll = THREE.MathUtils.clamp(-this.yawRate * 0.36, -0.55, 0.55);
       // Boden & Decke
       const minY = height(this.pos.x, this.pos.z) + 0.9;
       if (this.pos.y < minY && !this.landed && !(climb < -0.3)) {

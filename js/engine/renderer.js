@@ -4,11 +4,11 @@ import { Post } from './gfx.js';
 import { PX } from '../world/particles.js';
 
 export const QUALITY = [
-  { id: 0, name: 'Niedrig', dpr: 1.0, dprMin: 0.75, post: false, samples: 0, depth: false, grass: 5000, deco: 0.55, particles: 160 },
-  { id: 1, name: 'Mittel', dpr: 1.5, dprMin: 1.0, post: true, samples: 0, depth: false, grass: 11000, deco: 0.8, particles: 320 },
-  { id: 2, name: 'Hoch', dpr: 2.0, dprMin: 1.25, post: true, samples: 4, depth: true, grass: 19000, deco: 1.0, particles: 480 },
+  { id: 0, name: 'Niedrig', dpr: 1.0, dprMin: 0.75, post: false, samples: 0, depth: false, grass: 4500, deco: 0.55, particles: 160 },
+  { id: 1, name: 'Mittel', dpr: 1.5, dprMin: 1.0, post: true, samples: 0, depth: false, grass: 8000, deco: 0.75, particles: 320 },
+  { id: 2, name: 'Hoch', dpr: 2.0, dprMin: 1.25, post: true, samples: 4, depth: true, grass: 16000, deco: 1.0, particles: 480 },
 ];
-export const GRASS_MAX = 19000;
+export const GRASS_MAX = 16000;
 
 export class Renderer {
   constructor(canvas) {

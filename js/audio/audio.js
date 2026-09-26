@@ -2,6 +2,30 @@
 // Alle Klänge sind vorgerendert (synth.js); zur Laufzeit nur Buffer-Wiedergabe mit Voice-Limit.
 import { renderSfx, renderMusic, renderAmbience } from './synth.js';
 import { Music } from './music.js';
+import { BUILD } from '../build.js';
+
+// ---------------------------------------------------------------- IndexedDB-Cache der vorgerenderten Klänge
+const DBN = 'schmetterlingswiese-audio';
+function idb() { return new Promise((res, rej) => { const r = indexedDB.open(DBN, 1); r.onupgradeneeded = () => r.result.createObjectStore('b'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function idbGet(k) { const db = await idb(); return new Promise((res) => { const q = db.transaction('b').objectStore('b').get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); }
+async function idbSet(k, v) { const db = await idb(); return new Promise((res) => { const tx = db.transaction('b', 'readwrite'); tx.objectStore('b').clear(); tx.objectStore('b').put(v, k); tx.oncomplete = () => res(true); tx.onerror = () => res(false); }); }
+function pack(o) {
+  if (o instanceof AudioBuffer) {
+    const ch = []; for (let c = 0; c < o.numberOfChannels; c++) { const d = o.getChannelData(c), q = new Int16Array(d.length); for (let i = 0; i < d.length; i++) q[i] = Math.max(-32767, Math.min(32767, Math.round(d[i] * 32767))); ch.push(q); }
+    return { __ab: 1, sr: o.sampleRate, ch };
+  }
+  if (Array.isArray(o)) return o.map(pack);
+  const r = {}; for (const k in o) r[k] = pack(o[k]); return r;
+}
+function unpack(o) {
+  if (o && o.__ab) {
+    const b = new AudioBuffer({ length: o.ch[0].length, sampleRate: o.sr, numberOfChannels: o.ch.length });
+    o.ch.forEach((q, c) => { const d = new Float32Array(q.length); for (let i = 0; i < q.length; i++) d[i] = q[i] / 32767; b.copyToChannel(d, c); });
+    return b;
+  }
+  if (Array.isArray(o)) return o.map(unpack);
+  const r = {}; for (const k in o) r[k] = unpack(o[k]); return r;
+}
 
 // Pegel-Tabelle (Mix): lineare Faktoren je Effekt
 const MIX = {
@@ -26,11 +50,11 @@ export function buildMaster(ctx) {
   const hp1 = ctx.createBiquadFilter(); hp1.type = 'highpass'; hp1.frequency.value = 80; hp1.Q.value = 0.707;
   const hp2 = ctx.createBiquadFilter(); hp2.type = 'highpass'; hp2.frequency.value = 80; hp2.Q.value = 0.707;
   const comp = ctx.createDynamicsCompressor();
-  comp.threshold.value = -20; comp.knee.value = 10; comp.ratio.value = 3; comp.attack.value = 0.012; comp.release.value = 0.25;
-  const makeup = ctx.createGain(); makeup.gain.value = 1.6;
+  comp.threshold.value = -18; comp.knee.value = 12; comp.ratio.value = 2.5; comp.attack.value = 0.015; comp.release.value = 0.25;
+  const makeup = ctx.createGain(); makeup.gain.value = 1.0;
   const lim = ctx.createDynamicsCompressor();
-  lim.threshold.value = -4; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.001; lim.release.value = 0.08;
-  m.master = ctx.createGain(); m.master.gain.value = 0.78;
+  lim.threshold.value = -2; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.002; lim.release.value = 0.1;
+  m.master = ctx.createGain(); m.master.gain.value = 0.74;
   m.pre.connect(hp1); hp1.connect(hp2); hp2.connect(comp); comp.connect(makeup); makeup.connect(lim); lim.connect(m.master);
   m.master.connect(ctx.destination);
   m.nodes = { hp1, hp2, comp, makeup, lim };
@@ -49,18 +73,27 @@ export class AudioEngine {
     this.stats = { played: 0, stolen: 0 };
     this.progress = 0;
   }
-  // Vorrendern (braucht keine Nutzergeste)
+  // Vorrendern (braucht keine Nutzergeste): erst Effekte, dann Ambience, dann Musik; Ergebnis im IndexedDB-Cache
   async preload(onProgress) {
     const t0 = performance.now();
-    let pS = 0, pM = 0, pA = 0;
-    const upd = () => { this.progress = (pS + pM + pA) / 3; onProgress && onProgress(this.progress); };
-    const [sfx, mus, amb] = await Promise.all([
-      renderSfx(p => { pS = p; upd(); }), renderMusic(p => { pM = p; upd(); }), renderAmbience(p => { pA = p; upd(); }),
-    ]);
-    this.bufs = { sfx, mus, amb };
+    this.bufs = { sfx: null, amb: null, mus: null };
+    try {
+      const c = typeof indexedDB !== 'undefined' && !/nocache/.test(location.search) ? await idbGet('v-' + BUILD) : null;
+      if (c) { this.bufs = unpack(c); this.fromCache = true; }
+    } catch (e) { /* kein Cache */ }
+    if (!this.fromCache) {
+      this.bufs.sfx = await renderSfx(p => onProgress && onProgress(p * 0.5));
+      this.sfxMs = Math.round(performance.now() - t0);
+      if (this.ctx) this.attach();
+      this.bufs.amb = await renderAmbience(p => onProgress && onProgress(0.5 + p * 0.15));
+      if (this.ctx) this.attach();
+      this.bufs.mus = await renderMusic(p => onProgress && onProgress(0.65 + p * 0.35));
+    }
     this.renderMs = Math.round(performance.now() - t0);
     this.ready = true;
+    onProgress && onProgress(1);
     if (this.ctx) this.attach();
+    if (!this.fromCache) setTimeout(() => { try { idbSet('v-' + BUILD, pack(this.bufs)).then(ok => { this.cached = ok; }); } catch (e) { /* egal */ } }, 1500);
     return this.bufs;
   }
   // Entsperren in einer echten Nutzergeste (pointerup/touchend/click/keydown)
@@ -72,7 +105,7 @@ export class AudioEngine {
         this.ctx = new AC({ latencyHint: 'interactive' });
         this.m = buildMaster(this.ctx);
         this.applyVol();
-        if (this.ready) this.attach();
+        if (this.bufs && this.bufs.sfx) this.attach();
         this.ctx.onstatechange = () => { this.onState && this.onState(this.ctx.state); };
       }
       if (this.ctx.state !== 'running' && !this.userPaused) this.ctx.resume().catch(() => { });
@@ -82,13 +115,15 @@ export class AudioEngine {
   }
   get state() { return this.ctx ? this.ctx.state : 'none'; }
   attach() {
-    if (this.music || !this.ctx || !this.bufs) return;
-    this.music = new Music(this.ctx, this.bufs.mus, this.m.music);
-    if (this.world) this.setWorld(this.world);
-    this.music.setIntensity(this.intensity);
-    this.music.start();
-    this.startLoops();
-    this.timer = setInterval(() => this.tick(), 50);
+    if (!this.ctx || !this.bufs) return;
+    if (this.bufs.amb && !this.loops.wind) this.startLoops();
+    if (this.bufs.mus && !this.music) {
+      this.music = new Music(this.ctx, this.bufs.mus, this.m.music);
+      if (this.world) this.setWorld(this.world);
+      this.music.setIntensity(this.intensity);
+      this.music.start();
+    }
+    if (!this.timer) this.timer = setInterval(() => this.tick(), 50);
   }
   applyVol() {
     if (!this.m) return;
@@ -105,7 +140,7 @@ export class AudioEngine {
   tick() {
     if (!this.ctx || this.ctx.state !== 'running') return;
     this.music && this.music.tick();
-    this.ambTick();
+    if (this.bufs.amb) this.ambTick();
   }
   setWorld(w) {
     this.world = w;
@@ -120,7 +155,7 @@ export class AudioEngine {
 
   // --------------------------------------------------------------- Effekte
   pick(name) {
-    const list = this.bufs && this.bufs.sfx[name]; if (!list || !list.length) return null;
+    const list = this.bufs && this.bufs.sfx && this.bufs.sfx[name]; if (!list || !list.length) return null;
     let i = ((this.rr[name] ?? -1) + 1 + (list.length > 2 ? (Math.random() * (list.length - 1)) | 0 : 0)) % list.length;
     this.rr[name] = i;
     return list[i];
@@ -248,4 +283,73 @@ export class Haptics {
       else if (this.label) { this.label.click(); if (p.length > 2) setTimeout(() => this.label && this.label.click(), p[0] + p[1]); }
     } catch (e) { /* ignorieren */ }
   }
+}
+
+// ------------------------------------------------------------------ Offline-Mix (für Messungen: LUFS/Peak/Spektrum)
+// mode: 'mix' (Musik+Ambience+SFX-Szenario), 'music', 'sfx'
+export async function renderOffline(bufs, world, mode = 'mix', seconds = 60, intensity = 0.6) {
+  const sr = 44100;
+  const ctx = new OfflineAudioContext(2, Math.ceil(seconds * sr), sr);
+  const m = buildMaster(ctx);
+  m.musicVol.gain.value = mode === 'sfx' ? 0 : 0.7; m.sfxVol.gain.value = mode === 'music' ? 0 : 0.9; m.ambVol.gain.value = mode === 'music' ? 0 : 0.81;
+  if (mode !== 'sfx') {
+    const mu = new Music(ctx, bufs.mus, m.music);
+    mu.maxVoices = 1e9;
+    const inst = world.id === 'abend' || world.id === 'kirsch' ? 'harp' : 'kalimba';
+    mu.setStyle({ ...world.music, inst });
+    mu.rnd = (() => { let s = 7; return () => { s = (s * 16807) % 2147483647; return s / 2147483647; }; })();
+    mu.intensity = intensity; mu.start(0); mu.tick(seconds);
+  }
+  const play = (buf, t, gain, rate = 1, pan = 0, bus = m.sfx, loop = false) => {
+    const s = ctx.createBufferSource(); s.buffer = buf; s.playbackRate.value = rate; s.loop = loop;
+    const g = ctx.createGain(); g.gain.value = gain; const p = ctx.createStereoPanner(); p.pan.value = pan;
+    s.connect(g); g.connect(p); p.connect(bus); s.start(t); return g;
+  };
+  const duck = (t, level, dur) => { m.duck.gain.setValueAtTime(1, t); m.duck.gain.linearRampToValueAtTime(level, t + 0.06); m.duck.gain.setTargetAtTime(1, t + dur, 0.35); };
+  const S = bufs.sfx;
+  const key = (() => { let off = ((world.music.root - 60) % 12 + 12) % 12; if (off > 5) off -= 12; return Math.pow(2, off / 12); })();
+  if (mode === 'mix') {
+    play(bufs.amb.wind[0], 0, 0.5, 1, 0, m.amb, true);
+    if ((world.amb_sfx || []).includes('water')) play(bufs.amb.water[0], 0, 0.35, 1, 0, m.amb, true);
+    if ((world.amb_sfx || []).includes('bees')) play(bufs.amb.bees[0], 0, 0.22, 1, 0, m.amb, true);
+    play(bufs.amb.flutter[0], 0, 0.16, 1, 0, m.amb, true);
+    for (let t = 1.3; t < seconds - 1; t += 2.2 + (t * 7 % 3)) play(bufs.amb.bird[(t * 10 | 0) % bufs.amb.bird.length], t, 0.16, 1, Math.sin(t) * 0.7, m.amb);
+  }
+  if (mode !== 'music') {
+    // Szenario: Kombo-Serien, Ringe, Stunts, Landung, Schubs, Böe, Regen, Glitzer, Fanfare
+    let t = 2, combo = 0;
+    const MIXG = { pling: 0.5, ring: 0.42, loop: 0.5, roll: 0.46, land: 0.5, takeoff: 0.36, boing: 0.5, gust: 0.42, splash: 0.4, glitter: 0.5, fanfare: 0.62, combo: 0.4, aww: 0.32, sip: 0.35, tap: 0.32 };
+    const fx = (n, tt, pan = 0, v = 0) => { const L = S[n]; if (L) play(L[v % L.length], tt, MIXG[n] || 0.4, 1, pan); };
+    if (mode === 'sfx') {
+      // jedes Effekt-Set einmal nacheinander
+      const names = Object.keys(S).filter(n => !n.startsWith('pling'));
+      for (let d = 0; d < 12; d++) { play(S['pling' + d][0], t, MIXG.pling, key, 0); t += 0.28; }
+      t += 1;
+      for (const n of names) { fx(n, t, 0); t += Math.min(3.2, S[n][0].duration * 0.8 + 0.3); if (t > seconds - 3) break; }
+    } else {
+      while (t < seconds - 6) {
+        for (let k = 0; k < 7 && t < seconds - 6; k++) { combo++; play(S['pling' + Math.min(11, combo - 1)][combo % 2], t, MIXG.pling, key, Math.sin(t) * 0.6); duck(t, 0.8, 0.35); if (combo === 5) fx('combo', t); if (k === 3) fx('ring', t, 0.3); t += 1.4; }
+        combo = 0; t += 2.5;
+      }
+      fx('loop', 11); fx('roll', 24); fx('land', 30); fx('sip', 30.2); fx('takeoff', 33); fx('boing', 41, -0.4); fx('gust', 45); fx('splash', 50); fx('aww', 36, 0.2);
+      fx('glitter', 19); duck(19, 0.55, 1.4);
+      fx('fanfare', seconds - 5.5); duck(seconds - 5.5, 0.3, 3);
+    }
+  }
+  const out = await ctx.startRendering();
+  return out;
+}
+export function wavBase64(buf) {
+  const ch = buf.numberOfChannels, len = buf.length, sr = buf.sampleRate;
+  const data = new DataView(new ArrayBuffer(44 + len * ch * 2));
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) data.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); data.setUint32(4, 36 + len * ch * 2, true); w(8, 'WAVE'); w(12, 'fmt '); data.setUint32(16, 16, true); data.setUint16(20, 1, true);
+  data.setUint16(22, ch, true); data.setUint32(24, sr, true); data.setUint32(28, sr * ch * 2, true); data.setUint16(32, ch * 2, true); data.setUint16(34, 16, true);
+  w(36, 'data'); data.setUint32(40, len * ch * 2, true);
+  const chans = []; for (let c = 0; c < ch; c++) chans.push(buf.getChannelData(c));
+  let o = 44;
+  for (let i = 0; i < len; i++) for (let c = 0; c < ch; c++) { const v = Math.max(-1, Math.min(1, chans[c][i])); data.setInt16(o, v < 0 ? v * 0x8000 : v * 0x7fff, true); o += 2; }
+  const bytes = new Uint8Array(data.buffer); let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(s);
 }

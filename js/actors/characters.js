@@ -76,24 +76,25 @@ function bandSphere(b, r, center, scale, bands, o = {}) {
 // Gesicht auf Kopfkugel: Augen, Glanzpunkte, Wangen, Mund. Liefert {open, happy}-Builds
 export function face(b, bOpen, bHappy, c, r, o = {}) {
   const eyeR = r * (o.eye ?? 0.4), sep = o.sep ?? 0.42, up = o.up ?? 0.18;
+  const lo = o.lod ? 0.5 : 1, S = (a, b) => [Math.max(5, Math.round(a * lo)), Math.max(4, Math.round(b * lo))];
   const iris = o.iris ?? 0x2a1830;
   for (const s of [-1, 1]) {
     const d = [s * sep, up, 1];
     const sc = surf(c, r, d, 1 - eyeR / r * 0.45);
-    bOpen.add(P.sphere(eyeR, 14, 10), 0xffffff, { p: sc, s: [1, 1.12, 0.8], unlit: 0.35 });
+    bOpen.add(P.sphere(eyeR, ...S(14, 10)), 0xffffff, { p: sc, s: [1, 1.12, 0.8], unlit: 0.35 });
     const pc = surf(c, r, [s * sep * 0.95, up * 0.9, 1], 1 + eyeR / r * 0.12);
-    bOpen.add(P.sphere(eyeR * 0.72, 12, 8), iris, { p: pc, s: [1, 1.15, 0.7] });
+    bOpen.add(P.sphere(eyeR * 0.72, ...S(12, 8)), iris, { p: pc, s: [1, 1.15, 0.7] });
     const hc = surf(c, r, [s * sep * 0.95 - 0.12, up * 0.9 + 0.18, 1], 1 + eyeR / r * 0.62);
-    bOpen.add(P.sphere(eyeR * 0.26, 8, 6), 0xffffff, { p: hc, unlit: 1 });
+    bOpen.add(P.sphere(eyeR * 0.26, ...S(8, 6)), 0xffffff, { p: hc, unlit: 1 });
     const hc2 = surf(c, r, [s * sep * 0.95 + 0.1, up * 0.9 - 0.12, 1], 1 + eyeR / r * 0.55);
-    bOpen.add(P.sphere(eyeR * 0.12, 6, 4), 0xffffff, { p: hc2, unlit: 1 });
+    if (!o.lod) bOpen.add(P.sphere(eyeR * 0.12, 6, 4), 0xffffff, { p: hc2, unlit: 1 });
     // Freude-Augen ^ ^
     const hp = surf(c, r, d, 1.0);
-    const arc = P.torus(eyeR * 0.62, eyeR * 0.16, 5, 10, Math.PI);
+    const arc = P.torus(eyeR * 0.62, eyeR * 0.16, 4, o.lod ? 6 : 10, Math.PI);
     bHappy.add(arc, iris, { p: hp, r: [0, s * sep * 0.9, 0] });
     // Wangen
     const ch = surf(c, r, [s * 0.72, -0.1, 0.72], 0.97);
-    b.add(P.sphere(r * 0.17, 10, 6), o.cheek ?? 0xff8fb0, { p: ch, s: [1, 0.6, 0.45], r: [0, s * 0.8, 0], unlit: 0.35 });
+    b.add(P.sphere(r * 0.17, ...S(10, 6)), o.cheek ?? 0xff8fb0, { p: ch, s: [1, 0.6, 0.45], r: [0, s * 0.8, 0], unlit: 0.35 });
   }
   // Mund (kleines Lächeln)
   const m = surf(c, r, [0, -0.28, 1], 0.99);

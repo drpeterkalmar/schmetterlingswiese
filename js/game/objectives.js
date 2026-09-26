@@ -233,7 +233,7 @@ class RingTask extends Task {
     this.pts = pts || ringCourse(g, cfg.n, cfg);
     this.max = this.pts.length;
     this.R = g.diff.ringR;
-    this.pool = new Pool(g.scene, 'ring', this.max, { glow: true, glowI: 0.5, rim: 1.2, emis: 0.3 });
+    this.pool = new Pool(g.scene, 'ring', this.max, { glow: true, glowI: 0.16, pulse: 0.2, rim: 1.2, emis: 0.35 });
     this.dirs = this.pts.map((p, i) => {
       const a = i > 0 ? this.pts[i - 1] : g.spawn, b = i < this.pts.length - 1 ? this.pts[i + 1] : p.clone().add(_v.subVectors(p, a));
       return new THREE.Vector3().subVectors(b, a).setY(0).normalize();
@@ -266,7 +266,7 @@ class RingTask extends Task {
       const yaw = Math.atan2(this.dirs[k].x, this.dirs[k].z);
       const col = state === 2 ? 0xffd84a : (k === this.cur + 1 ? 0xff9fd0 : 0xbfe6ff);
       const vis = state === 0 ? s : (k <= this.cur + 3 ? s : s * 0.001);
-      this.pool.set(k, p, 0, yaw, t * 0.4, vis, col, state === 2 ? this.R * 2.6 : 0.001);
+      this.pool.set(k, p, 0, yaw, t * 0.4, vis, col, state === 2 ? this.R * 2.2 : 0.001);
     });
     this.pool.flush();
   }
@@ -336,9 +336,11 @@ class LandTask extends Task {
       else {
         this.sip.t += dt;
         if (Math.random() < dt * 12) g.bursts.emit({ n: 1, pos: _v.copy(this.sip.spot.pos).add(_w.set(0, 0.3, 0)), colors: [0xffe07a, 0xffb0d8], speed: 1.2, up: 1.5, size: 0.18, life: 0.7, shape: 0, grav: -1 });
-        if (this.sip.t > 1.0) { const s = this.sip.spot; s.done = true; this.cur++; this.sip = null; g.hit(s.pos, 'land', 0xffd84a); }
+        if (this.sip.t > 1.0) { const s = this.sip.spot; s.done = true; this.cur++; this.sip = null; g.hit(s.pos, 'land', 0xffd84a); this.autoOff = 0.5; }
       }
     }
+    // nach dem Naschen hüpft die Figur fröhlich wieder los
+    if (this.autoOff > 0) { this.autoOff -= dt; if (this.autoOff <= 0 && g.player.landed) g.player.takeoff(); }
     this.spots.forEach((s, i) => {
       const sc = s.done ? 0.0001 : 1 + 0.08 * Math.sin(t * 4 + i);
       _v.copy(s.pos); _v.y += 0.05 + Math.sin(t * 3 + i) * 0.08;

@@ -249,7 +249,7 @@ export class Game {
     }
     if (this.state === 'won') {
       this.wonT += dt;
-      if (Math.random() < dt * 14) this.bursts.emit({ n: 6, pos: _v.copy(pl.pos).add(_w.set((Math.random() - 0.5) * 6, 3 + Math.random() * 2, (Math.random() - 0.5) * 6)), colors: [0xff6f9a, 0xffd84a, 0x6fd0ff, 0x9cf07a, 0xc08cff], shape: 2, size: 0.35, speed: 2, up: 0, life: 2.2, grav: -2.2, drag: 1.5, spin: 8 });
+      if (Math.random() < dt * 14) this.bursts.emit({ n: 6, pos: _v.copy(pl.pos).add(_w.set((Math.random() - 0.5) * 6, 3 + Math.random() * 2, (Math.random() - 0.5) * 6)), colors: [0xff6f9a, 0xffd84a, 0x6fd0ff, 0x9cf07a, 0xc08cff], shape: 2, size: 0.22, speed: 2, up: 0, life: 2.2, grav: -2.2, drag: 1.5, spin: 8 });
     }
     this.app.ui.hudTime(this.time, this.limit, this.par);
   }
@@ -351,7 +351,7 @@ export class Game {
     this.app.audio.sfx('fanfare');
     this.app.audio.setIntensity(1);
     this.app.haptics.buzz('win');
-    for (let i = 0; i < 4; i++) this.bursts.emit({ n: 40, pos: _v.copy(this.player.pos).add(_w.set(0, 2.5, 0)), colors: [0xff6f9a, 0xffd84a, 0x6fd0ff, 0x9cf07a, 0xc08cff, 0xffffff], shape: 2, size: 0.4, speed: 9, up: 4, life: 2.6, grav: -3.5, drag: 1.2, spin: 10 });
+    for (let i = 0; i < 4; i++) this.bursts.emit({ n: 40, pos: _v.copy(this.player.pos).add(_w.set(0, 2.5, 0)), colors: [0xff6f9a, 0xffd84a, 0x6fd0ff, 0x9cf07a, 0xc08cff, 0xffffff], shape: 2, size: 0.26, speed: 9, up: 4, life: 2.6, grav: -3.5, drag: 1.2, spin: 10 });
     this.app.onWon({ stars, time: this.time, par: this.par, maxCombo: this.maxCombo, comboReq: this.comboReq, bonus: this.bonusFound, hits: this.hits });
   }
   sfx(name, pos) { this.app.audio.sfx(name, pos ? this.app.screenPan(pos) : 0); }
