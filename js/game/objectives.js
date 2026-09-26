@@ -142,7 +142,7 @@ class CollectTask extends Task {
     this.items = [];
     const cols = kind === 'fireflies' ? [0xd8ff6a] : kind === 'blossoms' ? [0xffb3cf, 0xffd0e0, 0xff9fc0, 0xffffff] : [0xffc83a, 0xff8fc8, 0x8fd8ff, 0xb89cff, 0x9cf07a];
     this.pool = new Pool(g.scene, kind === 'fireflies' ? 'firefly' : kind === 'blossoms' ? 'blossom' : 'drop', n + extra,
-      { glow: true, glowI: kind === 'fireflies' ? 1.6 : 0.8, emis: kind === 'drop' ? 0.35 : 0.2, side: kind === 'blossoms' ? THREE.DoubleSide : THREE.FrontSide });
+      { glow: true, glowI: kind === 'fireflies' ? 1.6 : 0.55, emis: kind === 'drop' ? 0.35 : 0.2, side: kind === 'blossoms' ? THREE.DoubleSide : THREE.FrontSide });
     const others = [];
     const hi = g.diff.id === 'schwer' ? 7 : 4.5;
     const trees = (g.world.trees.userData.cherry || g.world.trees.userData.round || []).filter(t => Math.hypot(t.x, t.z) < 85);
@@ -185,7 +185,7 @@ class CollectTask extends Task {
       const spin = this.kind === 'blossoms' ? t * 1.5 + it.ph : t * 1.6 + it.ph;
       const bl = this.kind === 'blossoms';
       const pulse = this.kind === 'fireflies' ? 0.8 + 0.4 * Math.sin(t * 3 + it.ph) : 1;
-      this.pool.set(i, it.pos, bl ? 0.5 * Math.sin(t + it.ph) : 0, spin, bl ? 0.3 : 0, it.s * (this.kind === 'blossoms' ? 1.25 : 1.1), it.col, (this.kind === 'fireflies' ? 3.2 : 2.3) * pulse * (it.s > 0.01 ? 1 : 0));
+      this.pool.set(i, it.pos, bl ? 0.5 * Math.sin(t + it.ph) : 0, spin, bl ? 0.3 : 0, it.s * (this.kind === 'blossoms' ? 1.25 : 1.3), it.col, (this.kind === 'fireflies' ? 3.2 : 1.9) * pulse * (it.s > 0.01 ? 1 : 0));
     });
     this.pool.flush();
   }
@@ -510,7 +510,7 @@ class RaceTask extends RingTask {
       const myU = this.cur / this.max;
       const lead = this.u - myU;
       if (lead > 0.16) sp *= 0.6; else if (lead < -0.12) sp *= 1.25;
-      if (g.diff.id === 'leicht' && this.u > 0.9 && !this.done) sp *= 0.15; // Leicht: Flora lässt dich gewinnen
+      if (g.diff.id === 'leicht' && this.u > 0.9 && !this.done) sp = 0; // Leicht: kein Scheitern – die Rivalin wartet vor dem Ziel
       this.u = Math.min(1, this.u + sp * dt / this.len);
       if (this.u >= 1) { this.rivalDone = true; if (!this.done) g.fail(`${this.rivalName} war diesmal schneller! Nochmal?`); }
     }

@@ -1,0 +1,36 @@
+# Nahaufnahmen: Nektartropfen, Ring, Landemarke, Herz über Tierbaby, Beere, Glitzerstern, Tiere
+import time, json, sys
+sys.path.insert(0, 'tests')
+from util import *
+def look(s, name, js_target, dist=4.0, h=1.2, yaw=0.6):
+    s.ev(f"""(() => {{ const T = {js_target}; __game.freeze(true); const c = __app.camera;
+      c.position.set(T.x + Math.sin({yaw}) * {dist}, T.y + {h}, T.z + Math.cos({yaw}) * {dist}); c.lookAt(T.x, T.y, T.z); c.fov = 45; c.updateProjectionMatrix(); }})()""")
+    time.sleep(1.2); s.shot('cu_' + name)
+with sync_playwright() as pw:
+    s = Session(pw, device=PIXEL7_LAND, dpr=1.5)
+    s.open(); s.tap('#title'); s.pg.fill('input.name', 'C'); s.tap('[data-a=create]')
+    s.ev("__game.setQuality(2)")
+    s.ev("__game.start('1-2', 'leicht')"); time.sleep(1.5)
+    look(s, 'drop', "__app.game.tasks[1].items[0].pos", 3.2, 0.6)
+    s.ev("__game.freeze(false)")
+    look(s, 'visit', "__app.game.tasks[0].who[0].pos.clone().setY(__app.game.tasks[0].who[0].pos.y + 1.2)", 5, 1.2, 2.6)
+    s.ev("__game.freeze(false)")
+    look(s, 'glitter', "__app.game.glitter.pos", 4, 0.8)
+    s.ev("__game.freeze(false)")
+    s.ev("__game.start('3-2', 'leicht')"); time.sleep(1.5)
+    look(s, 'berry', "__app.game.tasks[0].bushes[0].berry", 4, 0.5)
+    s.ev("__game.freeze(false)")
+    look(s, 'capy', "__app.game.animals.list.find(a => a.kind === 'capy').pos.clone().setY(__app.game.animals.list.find(a => a.kind === 'capy').pos.y + 0.7)", 3.2, 0.5, 0.2)
+    s.ev("__game.freeze(false)")
+    s.ev("__game.start('2-1', 'leicht')"); time.sleep(1.5)
+    look(s, 'landmark', "__app.game.tasks[0].spots[0].pos", 5, 1.5)
+    s.ev("__game.freeze(false)")
+    s.ev("__game.start('1-3', 'leicht')"); time.sleep(1.5)
+    look(s, 'ring', "__app.game.tasks[0].pts[0]", 9, 1.0, 3.3)
+    s.ev("__game.freeze(false)")
+    s.ev("__game.start('5-2', 'leicht')"); time.sleep(1.5)
+    look(s, 'moonflower', "__app.game.tasks[1].spots[0].pos", 5, 1.0)
+    s.ev("__game.freeze(false)")
+    look(s, 'bear_sleepy', "__app.game.animals.list.find(a => a.kind === 'baer').pos.clone().setY(__app.game.animals.list.find(a => a.kind === 'baer').pos.y + 0.9)", 3.4, 0.6, 0.3)
+    print(s.errors[:5])
+    s.close()

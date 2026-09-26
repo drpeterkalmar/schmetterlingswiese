@@ -263,6 +263,7 @@ class App {
     this.frames++;
     this._fpsAcc += raw; this._fpsN++;
     if (this._fpsAcc > 1) { this.fps = Math.round(this._fpsN / this._fpsAcc); this._fpsAcc = 0; this._fpsN = 0; }
+    const c0 = performance.now();
     if (!window.__freeze) {
       this.t += dt;
       G.uTime.value = this.t;
@@ -285,8 +286,11 @@ class App {
       }
     }
     G.uCam.value.copy(this.camera.position);
+    const c1 = performance.now();
     this.renderer.r.info.reset();
     this.renderer.render(this.scene, this.camera);
+    const c2 = performance.now();
+    this.cpuUpd = (this.cpuUpd || 0) * 0.95 + (c1 - c0) * 0.05; this.cpuRen = (this.cpuRen || 0) * 0.95 + (c2 - c1) * 0.05;
     this.renderer.sample(raw * 1000, now);
   }
 
@@ -323,7 +327,7 @@ window.__game = {
     player: { x: app.player.pos.x, y: app.player.pos.y, z: app.player.pos.z, landed: app.player.landed, stunt: app.player.stunt && app.player.stunt.type, yaw: app.player.yaw } }),
   ac: () => app.audio.state,
   audio: app.audio, haptics: app.haptics, progress: app.progress, player: app.player, camera: app.camera, scene: app.scene, input: app.input,
-  info: () => ({ ...app.renderer.info(), fps: app.fps }),
+  info: () => ({ ...app.renderer.info(), fps: app.fps, cpuUpdateMs: +(app.cpuUpd || 0).toFixed(2), cpuRenderSubmitMs: +(app.cpuRen || 0).toFixed(2) }),
   freeze: (on = true) => { window.__freeze = on ? 1 : undefined; },
   start: (id, diff) => { if (diff) app.setDiff(diff); app.startLevel(id); },
   step: () => app.game.debugStep(),

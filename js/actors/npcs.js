@@ -12,6 +12,7 @@ const _v = new THREE.Vector3();
 const angDiff = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
 // ---------------------------------------------------------------- Luft-Freunde
+let NPC_WING = null; // einmalig erzeugt, über Level hinweg geteilt
 export class Flyers {
   constructor(rnd, nB = 10, nL = 10, area = 90) {
     this.group = new THREE.Group();
@@ -24,7 +25,7 @@ export class Flyers {
     const wg = new THREE.PlaneGeometry(0.8, 0.8); wg.rotateX(Math.PI / 2); wg.translate(0.4, 0, -0.1);
     const wl = wg.clone(); wl.rotateZ(Math.PI);
     const wgeo = new Build(); wgeo.add(wg, 0xffffff); wgeo.add(wl, 0xffffff);
-    const tex = wingMask('verlauf');
+    const tex = NPC_WING || (NPC_WING = wingMask('verlauf'));
     this.bBody = new THREE.InstancedMesh(bb.build(), toonMat({ vc: true, rim: 0.5 }), nB);
     this.bWing = new THREE.InstancedMesh(wgeo.build(), toonMat({ map: tex, wing: true, instWing: true, alphaTest: 0.5, side: THREE.DoubleSide, flap: [0.35, 0.9, 13], wc: 0x2a1a30 }), nB);
     // Marienkäfer: runder Panzer + Glasflügel
