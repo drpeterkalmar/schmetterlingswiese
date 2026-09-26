@@ -212,7 +212,7 @@ export class Player {
   updateCamera(cam, dt, t) {
     const aspect = cam.aspect;
     const portrait = aspect < 1;
-    const dist = portrait ? 6.4 : 5.4, hgt = portrait ? 2.3 : 1.85;
+    const dist = portrait ? 6.4 : 4.7, hgt = portrait ? 2.3 : 1.6;
     _f.set(Math.sin(this.yaw), 0, Math.cos(this.yaw));
     // gelandet: Kamera schwenkt langsam nach vorn (Gesicht zeigen)
     const orbitT = this.hover ? 2.75 : this.landed ? 2.2 : 0;

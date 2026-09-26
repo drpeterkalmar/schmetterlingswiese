@@ -23,6 +23,7 @@ export class Renderer {
     this.tier = mobile ? 1 : 2;
     this.dpr = Math.min(QUALITY[this.tier].dpr, devicePixelRatio || 1);
     this.ft = []; this.slowT = 0; this.fastT = 0; this.lastChange = 0;
+    this.maxTier = 2; // sinkt, wenn eine Stufe einmal zu langsam war (keine Pendelei)
     this.onTier = null;
     this.w = 0; this.h = 0;
     this.resize();
@@ -63,12 +64,13 @@ export class Renderer {
     if (this.slowT > 2000) {
       this.slowT = 0; this.lastChange = now; this.ft.length = 0;
       if (this.dpr - 0.25 >= Q.dprMin - 1e-3) this.dpr -= 0.25;
-      else if (this.tier > 0) { this.tier--; this.dpr = Math.min(QUALITY[this.tier].dpr, devicePixelRatio || 1); }
+      else if (this.tier > 0) { this.maxTier = this.tier - 1; this.tier--; this.dpr = Math.min(QUALITY[this.tier].dpr, devicePixelRatio || 1); }
       this.resize(true); this.onTier && this.onTier(this.q);
     } else if (this.fastT > 9000) {
       this.fastT = 0; this.lastChange = now; this.ft.length = 0;
       const maxD = Math.min(Q.dpr, devicePixelRatio || 1);
       if (this.dpr + 0.25 <= maxD + 1e-3) { this.dpr += 0.25; this.resize(true); }
+      else if (this.tier < this.maxTier) { this.tier++; this.dpr = Math.max(QUALITY[this.tier].dprMin, Math.min(this.dpr, devicePixelRatio || 1)); this.resize(true); this.onTier && this.onTier(this.q); }
     }
   }
   info() {

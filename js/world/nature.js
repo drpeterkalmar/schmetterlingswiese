@@ -310,6 +310,10 @@ export function buildClouds(world, rnd, n) {
   const mat = toonMat({ vc: true, rim: 1.0, soft: 0.45, emis: 0.0 });
   mat.uniforms.uColor.value.set(world.cloud || 0xffffff);
   mat.uniforms.uFog = { value: new THREE.Vector4(150, 700, 0, 0.55) };
+  // Unterseiten lavendel statt grasgrün (kein Boden-Widerschein)
+  const k = world.amb.k;
+  mat.uniforms.uGndAmb = { value: new THREE.Color(world.sky.zenith).lerp(new THREE.Color(0xd8cff0), 0.6).multiplyScalar(0.62 * k / 0.62) };
+  mat.uniforms.uSkyAmb = { value: new THREE.Color(0xffffff).lerp(new THREE.Color(world.sky.horizon), 0.3).multiplyScalar(0.7 * k / 0.62) };
   const shapes = [];
   for (let s = 0; s < 3; s++) {
     const b = new Build();

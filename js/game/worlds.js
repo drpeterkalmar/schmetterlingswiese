@@ -63,9 +63,9 @@ export const WORLDS = [
   },
   {
     id: 'abend', name: 'Glühwürmchen-Abend', emoji: '✨', tod: 'Abend',
-    sun: { az: 2.6, el: 0.5, col: 0x9fb2ff, k: 0.75 },
+    sun: { az: 2.6, el: 0.5, col: 0xa8b8ff, k: 0.9 },
     sky: { zenith: 0x141c46, horizon: 0x8d6a9e, glow: 0x6a4a88, sunCol: 0x000000, size: 0.001, stars: 1, moon: 1 },
-    amb: { sky: 0x5a64a8, gnd: 0x2c3c3c, k: 0.75 }, rim: 0xa8b8ff,
+    amb: { sky: 0x6670b8, gnd: 0x34464a, k: 0.9 }, rim: 0xb8c8ff,
     fog: { col: 0x3f416e, sun: 0x7a6aa0, near: 35, far: 260, max: 0.85 },
     grass: [0x1e4636, 0x2f6a50, 0x62a47e], ground: [0x24503e, 0x30604a, 0x437052],
     flowers: [0x9fd8ff, 0xd0a8ff, 0xffffff, 0xfff0a0, 0xff9ed2],
