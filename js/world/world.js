@@ -68,7 +68,12 @@ export class World {
   update(dt, cam, focus) {
     this.sky.position.copy(cam.position);
     this.far.position.set(cam.position.x * 0.6, 0, cam.position.z * 0.6);
-    if (this.grass) this.grass.material.uniforms.uCenter.value.copy(focus);
+    // Gras-Feld in Blickrichtung vorschieben (weniger Halme hinter der Kamera)
+    if (this.grass) {
+      const c = this.grass.material.uniforms.uCenter.value;
+      const dx = focus.x - cam.position.x, dz = focus.z - cam.position.z, l = Math.hypot(dx, dz) || 1;
+      c.set(focus.x + dx / l * 9, focus.y, focus.z + dz / l * 9);
+    }
     if (this.clouds) this.clouds.userData.update(dt);
     if (this.ambient) this.ambient.update(dt, focus);
   }

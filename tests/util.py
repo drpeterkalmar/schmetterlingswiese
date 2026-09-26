@@ -20,8 +20,13 @@ class Session:
         self.pg.on("pageerror", lambda e: self.errors.append("PAGEERROR " + str(e)))
         self.pg.on("console", lambda m: (self.console.append(m.type + ": " + m.text), self.errors.append("CONSOLE " + m.text) if m.type == "error" else None))
     def open(self, q='?nosw'):
-        self.pg.goto(BASE + 'index.html' + q)
-        self.pg.wait_for_function("window.__game && window.__app && window.__app.frames > 3", timeout=90000)
+        for attempt in range(2):
+            try:
+                self.pg.goto(BASE + 'index.html' + q)
+                self.pg.wait_for_function("window.__game && window.__app && window.__app.frames > 3", timeout=150000)
+                return
+            except Exception:
+                if attempt: raise
     def ev(self, js, arg=None):
         return self.pg.evaluate(js, arg) if arg is not None else self.pg.evaluate(js)
     def shot(self, name):

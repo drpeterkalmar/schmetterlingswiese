@@ -47,6 +47,18 @@ export function scatter(n, rnd, o = {}) {
   return out;
 }
 
+// Räumlich gekachelt: pro Kachel ein InstancedMesh → Frustum-Culling greift (LOD/Culling light)
+function chunked(geo, mat, pts, colorFn, cell = 60) {
+  const grp = new THREE.Group();
+  const cells = new Map();
+  for (const p of pts) { const k = Math.floor(p.x / cell) + ':' + Math.floor(p.z / cell); if (!cells.has(k)) cells.set(k, []); cells.get(k).push(p); }
+  for (const list of cells.values()) {
+    const im = instanced(geo, mat, list, colorFn);
+    if (im.boundingSphere) im.boundingSphere.radius += 3;
+    grp.add(im);
+  }
+  return grp;
+}
 function instanced(geo, mat, pts, colorFn, extra) {
   const im = new THREE.InstancedMesh(geo, mat, Math.max(1, pts.length));
   im.count = pts.length;
@@ -126,7 +138,7 @@ export function buildFlowers(world, rnd, count) {
     const pts = scatter(n, rnd, { rMin: 3, rMax: 120, sMin: 1.6, sMax: 3.0 });
     // kleine Grüppchen für natürlicheres Bild
     pts.forEach(p => { if (p.k < 0.35) { const q = pts[(Math.random() * pts.length) | 0]; if (q) { p.x = q.x + (rnd() - 0.5) * 3; p.z = q.z + (rnd() - 0.5) * 3; p.y = height(p.x, p.z); } } });
-    grp.add(instanced(geos[k], mat, pts, (p) => k === 'daisy' && p.k > 0.4 ? 0xffffff : pal[(p.k * 997 | 0) % pal.length]));
+    grp.add(chunked(geos[k], mat, pts, (p) => k === 'daisy' && p.k > 0.4 ? 0xffffff : pal[(p.k * 997 | 0) % pal.length]));
   }
   return grp;
 }
