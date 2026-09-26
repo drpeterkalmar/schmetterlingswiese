@@ -280,9 +280,9 @@ class App {
       this.world.update(dt, this.camera, this.focus);
       G.uPlayer.value.copy(this.player.pos);
       if ((this.frames & 3) === 0 && this.audio.ctx) {
-        const pl = this.player, c = pl.critter;
+        const pl = this.player;
         const playing = this.mode === 'game' && (this.game.state === 'play' || this.game.state === 'won');
-        this.audio.setFlight(playing ? THREE.MathUtils.clamp(pl.speed / FLIGHT_NORM, 0, 1) : 0.15, playing ? (pl.landed ? 0.1 : 0.5 + Math.max(0, this.input.climb) * 0.5) : 0.25, c ? c.kind : 'none', this.world.windBoost || 0);
+        this.audio.setFlight(playing && !pl.landed ? THREE.MathUtils.clamp(pl.speed / FLIGHT_NORM, 0, 1) : 0.15, this.world.windBoost || 0);
       }
     }
     G.uCam.value.copy(this.camera.position);
@@ -336,6 +336,6 @@ window.__game = {
   daily: () => dailyLevel().id,
   show: (s, d) => app.ui.show(s, d),
   setQuality: (q) => app.setSetting('quality', q),
-  renderFlight: async (kind, wid = 'wiese', sec = 30, sp = 8.5, only = null) => wavBase64(await renderFlight(app.audio.bufs, WORLDS.find(w => w.id === wid), kind, sec, sp, only)),
+  renderFlight: async (kind, wid = 'wiese', sec = 30, sp = 7.0, only = null) => wavBase64(await renderFlight(app.audio.bufs, WORLDS.find(w => w.id === wid), kind, sec, sp, only)),
   renderWav: async (mode, wid = 'wiese', sec = 60, inten = 0.6) => wavBase64(await renderOffline(app.audio.bufs, WORLDS.find(w => w.id === wid), mode, sec, inten)),
 };

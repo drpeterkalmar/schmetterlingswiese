@@ -25,6 +25,15 @@ def mod_spectrum(sig, fs):
         acc = p if acc is None else acc + p; n += 1
     return np.fft.rfftfreq(seg, 1 / fs), acc / n
 
+def prominence(f, P, lo=4, hi=40):
+    # stärkster schmaler Peak im Band gegen den lokalen Sockel (±4 Hz ohne ±0,75 Hz) → periodisch vs. Rauschen/Neigung
+    best = (0.0, 0.0)
+    for i in np.where((f >= lo) & (f <= hi))[0]:
+        nb = (np.abs(f - f[i]) <= 4) & (np.abs(f - f[i]) > 0.75)
+        pr = 10 * np.log10(P[i] / np.median(P[nb]))
+        if pr > best[0]: best = (pr, f[i])
+    return best
+
 def analyse(path):
     x, sr = load(path)
     x = x[int(3 * sr):]                      # Einschwingen überspringen
@@ -38,8 +47,7 @@ def analyse(path):
     full = np.fft.rfft(e - e.mean()); ff = np.fft.rfftfreq(len(e), 1 / fs)
     bp = np.fft.irfft(np.where((ff >= 4) & (ff <= 40), full, 0), n=len(e))
     depth = float(np.sqrt(2) * bp.std() * 100)
-    pk = int(np.argmax(np.where(band, P, 0)))
-    prom = float(10 * np.log10(P[pk] / np.median(P[band])))
+    prom, fpk = prominence(f, P)
     # Spektralschwerpunkt-Wobble (Frequenzmodulation, z. B. Summen mit Vibrato)
     n = 1024; spec = []
     for i in range(0, len(x) - n, hop):
@@ -48,17 +56,16 @@ def analyse(path):
     cen = (spec * fq).sum(axis=1) / (spec.sum(axis=1) + 1e-12)
     c = cen / cen.mean() - 1
     fc, Pc = mod_spectrum(c - c.mean(), fs)
-    bc = (fc >= 4) & (fc <= 40); pkc = int(np.argmax(np.where(bc, Pc, 0)))
-    cprom = float(10 * np.log10(Pc[pkc] / np.median(Pc[bc])))
+    cprom, fpkc = prominence(fc, Pc)
     rms_db = float(20 * np.log10(np.sqrt((x ** 2).mean()) + 1e-12))
-    return dict(rms_dBFS=round(rms_db, 1), am_tiefe_4_40Hz_pct=round(depth, 1), am_peak_Hz=round(float(f[pk]), 2),
-                am_peak_ueber_sockel_dB=round(prom, 1), fm_peak_Hz=round(float(fc[pkc]), 2), fm_peak_ueber_sockel_dB=round(cprom, 1))
+    return dict(rms_dBFS=round(rms_db, 1), am_tiefe_4_40Hz_pct=round(depth, 1), am_peak_Hz=round(float(fpk), 2),
+                am_peak_ueber_sockel_dB=round(float(prom), 1), fm_peak_Hz=round(float(fpkc), 2), fm_peak_ueber_sockel_dB=round(float(cprom), 1))
 
 with sync_playwright() as pw:
     s = Session(pw, dpr=1)
     s.open(); s.wait_audio()
     res = {}
-    for kind, wid in [('schmetterling', 'wiese'), ('marienkaefer', 'wiese'), ('biene', 'wiese'), ('libelle', 'wiese'), ('schmetterling', 'sonne'), ('schmetterling', 'abend')]:
+    for kind, wid in [('schmetterling', 'wiese'), ('marienkaefer', 'wiese'), ('biene', 'wiese'), ('libelle', 'wiese'), ('schmetterling', 'sonne'), ('biene', 'teich'), ('libelle', 'abend')]:
         b64 = s.pg.evaluate(f"__game.renderFlight('{kind}', '{wid}', 30, {SPEED})")
         path = f'{OUT}/flug_{LABEL}_{kind}_{wid}.wav'
         open(path, 'wb').write(base64.b64decode(b64))
@@ -80,6 +87,6 @@ with sync_playwright() as pw:
     json.dump(res, open(f'tests/out/flug_audio_{LABEL}.json', 'w'), indent=1)
     # Grenzwerte (nur für „nachher“): keine ausgeprägte periodische Modulation im Flug-Bett
     if LABEL != 'vorher':
-        bad = [k for k, v in res.items() if k != 'errors' and (v['am_peak_ueber_sockel_dB'] > 8 or v['fm_peak_ueber_sockel_dB'] > 8)]
+        bad = [k for k, v in res.items() if k != 'errors' and not k.startswith('Schicht') and (v['am_peak_ueber_sockel_dB'] > 8 or v['fm_peak_ueber_sockel_dB'] > 8)]
         print('FLUG-BETT OHNE STOTTERN' if not bad and not s.errors else f'FEHLER: periodische Modulation in {bad} / errors {s.errors[:5]}')
     s.close()

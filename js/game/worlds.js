@@ -29,7 +29,7 @@ export const WORLDS = [
     far: [{ color: 0xa6b877, h: 32, mist: 0.1, round: 2 }, { color: 0xc9c995, h: 55, mist: 0.2 }, { color: 0xe6dcc0, h: 85, mist: 0.3 }],
     terrain: { t1: [1.6, 0.03, 0.036, 0.6], t2: [0.9, 0.08, 0.07, 1.2], t3: [0.4, 0.14, 0.16, 2.2], edge: [118, 190, 24] },
     cloudN: 10, flowerN: 900, sunflowers: 200, particles: 'pollen', wind: [0.7, 0.2],
-    music: { root: 67, mode: 'major', bpm: 92 }, amb_sfx: ['birds', 'wind', 'bees'],
+    music: { root: 67, mode: 'major', bpm: 92 }, amb_sfx: ['birds', 'wind'],
   },
   {
     id: 'teich', name: 'Seerosenteich', emoji: '🪷', tod: 'Nachmittag',

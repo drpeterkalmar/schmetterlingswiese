@@ -218,8 +218,8 @@ export class AudioEngine {
       s.connect(g); g.connect(this.m.amb); s.start();
       this.loops[name] = { s, g, base: gain };
     };
-    mk('wind', A.wind[0], 0.5); mk('water', A.water[0], 0.35); mk('bees', A.bees[0], 0.22);
-    mk('flutter', A.flutter[0], 0.0); mk('buzz', A.buzz[0], 0.0);
+    // bewusst keine Dauer-Loops für Flügel/Summen (klangen wie ein stotternder Motor) – nur Wind + Wasser
+    mk('wind', A.wind[0], 0.5); mk('water', A.water[0], 0.35);
     this.updateLoops();
   }
   updateLoops() {
@@ -228,20 +228,13 @@ export class AudioEngine {
     const on = (n) => (K.includes(n) ? this.loops[n].base : 0);
     this.loops.wind.g.gain.setTargetAtTime(this.menu ? 0.25 : on('wind') || 0.3, t, 0.8);
     this.loops.water.g.gain.setTargetAtTime(on('water'), t, 0.8);
-    this.loops.bees.g.gain.setTargetAtTime(on('bees'), t, 0.8);
   }
-  setMenu(m) { this.menu = m; this.updateLoops(); if (m) { this.setFlight(0, 0, 'none'); this.setIntensity(0.3); } }
-  // Flug-Geräusche folgen Tempo/Flügelschlag
-  setFlight(speed01, flap, kind, wind = 0, at = null) {
+  setMenu(m) { this.menu = m; this.updateLoops(); if (m) { this.setFlight(0); this.setIntensity(0.3); } }
+  // Flug-Rauschen: nur der Wind-Pegel folgt Tempo/Böen – langsam geglättet, Tonhöhe fest (kein Leiern/Stottern)
+  setFlight(speed01, wind = 0, at = null) {
     if (!this.loops.wind) return;
     const t = at ?? this.ctx.currentTime;
-    this.loops.wind.g.gain.setTargetAtTime((this.menu ? 0.2 : 0.3) + speed01 * 0.35 + wind * 0.4, t, 0.3);
-    this.loops.wind.s.playbackRate.setTargetAtTime(0.9 + speed01 * 0.25, t, 0.3);
-    const buzzy = kind === 'biene' || kind === 'libelle';
-    this.loops.flutter.g.gain.setTargetAtTime(kind === 'none' || buzzy ? 0 : 0.1 + flap * 0.12, t, 0.2);
-    this.loops.flutter.s.playbackRate.setTargetAtTime(0.7 + flap * 0.8, t, 0.2);
-    this.loops.buzz.g.gain.setTargetAtTime(buzzy ? 0.07 + flap * 0.06 : 0, t, 0.2);
-    this.loops.buzz.s.playbackRate.setTargetAtTime((kind === 'libelle' ? 0.7 : 1) + flap * 0.3, t, 0.2);
+    this.loops.wind.g.gain.setTargetAtTime((this.menu ? 0.2 : 0.3) + speed01 * 0.3 + wind * 0.35, t, 0.9);
   }
   ambTick() {
     const t = this.ctx.currentTime;
@@ -314,8 +307,6 @@ export async function renderOffline(bufs, world, mode = 'mix', seconds = 60, int
   if (mode === 'mix') {
     play(bufs.amb.wind[0], 0, 0.5, 1, 0, m.amb, true);
     if ((world.amb_sfx || []).includes('water')) play(bufs.amb.water[0], 0, 0.35, 1, 0, m.amb, true);
-    if ((world.amb_sfx || []).includes('bees')) play(bufs.amb.bees[0], 0, 0.22, 1, 0, m.amb, true);
-    play(bufs.amb.flutter[0], 0, 0.16, 1, 0, m.amb, true);
     for (let t = 1.3; t < seconds - 1; t += 2.2 + (t * 7 % 3)) play(bufs.amb.bird[(t * 10 | 0) % bufs.amb.bird.length], t, 0.16, 1, Math.sin(t) * 0.7, m.amb);
   }
   if (mode !== 'music') {
@@ -343,7 +334,7 @@ export async function renderOffline(bufs, world, mode = 'mix', seconds = 60, int
   return out;
 }
 // Flug-Bett offline (Ambience-Loops + setFlight wie im Spiel, ohne Musik/Effekte) – für die Stotter-Messung
-export async function renderFlight(bufs, world, kind, seconds = 30, diffSpeed = 8.5, only = null) {
+export async function renderFlight(bufs, world, kind, seconds = 30, diffSpeed = 7.0, only = null) {
   const sr = 44100;
   const ctx = new OfflineAudioContext(2, Math.ceil(seconds * sr), sr);
   const e = new AudioEngine();
@@ -358,7 +349,7 @@ export async function renderFlight(bufs, world, kind, seconds = 30, diffSpeed = 
     const ph = t % 6, climb = ph < 2 ? 1 : ph > 4.5 && ph < 5.2 ? -0.25 : 0;
     pitch += (climb * 0.58 - pitch) * Math.min(1, dt * 4);
     speed += (diffSpeed * (1 - pitch * 0.28) - speed) * Math.min(1, dt * 2);
-    e.setFlight(Math.min(1, Math.max(0, speed / FLIGHT_NORM)), 0.5 + Math.max(0, climb) * 0.5, kind, 0, t);
+    e.setFlight(Math.min(1, Math.max(0, speed / FLIGHT_NORM)), 0, t);
   }
   return ctx.startRendering();
 }

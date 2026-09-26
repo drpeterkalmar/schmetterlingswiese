@@ -347,13 +347,6 @@ export async function renderAmbience(onProgress) {
     }
     const n = noise(c, t, t + 10); const bp = filt(c, 'bandpass', 900, 0.6); const a = g(c, 0.12); chain(n, bp, a, o);
   }, { sr: 32000, peak: 0.45, wet: 0.2, hp: 150 }).then(b => loopify(b, 1.5)));
-  add('bees', render(6, 1, (c, o, t) => {
-    for (const f of [212, 219, 331]) {
-      const s = osc(c, 'sawtooth', f, t, t + 6); const v = osc(c, 'sine', 5 + f % 3, t, t + 6); const vg = g(c, 6); v.connect(vg); vg.connect(s.frequency);
-      const bp = filt(c, 'bandpass', 900, 1.2); const a = g(c, 0.2); const am = osc(c, 'sine', 0.3 + f % 5 * 0.1, t, t + 6); const amg = g(c, 0.12); am.connect(amg); amg.connect(a.gain);
-      chain(s, bp, a, o);
-    }
-  }, { sr: 32000, peak: 0.4, hp: 150 }).then(b => loopify(b, 1)));
   // Vogelrufe
   for (let v = 0; v < 5; v++) add('bird', render(1.4, 1, (c, o, t) => {
     const notes = 2 + v % 3;
@@ -371,16 +364,6 @@ export async function renderAmbience(onProgress) {
     for (let k = 0; k < pulses; k++) { const tt = t + k * 0.075; a.gain.setValueAtTime(0, tt); a.gain.linearRampToValueAtTime(0.5, tt + 0.008); a.gain.linearRampToValueAtTime(0, tt + 0.035); }
     chain(s, a, o);
   }, { wet: 0.3, peak: 0.35, hp: 1000 }));
-  // Flügelflattern (Loop, Tempo via playbackRate)
-  add('flutter', render(2.2, 1, (c, o, t) => {
-    const n = noise(c, t, t + 2.2); const bp = filt(c, 'bandpass', 700, 0.9); const a = g(c, 0.0);
-    for (let k = 0; k < 22; k++) { const tt = t + k * 0.1; a.gain.setValueAtTime(0.02, tt); a.gain.linearRampToValueAtTime(0.5, tt + 0.03); a.gain.linearRampToValueAtTime(0.02, tt + 0.09); }
-    chain(n, bp, a, o);
-  }, { sr: 32000, peak: 0.4, hp: 200 }));
-  add('buzz', render(2.0, 1, (c, o, t) => {
-    const s = osc(c, 'sawtooth', 240, t, t + 2); const v = osc(c, 'sine', 7, t, t + 2); const vg = g(c, 5); v.connect(vg); vg.connect(s.frequency);
-    const bp = filt(c, 'bandpass', 1100, 1.4); const a = g(c, 0.4); chain(s, bp, a, o);
-  }, { sr: 32000, peak: 0.4, hp: 200 }).then(b => loopify(b, 0.4)));
   let done = 0; jobs.forEach(j => j.then(() => onProgress && onProgress(++done / jobs.length)));
   await Promise.all(jobs);
   return A;
