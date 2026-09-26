@@ -115,6 +115,7 @@ class App {
     this.audio.setWorld(w);
   }
   toShowcase(view = 'orbit') {
+    if (this.pendingReload) { this.pendingReload(); return; }
     this.mode = 'showcase'; this.showcaseView = view;
     document.body.classList.remove('playing');
     this.input.clear();
@@ -300,8 +301,9 @@ class App {
       });
     }).catch(() => { });
     let reloaded = false;
+    const hadController = !!navigator.serviceWorker.controller; // Erstinstallation → kein Neuladen
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (reloaded) return;
+      if (reloaded || !hadController) return;
       // Nur im Menü neu laden, nie mitten im Level
       const doReload = () => { if (!reloaded) { reloaded = true; location.reload(); } };
       if (this.mode !== 'game') doReload(); else this.pendingReload = doReload;
