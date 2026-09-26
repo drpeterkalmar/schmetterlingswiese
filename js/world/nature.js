@@ -339,13 +339,13 @@ export function buildClouds(world, rnd, n) {
   for (let s = 0; s < 3; s++) {
     const b = new Build();
     const W = 14 + s * 6, D = 8 + s * 2;
-    b.add(P.ico(W * 0.42, 3), 0xffffff, { p: [0, W * 0.12, 0], s: [1, 0.8, 0.8] });
+    b.add(P.ico(W * 0.42, 2), 0xffffff, { p: [0, W * 0.12, 0], s: [1, 0.8, 0.8] });
     const k = 7 + s * 2;
     for (let i = 0; i < k; i++) {
       const a = i / k * Math.PI * 2 + rnd() * 0.4;
       const rx = Math.cos(a) * W * 0.55, rz = Math.sin(a) * D * 0.5;
       const r = W * (0.18 + rnd() * 0.12) * (1 - Math.abs(Math.cos(a)) * 0.3);
-      b.add(P.ico(r, 2), 0xffffff, { p: [rx, r * 0.35, rz] });
+      b.add(P.ico(r, 1), 0xffffff, { p: [rx, r * 0.35, rz] });
     }
     for (let i = 0; i < 3; i++) b.add(P.ico(W * (0.2 + rnd() * 0.08), 2), 0xffffff, { p: [(rnd() - 0.5) * W * 0.5, W * 0.3 + rnd() * W * 0.1, (rnd() - 0.5) * D * 0.3] });
     const geo = b.build();

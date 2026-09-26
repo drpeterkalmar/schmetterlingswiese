@@ -9,6 +9,13 @@ CHECK = """(() => { const bad = []; const vw = innerWidth, vh = innerHeight;
     const sc = b.closest('.worlds, .card'); const clip = sc ? sc.getBoundingClientRect() : null;
     if (!sc && (r.right > vw + 1 || r.bottom > vh + 1 || r.left < -1 || r.top < -1)) bad.push('raus:' + (b.dataset.a || b.id));
   }); return bad; })()"""
+# Garderobe: alle Tabs ganz sichtbar (kein Wegscrollen) und die letzte Reihe ganz über dem Fertig-Knopf
+WARD = """(() => { const bad = [], t = document.querySelector('#wardrobe .tabs'); if (!t) return bad; const tr = t.getBoundingClientRect();
+  t.querySelectorAll('button').forEach(b => { const r = b.getBoundingClientRect(); if (r.left < tr.left - 0.5 || r.right > tr.right + 0.5 || r.left < 0 || r.right > innerWidth) bad.push('tab-abgeschnitten:' + b.dataset.v); });
+  const g = document.querySelector('#wardrobe .grid'); g.scrollTop = g.scrollHeight;
+  const it = [...g.querySelectorAll('.item')].pop(), ri = it.getBoundingClientRect(), rg = g.getBoundingClientRect(), rb = document.querySelector('[data-a=wdone]').getBoundingClientRect();
+  if (ri.bottom > rg.bottom - 8 || ri.bottom > rb.top) bad.push('letzte-reihe-verdeckt:' + Math.round(ri.bottom) + '>' + Math.round(Math.min(rg.bottom - 8, rb.top)));
+  g.scrollTop = 0; return bad; })()"""
 def run(dev, tag):
     with sync_playwright() as pw:
         s = Session(pw, device=dev, dpr=1)
@@ -37,7 +44,7 @@ def run(dev, tag):
         s.tap('[data-a=map]'); s.tap('[data-a=wardrobe]'); snap('wardrobe_figur')
         s.ev("__app.progress.cur.stats.loops = 0"); 
         for t in ['farbe', 'muster', 'hut']:
-            s.tap(f'[data-a=wtab][data-v={t}]'); snap('wardrobe_' + t)
+            s.tap(f'[data-a=wtab][data-v={t}]'); snap('wardrobe_' + t); out['wardrobe_' + t] += s.ev(WARD)
         s.tap('[data-a=wdone]'); s.tap('[data-a=album]'); snap('album')
         s.tap('[data-a=map]'); s.tap('[data-a=badges]'); snap('badges')
         s.tap('[data-a=map]'); s.ev("__game.start('2-3','mittel')"); time.sleep(0.5); snap('countdown')
