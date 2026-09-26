@@ -27,6 +27,9 @@ function unpack(o) {
   const r = {}; for (const k in o) r[k] = unpack(o[k]); return r;
 }
 
+// Flug-Tempo, das „volles“ Flug-Rauschen ergibt (m/s)
+export const FLIGHT_NORM = 11;
+
 // Pegel-Tabelle (Mix): lineare Faktoren je Effekt
 const MIX = {
   pling: 0.5, ring: 0.42, loop: 0.5, roll: 0.46, land: 0.5, takeoff: 0.36, boing: 0.5, gust: 0.42, splash: 0.4, pick: 0.45,
@@ -229,9 +232,9 @@ export class AudioEngine {
   }
   setMenu(m) { this.menu = m; this.updateLoops(); if (m) { this.setFlight(0, 0, 'none'); this.setIntensity(0.3); } }
   // Flug-Geräusche folgen Tempo/Flügelschlag
-  setFlight(speed01, flap, kind, wind = 0) {
+  setFlight(speed01, flap, kind, wind = 0, at = null) {
     if (!this.loops.wind) return;
-    const t = this.ctx.currentTime;
+    const t = at ?? this.ctx.currentTime;
     this.loops.wind.g.gain.setTargetAtTime((this.menu ? 0.2 : 0.3) + speed01 * 0.35 + wind * 0.4, t, 0.3);
     this.loops.wind.s.playbackRate.setTargetAtTime(0.9 + speed01 * 0.25, t, 0.3);
     const buzzy = kind === 'biene' || kind === 'libelle';
@@ -338,6 +341,26 @@ export async function renderOffline(bufs, world, mode = 'mix', seconds = 60, int
   }
   const out = await ctx.startRendering();
   return out;
+}
+// Flug-Bett offline (Ambience-Loops + setFlight wie im Spiel, ohne Musik/Effekte) – für die Stotter-Messung
+export async function renderFlight(bufs, world, kind, seconds = 30, diffSpeed = 8.5, only = null) {
+  const sr = 44100;
+  const ctx = new OfflineAudioContext(2, Math.ceil(seconds * sr), sr);
+  const e = new AudioEngine();
+  e.ctx = ctx; e.m = buildMaster(ctx); e.bufs = bufs;
+  e.m.musicVol.gain.value = 0; e.m.sfxVol.gain.value = 0.9; e.m.ambVol.gain.value = 0.81;
+  e.ambKinds = world.amb_sfx || [];
+  e.startLoops();
+  if (only) for (const n in e.loops) if (!only.includes(n)) e.loops[n].g.disconnect(); // einzelne Schicht isoliert
+  // deterministisches Flugprofil: Geradeausflug, alle 6 s 2 s Steigen, dazwischen kurz Sinken
+  let pitch = 0, speed = diffSpeed;
+  for (let t = 0, dt = 1 / 15; t < seconds; t += dt) {
+    const ph = t % 6, climb = ph < 2 ? 1 : ph > 4.5 && ph < 5.2 ? -0.25 : 0;
+    pitch += (climb * 0.58 - pitch) * Math.min(1, dt * 4);
+    speed += (diffSpeed * (1 - pitch * 0.28) - speed) * Math.min(1, dt * 2);
+    e.setFlight(Math.min(1, Math.max(0, speed / FLIGHT_NORM)), 0.5 + Math.max(0, climb) * 0.5, kind, 0, t);
+  }
+  return ctx.startRendering();
 }
 export function wavBase64(buf) {
   const ch = buf.numberOfChannels, len = buf.length, sr = buf.sampleRate;

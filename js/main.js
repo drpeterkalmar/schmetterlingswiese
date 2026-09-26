@@ -10,7 +10,7 @@ import { Game } from './game/game.js';
 import { LEVELS, DIFFS, levelById, worldOf, dailyLevel, todayStr } from './game/levels.js';
 import { WORLDS } from './game/worlds.js';
 import { Progress, ALBUM } from './game/progress.js';
-import { AudioEngine, Haptics, renderOffline, wavBase64 } from './audio/audio.js';
+import { AudioEngine, Haptics, renderOffline, renderFlight, wavBase64, FLIGHT_NORM } from './audio/audio.js';
 import { Input } from './input.js';
 import { UI } from './ui/ui.js';
 
@@ -282,7 +282,7 @@ class App {
       if ((this.frames & 3) === 0 && this.audio.ctx) {
         const pl = this.player, c = pl.critter;
         const playing = this.mode === 'game' && (this.game.state === 'play' || this.game.state === 'won');
-        this.audio.setFlight(playing ? THREE.MathUtils.clamp(pl.speed / 11, 0, 1) : 0.15, playing ? (pl.landed ? 0.1 : 0.5 + Math.max(0, this.input.climb) * 0.5) : 0.25, c ? c.kind : 'none', this.world.windBoost || 0);
+        this.audio.setFlight(playing ? THREE.MathUtils.clamp(pl.speed / FLIGHT_NORM, 0, 1) : 0.15, playing ? (pl.landed ? 0.1 : 0.5 + Math.max(0, this.input.climb) * 0.5) : 0.25, c ? c.kind : 'none', this.world.windBoost || 0);
       }
     }
     G.uCam.value.copy(this.camera.position);
@@ -336,5 +336,6 @@ window.__game = {
   daily: () => dailyLevel().id,
   show: (s, d) => app.ui.show(s, d),
   setQuality: (q) => app.setSetting('quality', q),
+  renderFlight: async (kind, wid = 'wiese', sec = 30, sp = 8.5, only = null) => wavBase64(await renderFlight(app.audio.bufs, WORLDS.find(w => w.id === wid), kind, sec, sp, only)),
   renderWav: async (mode, wid = 'wiese', sec = 60, inten = 0.6) => wavBase64(await renderOffline(app.audio.bufs, WORLDS.find(w => w.id === wid), mode, sec, inten)),
 };
