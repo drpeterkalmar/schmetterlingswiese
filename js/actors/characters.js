@@ -43,13 +43,29 @@ export const COLORS = {
     { name: 'Rubin', a: 0xff4a7a, b: 0xffb0d0, c: 0x4a0a2a, stars: 28 },
   ],
 };
+// Eigene kleine Icons, wo es kein passendes Emoji gibt (Kranz statt Strauß, Hut statt Person/Gesicht)
+const svg = (inner) => `<svg class="ico" viewBox="0 0 48 48" aria-hidden="true">${inner}</svg>`;
+const bloom = (x, y, c) => [0, 72, 144, 216, 288].map(a => `<circle cx="${(x + Math.cos(a * Math.PI / 180) * 3.2).toFixed(1)}" cy="${(y + Math.sin(a * Math.PI / 180) * 3.2).toFixed(1)}" r="3" fill="${c}"/>`).join('') + `<circle cx="${x}" cy="${y}" r="2.1" fill="#ffd23f"/>`;
+const ICONS = {
+  kranz: svg(`<ellipse cx="24" cy="27" rx="17" ry="9" fill="none" stroke="#4f9a3a" stroke-width="4"/>
+    <ellipse cx="24" cy="27" rx="17" ry="9" fill="none" stroke="#7cc45a" stroke-width="1.6" stroke-dasharray="3 4"/>
+    ${bloom(8, 25, '#ff7eb6')}${bloom(15, 34, '#ffffff')}${bloom(24, 36.5, '#b38cff')}${bloom(33, 34, '#6ec6ff')}${bloom(40, 25, '#ff7eb6')}${bloom(16, 19, '#ffffff')}${bloom(32, 19, '#ffe070')}`),
+  party: svg(`<clipPath id="pc"><path d="M24 5 L37 39 Q24 44 11 39 Z"/></clipPath>
+    <path d="M24 5 L37 39 Q24 44 11 39 Z" fill="#ff6fb0"/>
+    <g clip-path="url(#pc)" fill="#5fd0ff"><rect x="0" y="12" width="48" height="5"/><rect x="0" y="22" width="48" height="5"/><rect x="0" y="32" width="48" height="5"/></g>
+    <circle cx="24" cy="6" r="4.5" fill="#ffe04a"/><circle cx="17" cy="30" r="1.6" fill="#fff"/><circle cx="29" cy="20" r="1.6" fill="#fff"/>`),
+  zauber: svg(`<ellipse cx="24" cy="39" rx="20" ry="5.5" fill="#6a4ac8"/>
+    <path d="M13 38 Q20 22 22 12 Q24 4 33 3 Q28 9 31 20 Q33 30 35 38 Q24 42 13 38 Z" fill="#7a5ae0"/>
+    <path d="M14 34 Q24 38 34 34 L35 38 Q24 42 13 38 Z" fill="#ffd23f"/>
+    <path d="M24 17 l1.6 3.3 3.6 .5 -2.6 2.5 .6 3.6 -3.2 -1.7 -3.2 1.7 .6 -3.6 -2.6 -2.5 3.6 -.5 Z" fill="#ffe04a"/>`),
+};
 export const HATS = [
   { id: 'none', name: 'Ohne', emoji: '🚫', stars: 0 },
-  { id: 'kranz', name: 'Blumenkranz', emoji: '💐', stars: 1 },
+  { id: 'kranz', name: 'Blumenkranz', emoji: '🌸', icon: ICONS.kranz, stars: 1 },
   { id: 'schleife', name: 'Schleife', emoji: '🎀', stars: 4 },
-  { id: 'party', name: 'Partyhut', emoji: '🥳', stars: 7 },
+  { id: 'party', name: 'Partyhut', emoji: '🎉', icon: ICONS.party, stars: 7 },
   { id: 'stroh', name: 'Sonnenhut', emoji: '👒', stars: 11 },
-  { id: 'zauber', name: 'Zauberhut', emoji: '🧙', stars: 16 },
+  { id: 'zauber', name: 'Zauberhut', emoji: '🪄', icon: ICONS.zauber, stars: 16 },
   { id: 'krone', name: 'Krone', emoji: '👑', stars: 25 },
   { id: 'heiligenschein', name: 'Sternenkranz', emoji: '⭐', stars: 36 },
 ];

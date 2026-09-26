@@ -133,13 +133,22 @@ export function buildFlowers(world, rnd, count) {
   const mat = toonMat({ vc: true, tint: true, sway: 0.45, rim: 0.5, soft: 0.15 });
   const mix = world.flowerMix || { daisy: 0.3, tulip: 0.2, round: 0.35, spike: 0.15 };
   const pal = world.flowers;
+  const all = [];
   for (const k of Object.keys(mix)) {
     const n = Math.round(count * mix[k]);
     const pts = scatter(n, rnd, { rMin: 3, rMax: 120, sMin: 1.6, sMax: 3.0 });
     // kleine Grüppchen für natürlicheres Bild
     pts.forEach(p => { if (p.k < 0.35) { const q = pts[(Math.random() * pts.length) | 0]; if (q) { p.x = q.x + (rnd() - 0.5) * 3; p.z = q.z + (rnd() - 0.5) * 3; p.y = height(p.x, p.z); } } });
     grp.add(chunked(geos[k], mat, pts, (p) => k === 'daisy' && p.k > 0.4 ? 0xffffff : pal[(p.k * 997 | 0) % pal.length]));
+    all.push(...pts);
   }
+  // Rasterindex der Blumen (für Deko, die nicht in Blüten stehen darf)
+  const cell = new Map(), key = (x, z) => Math.floor(x / 2) + ':' + Math.floor(z / 2);
+  for (const p of all) { const kk = key(p.x, p.z); if (!cell.has(kk)) cell.set(kk, []); cell.get(kk).push(p); }
+  grp.userData.near = (x, z, r) => {
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (const p of cell.get(key(x + i * 2, z + j * 2)) || []) if ((p.x - x) ** 2 + (p.z - z) ** 2 < r * r) return true;
+    return false;
+  };
   return grp;
 }
 
@@ -319,30 +328,37 @@ function waterMat() {
 // ---------------------------------------------------------------- Wolken (weiche Cumulus)
 export function buildClouds(world, rnd, n) {
   const grp = new THREE.Group();
-  const mat = toonMat({ vc: true, rim: 1.0, soft: 0.45, emis: 0.0 });
+  const mat = toonMat({ vc: true, rim: 0.7, soft: 1.1, emis: 0.0, cloud: true });
   mat.uniforms.uColor.value.set(world.cloud || 0xffffff);
   mat.uniforms.uFog = { value: new THREE.Vector4(150, 700, 0, 0.55) };
-  // Unterseiten lavendel statt grasgrün (kein Boden-Widerschein)
+  // Unterseiten weich weiß-lila/rosa (kein Boden-Widerschein, kein Oliv), Oberseite fast weiß
   const k = world.amb.k;
-  mat.uniforms.uGndAmb = { value: new THREE.Color(world.sky.zenith).lerp(new THREE.Color(0xd8cff0), 0.6).multiplyScalar(0.62 * k / 0.62) };
-  mat.uniforms.uSkyAmb = { value: new THREE.Color(0xffffff).lerp(new THREE.Color(world.sky.horizon), 0.3).multiplyScalar(0.7 * k / 0.62) };
+  mat.uniforms.uGndAmb = { value: new THREE.Color(0xf2dcf2).lerp(new THREE.Color(world.sky.horizon), 0.18).multiplyScalar(0.92 * k / 0.62) };
+  mat.uniforms.uSkyAmb = { value: new THREE.Color(0xffffff).lerp(new THREE.Color(world.sky.horizon), 0.2).multiplyScalar(0.95 * k / 0.62) };
   const shapes = [];
   for (let s = 0; s < 3; s++) {
     const b = new Build();
     const W = 14 + s * 6, D = 8 + s * 2;
-    b.add(P.ico(W * 0.42, 2), 0xffffff, { p: [0, W * 0.12, 0], s: [1, 0.8, 0.8] });
+    b.add(P.ico(W * 0.42, 3), 0xffffff, { p: [0, W * 0.12, 0], s: [1, 0.8, 0.8] });
     const k = 7 + s * 2;
     for (let i = 0; i < k; i++) {
       const a = i / k * Math.PI * 2 + rnd() * 0.4;
       const rx = Math.cos(a) * W * 0.55, rz = Math.sin(a) * D * 0.5;
       const r = W * (0.18 + rnd() * 0.12) * (1 - Math.abs(Math.cos(a)) * 0.3);
-      b.add(P.ico(r, 1), 0xffffff, { p: [rx, r * 0.35, rz] });
+      b.add(P.ico(r, 2), 0xffffff, { p: [rx, r * 0.35, rz] });
     }
-    for (let i = 0; i < 3; i++) b.add(P.ico(W * (0.2 + rnd() * 0.08), 1), 0xffffff, { p: [(rnd() - 0.5) * W * 0.5, W * 0.3 + rnd() * W * 0.1, (rnd() - 0.5) * D * 0.3] });
+    for (let i = 0; i < 3; i++) b.add(P.ico(W * (0.2 + rnd() * 0.08), 2), 0xffffff, { p: [(rnd() - 0.5) * W * 0.5, W * 0.3 + rnd() * W * 0.1, (rnd() - 0.5) * D * 0.3] });
     const geo = b.build();
     // flacher Boden
     const pa = geo.attributes.position, na = geo.attributes.normal;
     for (let i = 0; i < pa.count; i++) if (pa.getY(i) < 0) { pa.setY(i, pa.getY(i) * 0.15); na.setXYZ(i, na.getX(i) * 0.5, -1, na.getZ(i) * 0.5); }
+    // Normalen zur Hülle der ganzen Wolke hin biegen → eine zusammenhängende, weiche Schattierung statt „Brokkoli“-Röschen
+    const cy = W * 0.14, rx = W * 0.8, ry = W * 0.36, rz = D * 0.75, _n = new THREE.Vector3(), _e = new THREE.Vector3();
+    for (let i = 0; i < pa.count; i++) {
+      _e.set(pa.getX(i) / (rx * rx), (pa.getY(i) - cy) / (ry * ry), pa.getZ(i) / (rz * rz)).normalize();
+      _n.set(na.getX(i), na.getY(i), na.getZ(i)).normalize().lerp(_e, 0.7).normalize();
+      na.setXYZ(i, _n.x, _n.y, _n.z);
+    }
     geo.computeBoundingSphere();
     shapes.push(geo);
   }

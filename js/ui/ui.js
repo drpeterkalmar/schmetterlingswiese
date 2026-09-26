@@ -212,7 +212,7 @@ export class UI {
       <h2>${lvl.daily ? '📅 Tagesaufgabe geschafft!' : cheer} 🎉</h2>
       <div class="bigstars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
       <div class="facts"><div>⏱️ ${r.time.toFixed(1).replace('.', ',')} s ${r.time <= r.par ? '✅' : `(Ziel ${r.par} s)`}</div><div>🔥 Kombo ${r.maxCombo}${r.diff === 'schwer' ? ` / ${r.comboReq}` : ''}</div>${r.diff !== 'schwer' ? `<div>⭐ Glitzerstern ${r.bonus ? '✅' : '❌'}</div>` : ''}</div>
-      </div><div>${r.unlocks.map((u, k) => `<div class="unl" style="animation-delay:${1.6 + k * 0.2}s"><span class="e">${u.emoji}</span><span>Neu freigeschaltet:<br>${u.name}</span></div>`).join('')}
+      </div><div>${r.unlocks.map((u, k) => `<div class="unl" style="animation-delay:${1.6 + k * 0.2}s"><span class="e">${u.icon || u.emoji}</span><span>Neu freigeschaltet:<br>${u.name}</span></div>`).join('')}
       ${r.badges.map((b, k) => `<div class="unl" style="animation-delay:${1.8 + k * 0.2}s"><span class="e">${b.emoji}</span><span>Abzeichen: ${b.name}</span></div>`).join('')}
       </div></div><div class="row cta"><button class="btn soft" data-a="map">🗺️ Karte</button><button class="btn alt" data-a="again">🔄 Nochmal</button>${hasNext ? `<button class="btn big" data-a="next">Weiter ➜</button>` : ''}</div>
     </div></div>`;
@@ -228,11 +228,11 @@ export class UI {
     if (tab === 'figur') body = CHARACTERS.map(c => item(L.char === c.id, s < c.stars, 'wchar', c.id, `${c.emoji}<span>${c.name}</span>`, c.stars)).join('');
     if (tab === 'farbe') body = COLORS[L.char].map((c, i) => item((L.color[L.char] || 0) === i, s < c.stars, 'wcolor', i, `<div class="swatch" style="background:linear-gradient(135deg,${hexCss(c.a)},${hexCss(c.b ?? c.a)})"></div><span>${c.name}</span>`, c.stars)).join('');
     if (tab === 'muster') body = PATTERNS.map(pt => item(L.pattern === pt.id, s < pt.stars, 'wpat', pt.id, `🦋<span>${pt.name}</span>`, pt.stars)).join('');
-    if (tab === 'hut') body = HATS.map(h => item(L.hat === h.id, s < h.stars, 'what', h.id, `${h.emoji}<span>${h.name}</span>`, h.stars)).join('');
-    const tabs = [['figur', '🦋 Figur'], ['farbe', '🎨 Farbe'], ...(L.char === 'schmetterling' ? [['muster', '✨ Muster']] : []), ['hut', '👒 Hut']];
+    if (tab === 'hut') body = HATS.map(h => item(L.hat === h.id, s < h.stars, 'what', h.id, `${h.icon || h.emoji}<span>${h.name}</span>`, h.stars)).join('');
+    const tabs = [['figur', '🦋', 'Figur'], ['farbe', '🎨', 'Farbe'], ...(L.char === 'schmetterling' ? [['muster', '✨', 'Muster']] : []), ['hut', '👒', 'Hut']];
     return `<div class="screen" id="wardrobe"><div class="card">
       <div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Garderobe</h2><div class="chip">⭐ ${s}</div></div>
-      <div class="tabs">${tabs.map(([k, n]) => `<button data-a="wtab" data-v="${k}" class="${tab === k ? 'sel' : ''}">${n}</button>`).join('')}</div>
+      <div class="tabs">${tabs.map(([k, e, n]) => `<button data-a="wtab" data-v="${k}" class="${tab === k ? 'sel' : ''}"><b>${e}</b>${n}</button>`).join('')}</div>
       <div class="grid">${body}</div>
       <div class="row" style="margin-top:12px"><button class="btn big" data-a="wdone">Fertig ✓</button></div></div></div>`;
   }

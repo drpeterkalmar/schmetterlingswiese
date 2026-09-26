@@ -97,7 +97,7 @@ export class Progress {
     const out = [];
     CHARACTERS.forEach(c => out.push({ type: 'char', id: c.id, name: c.name, emoji: c.emoji, stars: c.stars }));
     for (const k of Object.keys(COLORS)) COLORS[k].forEach((c, i) => { if (c.stars > 0) out.push({ type: 'color', id: k + ':' + i, name: `${c.name} (${CHARACTERS.find(x => x.id === k).name})`, emoji: '🎨', stars: c.stars }); });
-    HATS.forEach(h => { if (h.stars > 0) out.push({ type: 'hat', id: h.id, name: h.name, emoji: h.emoji, stars: h.stars }); });
+    HATS.forEach(h => { if (h.stars > 0) out.push({ type: 'hat', id: h.id, name: h.name, emoji: h.emoji, icon: h.icon, stars: h.stars }); });
     PATTERNS.forEach(pt => { if (pt.stars > 0) out.push({ type: 'pattern', id: pt.id, name: 'Flügelmuster ' + pt.name, emoji: '🦋', stars: pt.stars }); });
     return out;
   }

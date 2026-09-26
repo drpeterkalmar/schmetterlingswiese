@@ -61,16 +61,15 @@ export function wingMask(pattern = 'monarch') {
   // Adern
   x.strokeStyle = B(120); x.lineWidth = 3;
   [[10, 60, 200, 30], [10, 70, 230, 60], [10, 90, 220, 100], [14, 128, 180, 190], [14, 140, 130, 236], [14, 150, 70, 220]].forEach(([a, b, c2, d]) => { x.beginPath(); x.moveTo(a, b); x.quadraticCurveTo((a + c2) / 2, (b + d) / 2 - 10, c2, d); x.stroke(); });
-  // Rand + weiße Randpunkte (Monarch)
+  // Körpernahes Dunkel (Wurzel) – der Flügelansatz bleibt am Körper sichtbar
+  const rg = x.createRadialGradient(0, 95, 4, 0, 95, 64);
+  rg.addColorStop(0, B(255)); rg.addColorStop(0.5, B(150)); rg.addColorStop(1, B(0));
+  x.fillStyle = rg; x.fillRect(0, 0, 70, 200);
+  // Rand (v2.1: ohne weiße Randpunkte – die saßen halb auf der Silhouette und wirkten wie Artefakte)
   x.globalCompositeOperation = 'source-over';
   x.lineWidth = pattern === 'monarch' ? 22 : 12;
   x.strokeStyle = 'rgb(0,0,255)'; wingPath(x); x.stroke();
-  if (pattern === 'monarch' || pattern === 'punkte') {
-    x.fillStyle = 'rgb(255,0,255)';
-    [[210, 26], [236, 58], [230, 90], [200, 118], [196, 186], [190, 216], [160, 240], [120, 244], [80, 230], [44, 200]].forEach(([a, b]) => { x.beginPath(); x.arc(a, b, 4.5, 0, 7); x.fill(); });
-  }
   x.restore();
-  // Körpernahes Dunkel (Wurzel)
   const t = new THREE.CanvasTexture(c);
   t.anisotropy = 4; t.generateMipmaps = true;
   return t;

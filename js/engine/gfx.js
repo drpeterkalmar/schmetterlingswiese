@@ -162,6 +162,11 @@ void main(){
   c += alb * uSunCol * tr;
 #endif
   c = mix(c, alb * (1.0 + uEmis), clamp(vCol.a + uEmis, 0.0, 1.0));
+#ifdef CLOUD
+  // weiche Wolkenkanten: Silhouette geht in den Dunst über
+  float ef = pow(1.0 - clamp(dot(N, V), 0.0, 1.0), 2.0);
+  c = mix(c, mix(uFogCol, vec3(1.0), 0.45) * uSkyAmb * 1.1, ef * 0.45);
+#endif
   c = applyFog(c, vWP);
   gl_FragColor = vec4(c, alpha);
   #include <tonemapping_fragment>
@@ -176,6 +181,7 @@ export function toonMat(o = {}) {
   if (o.sway) defines.SWAY = '';
   if (o.flap) defines.WINGFLAP = '';
   if (o.tint) defines.USE_TINT = '';
+  if (o.cloud) defines.CLOUD = '';
   if (o.alphaTest) defines.ALPHATEST = o.alphaTest.toFixed(3);
   const u = {
     ...G,
@@ -509,7 +515,8 @@ export class Post {
   }
   build(w, h, samples, useDepth) {
     this.samples = samples; this.useDepth = useDepth;
-    const mk = (ww, hh, o = {}) => new THREE.WebGLRenderTarget(ww, hh, { type: this.type, depthBuffer: false, ...o });
+    // 8-Bit-Rückfall: Ziele im sRGB-Format speichern (sonst sichtbare Farbstufen in dunklen Himmeln, z. B. nachts)
+    const mk = (ww, hh, o = {}) => { const rt = new THREE.WebGLRenderTarget(ww, hh, { type: this.type, depthBuffer: false, ...o }); if (this.type === THREE.UnsignedByteType) rt.texture.colorSpace = THREE.SRGBColorSpace; return rt; };
     [this.rtMain, this.rtA, this.rtB, this.rtC, this.rtD].forEach(rt => { if (rt) { if (rt.depthTexture) rt.depthTexture.dispose(); rt.dispose(); } });
     const opts = { depthBuffer: true, samples: this.isWebGL2 ? samples : 0 };
     if (useDepth) { opts.depthTexture = new THREE.DepthTexture(w, h); opts.depthTexture.type = THREE.UnsignedIntType; }

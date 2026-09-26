@@ -54,7 +54,8 @@ export class World {
     this.flowers = N.buildFlowers(w, rnd, Math.round(w.flowerN * quality.deco)); g.add(this.flowers);
     this.trees = N.buildTrees(w, rnd, avoid); g.add(this.trees);
     this.bushes = N.buildBushes(w, rnd, 24, avoid); g.add(this.bushes);
-    g.add(N.buildMushrooms(rnd, 40, avoidPond));
+    // Pilze nie in/auf Blumen (sah im Vordergrund wie schwebende Deko aus)
+    g.add(N.buildMushrooms(rnd, 40, (x, z) => (avoidPond && avoidPond(x, z)) || this.flowers.userData.near(x, z, 1.8)));
     g.add(N.buildRocks(w, rnd, 22));
     if (w.sunflowers) { this.sunflowers = N.buildSunflowers(rnd, Math.round(w.sunflowers * quality.deco), sfC.x, sfC.z, sfC.R); g.add(this.sunflowers); }
     else this.sunflowers = null;
