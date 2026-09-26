@@ -488,10 +488,29 @@ export class Post {
     });
     this.rtMain = null;
   }
+  // Framebuffer-Vollständigkeit prüfen (manche Handy-GPUs können kein HalfFloat/MSAA-Ziel)
+  complete(rt) {
+    const r = this.r, gl = r.getContext();
+    r.setRenderTarget(rt); r.clear();
+    const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+    r.setRenderTarget(null);
+    return ok;
+  }
   setup(w, h, samples, useDepth) {
+    for (let attempt = 0; attempt < 4; attempt++) {
+      this.build(w, h, samples, useDepth);
+      if (this.complete(this.rtMain) && this.complete(this.rtA)) return true;
+      // Rückfall-Kette: ohne MSAA → ohne Tiefentextur → 8-Bit-Ziele
+      if (samples) samples = 0; else if (useDepth) useDepth = false; else if (this.type !== THREE.UnsignedByteType) this.type = THREE.UnsignedByteType; else break;
+      this.fallbacks = (this.fallbacks || 0) + 1;
+    }
+    this.failed = true;
+    return false;
+  }
+  build(w, h, samples, useDepth) {
     this.samples = samples; this.useDepth = useDepth;
     const mk = (ww, hh, o = {}) => new THREE.WebGLRenderTarget(ww, hh, { type: this.type, depthBuffer: false, ...o });
-    [this.rtMain, this.rtA, this.rtB, this.rtC, this.rtD].forEach(rt => rt && rt.dispose());
+    [this.rtMain, this.rtA, this.rtB, this.rtC, this.rtD].forEach(rt => { if (rt) { if (rt.depthTexture) rt.depthTexture.dispose(); rt.dispose(); } });
     const opts = { depthBuffer: true, samples: this.isWebGL2 ? samples : 0 };
     if (useDepth) { opts.depthTexture = new THREE.DepthTexture(w, h); opts.depthTexture.type = THREE.UnsignedIntType; }
     this.rtMain = mk(w, h, opts);

@@ -45,10 +45,10 @@ export class Renderer {
     this.canvas.style.width = w + 'px'; this.canvas.style.height = h + 'px';
     const bw = Math.round(w * dpr), bh = Math.round(h * dpr);
     PX.value = bh;
-    if (this.q.post) this.post.setup(bw, bh, this.q.samples, this.q.depth);
+    if (this.q.post && !this.post.failed) this.post.setup(bw, bh, this.q.samples, this.q.depth);
   }
   render(scene, cam) {
-    if (this.q.post) this.post.render(scene, cam);
+    if (this.q.post && !this.post.failed) this.post.render(scene, cam);
     else { this.r.setRenderTarget(null); this.r.render(scene, cam); }
   }
   // Frame-Zeit messen und adaptiv nachregeln
@@ -75,6 +75,6 @@ export class Renderer {
   }
   info() {
     const i = this.r.info;
-    return { calls: i.render.calls, tris: i.render.triangles, geos: i.memory.geometries, tex: i.memory.textures, tier: this.tier, dpr: this.dpr, w: this.w, h: this.h };
+    return { calls: i.render.calls, tris: i.render.triangles, geos: i.memory.geometries, tex: i.memory.textures, tier: this.tier, dpr: this.dpr, w: this.w, h: this.h, hdr: this.post.type === THREE.HalfFloatType, postFallbacks: this.post.fallbacks || 0, postFailed: !!this.post.failed };
   }
 }
