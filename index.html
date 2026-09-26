@@ -724,7 +724,14 @@ var keys={};
 var hintShown=true,started=false,finished=false,elapsed=0,score=0;
 var hudEl=document.getElementById('hud'),hintEl=document.getElementById('hint'),toastEl=document.getElementById('toast');
 var AC=null;
-function ensureAC(){try{ if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();} if(AC.state==='suspended')AC.resume(); }catch(e){}}
+function ensureAC(){try{
+  if(!AC){ try{ if(navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){}
+    AC=new (window.AudioContext||window.webkitAudioContext)(); }
+  if(AC.state!=='running'){ AC.resume().catch(function(){});
+    try{var b=AC.createBufferSource();b.buffer=AC.createBuffer(1,1,22050);b.connect(AC.destination);b.start(0);}catch(e){} }
+}catch(e){}}
+/* Handy: pointerdown zaehlt nicht als Nutzer-Aktivierung -> auch auf pointerup/touchend/click entsperren */
+['pointerup','touchend','click','keydown'].forEach(function(ev){document.addEventListener(ev,ensureAC,{passive:true,capture:true});});
 function hideHint(){if(hintShown){hintShown=false;hintEl.style.opacity='0';}}
 var toastT=null;
 function showToast(txt,dur){
@@ -1210,7 +1217,7 @@ animate();
 })();
 
 /* Test-/Debug-API */
-window.__game={
+window.__game={ac:function(){return AC?AC.state:"none";},
   st:st,
   B:B,pivR:pivotR,pivL:pivotL,wingMat:wingMatM,scene:scene,camera:camera,
   switchChar:switchChar,curCharName:function(){return CHAR_NAMES[Object.keys(CHAR_NAMES)[0]]||'';},
