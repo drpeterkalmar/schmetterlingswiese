@@ -116,7 +116,7 @@ export class Game {
     this.gustT = 8 + this.rnd() * 6; this.gust = null;
     // Zustand
     this.time = 0; this.combo = 0; this.maxCombo = 0; this.lastHit = -99; this.hits = 0; this.bumps = 0;
-    this.limit = D.timeLimit ? Math.round(level.par * 1.5) : 0;
+    this.limit = D.timeLimit ? Math.round(level.par * D.par * 1.5) : 0;
     this.par = Math.round(level.par * D.par);
     this.comboReq = Math.max(4, Math.ceil(this.tasks.reduce((a, t) => a + t.max, 0) * 0.45));
     this.bonusFound = false; this.wonT = 0;
@@ -277,7 +277,7 @@ export class Game {
       if (this.gust) {
         const G = this.gust; G.t += dt;
         const k = Math.sin(Math.PI * Math.min(1, G.t / G.dur));
-        pl.ext.addScaledVector(G.dir, D.gusts * 9 * k * dt);
+        pl.ext.addScaledVector(G.dir, D.gusts * D.speed * k * dt); // Stärke relativ zum Tempo
         this.world.windBoost = k * D.gusts;
         if (Math.random() < dt * 30) {
           _v.copy(pl.pos).add(_w.set((Math.random() - 0.5) * 12, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 12)).addScaledVector(G.dir, -6);

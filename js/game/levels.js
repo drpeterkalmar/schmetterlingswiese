@@ -2,11 +2,14 @@
 import { WORLDS } from './worlds.js';
 import { rng, hashStr } from '../engine/geo.js';
 
-// Schwierigkeitsgrade – echt spürbar
+// Schwierigkeitsgrade – echt spürbar.
+// v2.1: Tempo −17 % (war 7,6 / 8,5 / 9,4). Drehrate bleibt → Kurvenradius (Tempo/Drehrate) wird ~17 % enger.
+// Alles Zeitabhängige (par, Zeitlimit, Kombo-Fenster) ist mit dem Tempo-Verhältnis alt/neu (≈ 1,21) mitskaliert;
+// Rivalin, Böen, FOV und Flug-Rauschen hängen relativ am Tempo.
 export const DIFFS = {
-  leicht: { id: 'leicht', name: 'Leicht', emoji: '🌱', speed: 7.6, turn: 1.8, magnet: 5.5, ringR: 3.4, arrow: true, timeLimit: false, gusts: 0, wasps: 0, rain: false, comboWin: 4.5, rival: 0.72, ringAssist: 1, par: 1.6, pickR: 2.2 },
-  mittel: { id: 'mittel', name: 'Mittel', emoji: '🌼', speed: 8.5, turn: 1.9, magnet: 2.8, ringR: 2.6, arrow: true, timeLimit: false, gusts: 0.6, wasps: 1, rain: true, comboWin: 3.5, rival: 0.93, ringAssist: 0.4, par: 1.25, pickR: 1.8 },
-  schwer: { id: 'schwer', name: 'Schwer', emoji: '🔥', speed: 9.4, turn: 2.0, magnet: 1.2, ringR: 1.95, arrow: false, timeLimit: true, gusts: 1.0, wasps: 3, rain: true, comboWin: 2.6, rival: 1.04, ringAssist: 0, par: 1.0, pickR: 1.5 },
+  leicht: { id: 'leicht', name: 'Leicht', emoji: '🌱', speed: 6.3, turn: 1.8, magnet: 5.5, ringR: 3.4, arrow: true, timeLimit: false, gusts: 0, wasps: 0, rain: false, comboWin: 5.4, rival: 0.72, ringAssist: 1, par: 1.93, pickR: 2.2 },
+  mittel: { id: 'mittel', name: 'Mittel', emoji: '🌼', speed: 7.0, turn: 1.9, magnet: 2.8, ringR: 2.6, arrow: true, timeLimit: false, gusts: 0.6, wasps: 1, rain: true, comboWin: 4.2, rival: 0.93, ringAssist: 0.4, par: 1.52, pickR: 1.8 },
+  schwer: { id: 'schwer', name: 'Schwer', emoji: '🔥', speed: 7.8, turn: 2.0, magnet: 1.2, ringR: 1.95, arrow: false, timeLimit: true, gusts: 1.0, wasps: 3, rain: true, comboWin: 3.1, rival: 1.04, ringAssist: 0, par: 1.2, pickR: 1.5 },
 };
 
 // Aufgabentypen: collect | fireflies | blossoms | rings | land | visit | deliver | stunts | race

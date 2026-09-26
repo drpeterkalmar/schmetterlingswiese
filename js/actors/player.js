@@ -14,8 +14,8 @@ export class Player {
     this.pos = new THREE.Vector3();
     this.vel = new THREE.Vector3();
     this.ext = new THREE.Vector3(); // Schubs (Wind, Wespe)
-    this.yaw = 0; this.pitch = 0; this.yawRate = 0; this.speed = 8.5;
-    this.baseSpeed = 8.5; this.turnRate = 1.9;
+    this.yaw = 0; this.pitch = 0; this.yawRate = 0; this.speed = 7;
+    this.baseSpeed = 7; this.turnRate = 1.9;
     this.landed = false; this.landSpot = null; this.landing = null;
     this.stunt = null; this.wetT = 0; this.dizzyT = 0;
     this.carry = null;

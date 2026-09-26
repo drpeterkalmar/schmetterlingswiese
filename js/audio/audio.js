@@ -28,7 +28,7 @@ function unpack(o) {
 }
 
 // Flug-Tempo, das „volles“ Flug-Rauschen ergibt (m/s)
-export const FLIGHT_NORM = 11;
+export const FLIGHT_NORM = 9;
 
 // Pegel-Tabelle (Mix): lineare Faktoren je Effekt
 const MIX = {
