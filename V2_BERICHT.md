@@ -86,6 +86,13 @@ senkt bei < ~48 fps erst die Auflösung, dann die Stufe, stuft auf schnellen Ger
   Halslücke. **Speicher:** 12 Level-Starts → Geometrien/Texturen/Programme/Heap konstant.
 - Screenshots: `tests/shots/final/` (Auswahl), Test-Skripte: `tests/` (`tests/run_all.sh`).
 
+## Deployment
+
+- `v2-neubau` nach `main` gemergt und gepusht; GitHub Pages ausgeliefert (Build `e748b40cf1`).
+- **Live-Test** (headless gegen github.io, Pixel 7, mit Service-Worker, ohne Autoplay-Flag):
+  alle Dateien HTTP 200, Boot ok, `AudioContext` nach Tap `running`, Level 1-1 gewonnen (2 Sterne),
+  Service-Worker aktiv, **Offline-Neuladen** startet mit gespeichertem Profil und Sternen, 0 Fehler.
+
 ## Offene Punkte / Grenzen
 
 - Kein echtes Android-Gerät im Test: die 60-fps-Aussage für Mittelklasse-Handys ist nicht
