@@ -85,7 +85,11 @@ Vorher/Nachher-Vergleiche (links alt, rechts neu): `tests/shots/v21/vergleich_*.
 
 ## Deployment
 
-(siehe unten, wird nach dem Push ergänzt)
+- Nach `main` gepusht, GitHub Pages liefert Build `7d84ebb276`.
+- **Live-Test** (headless gegen github.io, Pixel 7, mit Service-Worker, ohne Autoplay-Flag): Boot ok,
+  `AudioContext` vor dem Tipp nicht vorhanden, danach `running`, Level 1-1 gewonnen (2 Sterne), Service-Worker
+  aktiv, Offline-Neuladen mit Profil und Sternen, **0 Fehler**. Live geprüft: Ambience-Loops nur noch
+  Wind/Wasser (+ Vogel-/Grillen-Einzelrufe), Tempo 6,3 / 7,0 / 7,8, Schwer 1-1 mit par 84 s und Limit 126 s.
 
 ## Bitte mit den Kindern testen
 
