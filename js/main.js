@@ -199,7 +199,7 @@ class App {
     const lvl = this.game.level;
     const rec = this.progress.record(lvl.id, this.diff, res, !!lvl.daily);
     this.lastResult = { ...res, ...rec, level: lvl, diff: this.diff };
-    setTimeout(() => { if (this.mode === 'game' && this.game.state === 'won') { this.ui.show('result', this.lastResult); } }, 2300);
+    this.ui.hideHints();
   }
   onFailed(msg) { setTimeout(() => this.ui.show('fail', { msg }), 900); }
   nextLevel() {

@@ -304,5 +304,6 @@ export class UI {
     const el = this.el.toast; el.textContent = txt; el.classList.add('show');
     clearTimeout(this._tt); this._tt = setTimeout(() => el.classList.remove('show'), dur);
   }
+  hideHints() { this.el.hint.classList.remove('show'); this.el.toast.classList.remove('show'); this.el.combo.classList.remove('show'); }
   countdown(v) { const el = this.el.count; el.textContent = v; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
 }

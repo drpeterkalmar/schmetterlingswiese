@@ -225,7 +225,9 @@ export class Player {
     const g = height(_v.x, _v.z) + 0.8;
     if (_v.y < g) _v.y = g;
     if (!this.camInit) { this.camPos.copy(_v); this.camLook.copy(this.pos); this.camInit = true; }
-    this.camPos.lerp(_v, 1 - Math.exp(-dt * (this.stunt ? 3.2 : 5.5)));
+    // im Orbit (gelandet/Jubel) direkt auf dem Kreis bleiben – nie durch die Figur schneiden
+    const orbiting = this.orbit > 0.05;
+    this.camPos.lerp(_v, 1 - Math.exp(-dt * (orbiting ? 14 : this.stunt ? 3.2 : 5.5)));
     _w.copy(this.pos).addScaledVector(_f, this.landed || this.hover ? 0 : 2.4); _w.y += this.landed || this.hover ? 0.15 : 0.45;
     this.camLook.lerp(_w, 1 - Math.exp(-dt * 9));
     cam.position.copy(this.camPos);

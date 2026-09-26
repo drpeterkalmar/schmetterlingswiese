@@ -249,6 +249,7 @@ export class Game {
     }
     if (this.state === 'won') {
       this.wonT += dt;
+      if (this.wonT > 2.3 && !this.resultShown) { this.resultShown = true; this.app.ui.show('result', this.app.lastResult); }
       if (Math.random() < dt * 14) this.bursts.emit({ n: 6, pos: _v.copy(pl.pos).add(_w.set((Math.random() - 0.5) * 6, 3 + Math.random() * 2, (Math.random() - 0.5) * 6)), colors: [0xff6f9a, 0xffd84a, 0x6fd0ff, 0x9cf07a, 0xc08cff], shape: 2, size: 0.22, speed: 2, up: 0, life: 2.2, grav: -2.2, drag: 1.5, spin: 8 });
     }
     this.app.ui.hudTime(this.time, this.limit, this.par);
@@ -280,7 +281,7 @@ export class Game {
         this.world.windBoost = k * D.gusts;
         if (Math.random() < dt * 30) {
           _v.copy(pl.pos).add(_w.set((Math.random() - 0.5) * 12, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 12)).addScaledVector(G.dir, -6);
-          this.bursts.emit({ n: 1, pos: _v, vel: _w.copy(G.dir).multiplyScalar(14), colors: [0xffffff], shape: 4, size: 0.9, speed: 0, up: 0, life: 0.8, grav: 0, drag: 0 });
+          this.bursts.emit({ n: 1, pos: _v, vel: _w.copy(G.dir).multiplyScalar(14), colors: [0xffffff], shape: 4, size: 1.6, speed: 0, up: 0, life: 0.8, grav: 0, drag: 0, rot: Math.PI / 2 });
         }
         if (G.t > G.dur) { this.gust = null; this.gustT = 10 + this.rnd() * 9; this.world.windBoost = 0; }
       }
@@ -291,9 +292,9 @@ export class Game {
       r.m.position.x = r.cx + Math.cos(r.a) * 12; r.m.position.z = r.cz + Math.sin(r.a) * 12;
       const gy = height(r.m.position.x, r.m.position.z);
       r.m.position.y = Math.max(gy + 8, 8);
-      if (Math.random() < dt * 40) {
-        _v.set(r.m.position.x + (Math.random() - 0.5) * 6, r.m.position.y - 1.2, r.m.position.z + (Math.random() - 0.5) * 6);
-        this.bursts.emit({ n: 1, pos: _v, vel: _w.set(0, -12, 0), colors: [0xb8d8ff], shape: 4, size: 0.5, speed: 0, up: 0, life: (r.m.position.y - gy) / 12, grav: 0, drag: 0 });
+      if (Math.random() < dt * 70) {
+        _v.set(r.m.position.x + (Math.random() - 0.5) * 7, r.m.position.y - 1.2, r.m.position.z + (Math.random() - 0.5) * 7);
+        this.bursts.emit({ n: 1, pos: _v, vel: _w.set(0, -11, 0), colors: [0x9cc8ff, 0xc8e0ff], shape: 4, size: 1.1, speed: 0, up: 0, life: (r.m.position.y - gy) / 11, grav: 0, drag: 0, rot: 0 });
       }
       const dx = pl.pos.x - r.m.position.x, dz = pl.pos.z - r.m.position.z;
       if (Math.hypot(dx, dz) < 4.2 && pl.pos.y < r.m.position.y + 1) {
@@ -304,7 +305,7 @@ export class Game {
         pl.wetT = 2.5;
       }
     }
-    if (pl.wetT > 0 && Math.random() < dt * 10) this.bursts.emit({ n: 1, pos: pl.pos, colors: [0xa8d0ff], shape: 4, size: 0.25, speed: 0.5, up: -1, life: 0.5, grav: -6 });
+    if (pl.wetT > 0 && Math.random() < dt * 10) this.bursts.emit({ n: 1, pos: pl.pos, colors: [0xa8d0ff], shape: 4, size: 0.35, speed: 0.5, up: -1, life: 0.5, grav: -6, rot: 0 });
     if (pl.outside && !this.shownHints.edge) { this.shownHints.edge = true; this.app.ui.toast('🌳 Hier endet die Wiese – zurück geht’s!'); }
   }
 
@@ -342,7 +343,7 @@ export class Game {
     if (this.tasks.some(t => t.cfg.type === 'deliver') && T > 2 && !H.del) { H.del = true; ui.hint('🍓 Hol Beeren von den Büschen und bring sie den Tierbabys'); }
   }
   win() {
-    this.state = 'won'; this.wonT = 0;
+    this.state = 'won'; this.wonT = 0; this.resultShown = false;
     const stars = 1 + (this.time <= this.par ? 1 : 0) + ((this.diffCfg.id === 'schwer' ? this.maxCombo >= this.comboReq : this.bonusFound) ? 1 : 0);
     this.stars = stars;
     this.player.cheer = true; this.player.hover = true;

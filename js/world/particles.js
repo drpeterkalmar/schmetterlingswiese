@@ -121,8 +121,8 @@ void main(){
     vec2 h = r * 2.6; h.y += 0.25;
     float v = h.x * h.x + pow(h.y - sqrt(abs(h.x)) * 0.75, 2.0);
     a = smoothstep(0.62, 0.52, v); c *= 1.1;
-  } else if (sh < 4.5) { // Tropfen/Strich
-    a = smoothstep(0.08, 0.02, abs(q.x)) * smoothstep(0.5, 0.2, abs(q.y));
+  } else if (sh < 4.5) { // Tropfen/Strich (Richtung über Rotation)
+    a = smoothstep(0.07, 0.015, abs(r.x)) * smoothstep(0.5, 0.15, abs(r.y));
   } else { // Ring
     float d = length(q) * 2.0; a = smoothstep(0.12, 0.0, abs(d - 0.8)); c *= 1.4;
   }
@@ -172,11 +172,11 @@ export class Bursts {
       const life = (o.life ?? 1) * (0.7 + Math.random() * 0.6);
       this.life[i] = life; this.life0[i] = life;
       this.size0[i] = (o.size ?? 0.3) * (0.7 + Math.random() * 0.6);
-      this.grav[i] = o.grav ?? -2; this.spin[i] = (o.spin ?? 3) * (Math.random() - 0.5) * 2; this.drag[i] = o.drag ?? 1.2;
+      this.grav[i] = o.grav ?? -2; this.spin[i] = o.rot !== undefined ? 0 : (o.spin ?? 3) * (Math.random() - 0.5) * 2; this.drag[i] = o.drag ?? 1.2;
       const cols = o.colors || [0xffffff];
       this._c.set(cols[(Math.random() * cols.length) | 0]);
       this.col[i * 3] = this._c.r; this.col[i * 3 + 1] = this._c.g; this.col[i * 3 + 2] = this._c.b;
-      this.p[i * 4] = this.size0[i]; this.p[i * 4 + 1] = 1; this.p[i * 4 + 2] = Math.random() * 6.28; this.p[i * 4 + 3] = o.shape ?? 0;
+      this.p[i * 4] = this.size0[i]; this.p[i * 4 + 1] = 1; this.p[i * 4 + 2] = o.rot ?? Math.random() * 6.28; this.p[i * 4 + 3] = o.shape ?? 0;
     }
   }
   update(dt) {
