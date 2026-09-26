@@ -491,7 +491,7 @@ class RaceTask extends RingTask {
     this.rivalName = cfg.rival === 'libelle' ? 'Lilli' : 'Flora';
     this.rival = new Critter(cfg.rival === 'libelle' ? 'libelle' : 'schmetterling', { color: cfg.rival === 'libelle' ? 1 : 3, pattern: 'herzen', hat: 'schleife' });
     g.scene.add(this.rival.root);
-    const all = [g.spawn.clone().add(new THREE.Vector3(Math.cos(g.spawnYaw) * 2.2, 0, -Math.sin(g.spawnYaw) * 2.2)), ...pts];
+    const all = [g.spawn.clone().add(new THREE.Vector3(Math.cos(g.spawnYaw) * 3.4, 0.4, -Math.sin(g.spawnYaw) * 3.4)), ...pts];
     const first = all[0].clone(); first.y = g.spawn.y;
     all[0] = first;
     this.curve = new THREE.CatmullRomCurve3(all, false, 'centripetal');

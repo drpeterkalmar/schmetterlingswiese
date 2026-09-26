@@ -30,6 +30,7 @@ class Session:
     def tap(self, sel):
         el = self.pg.locator(sel).first
         el.wait_for(state='visible', timeout=20000)
+        el.scroll_into_view_if_needed(); time.sleep(0.15)
         box = el.bounding_box()
         self.pg.touchscreen.tap(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
         time.sleep(0.25)

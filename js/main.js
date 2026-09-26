@@ -130,7 +130,7 @@ class App {
     if (c) {
       c.root.position.copy(pl.pos);
       const wardrobe = this.showcaseView === 'wardrobe';
-      const yaw = wardrobe ? this.wardYaw ?? 0 : pl.yaw;
+      const yaw = wardrobe ? Math.PI + 0.45 + Math.sin(t * 0.5) * 0.45 : pl.yaw;
       c.root.rotation.y = yaw;
       c.tilt.rotation.x = -0.12; c.tilt.rotation.z = Math.sin(t * 0.8) * 0.08;
       c.update(dt, t, { speed01: 0.35, landed: false, cheer: false });
@@ -139,18 +139,20 @@ class App {
     }
     const aspect = cam.aspect;
     if (this.showcaseView === 'wardrobe') {
-      // Figur groß: Hochformat oben, Querformat links
+      // Figur ganz im Bild: Hochformat oben, Querformat links (Karte liegt rechts/unten)
       const portrait = aspect < 1;
-      this.wardYaw = (this.wardYaw ?? Math.PI) + dt * 0.35;
-      const d = portrait ? 4.2 : 3.4;
-      cam.position.set(sp.x, sp.y + 0.5, sp.z - d);
-      const off = portrait ? new THREE.Vector3(0, -0.9, 0) : new THREE.Vector3(1.35, -0.1, 0);
-      cam.lookAt(sp.x + off.x, sp.y + off.y + 0.1, sp.z);
-      cam.fov = portrait ? 58 : 44;
+      const vf = portrait ? 50 : 40;
+      const halfW = Math.tan(THREE.MathUtils.degToRad(vf / 2)) * aspect;
+      const d = portrait ? Math.max(4.5, 1.9 / halfW) : 5.2;
+      cam.fov = vf;
+      cam.position.set(sp.x, sp.y + 0.9, sp.z - d);
+      const visH = 2 * d * Math.tan(THREE.MathUtils.degToRad(vf / 2));
+      if (portrait) cam.lookAt(sp.x, sp.y - visH * 0.24, sp.z);
+      else cam.lookAt(sp.x - d * halfW * 0.5, sp.y + 0.15, sp.z);
     } else {
-      const a = t * 0.12 + 2.2, R = aspect < 1 ? 7.5 : 6.2;
+      const a = t * 0.12 + 2.2, R = aspect < 1 ? 7.0 : 5.4;
       cam.position.set(sp.x + Math.sin(a) * R, sp.y + 1.3 + Math.sin(t * 0.2) * 0.4, sp.z + Math.cos(a) * R);
-      cam.lookAt(sp.x, sp.y + (aspect < 1 ? 1.2 : 0.6), sp.z);
+      cam.lookAt(sp.x, sp.y + (aspect < 1 ? 1.2 : 1.35), sp.z);
       cam.fov = aspect < 1 ? 64 : 55;
       pl.yaw = Math.atan2(cam.position.x - sp.x, cam.position.z - sp.z) + Math.sin(t * 0.3) * 0.5;
     }

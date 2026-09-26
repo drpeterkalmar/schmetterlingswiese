@@ -86,7 +86,7 @@ export class UI {
       case 'ctl': app.setSetting('control', v); this.show('settings'); break;
       case 'qual': app.setSetting('quality', v === 'auto' ? 'auto' : +v); this.show('settings'); break;
       case 'help': this.show('help'); break;
-      case 'helpback': this.show(this.prev === 'pause' ? 'pause' : 'settings'); break;
+      case 'helpback': this.show('settings'); break;
     }
   }
   onInput(e) {
@@ -110,9 +110,9 @@ export class UI {
     const k = this.loadK;
     return `<div class="screen" id="title" data-a="start">
       <div class="logo"><div class="bfly">🦋</div><div class="t1">Schmetterlings&shy;wiese</div><div class="t2">Fliegen · Sammeln · Tierbabys besuchen</div></div>
-      <div class="tapgo">👆 Tippe, um loszufliegen!</div>
+      <div class="bottom"><div class="tapgo">👆 Tippe, um loszufliegen!</div>
       <div class="loadbar" style="${k >= 1 ? 'opacity:0' : ''}"><div style="width:${Math.round(k * 100)}%"></div></div>
-      <div class="loadtxt" style="${k >= 1 ? 'opacity:0' : ''}">🎵 Klänge werden gezaubert … ${Math.round(k * 100)} %</div>
+      <div class="loadtxt" style="${k >= 1 ? 'opacity:0' : ''}">🎵 Klänge werden gezaubert … ${Math.round(k * 100)} %</div></div>
     </div>`;
   }
   loadProgress(k) {
@@ -160,15 +160,15 @@ export class UI {
     const worlds = WORLDS.map((w, wi) => {
       const lv = levelsOfWorld(w.id);
       const open = P.unlocked(lv[0].id);
-      return `<div class="wcard" style="background:${WGRAD[w.id]}"><div class="we">${w.emoji}</div><h3>${w.name}</h3><div class="tod">Welt ${wi + 1} · ${w.tod}</div>
+      return `<div class="wcard" style="background:${WGRAD[w.id]}"><div class="whead"><div class="we">${w.emoji}</div><h3>${w.name}</h3><div class="tod">Welt ${wi + 1} · ${w.tod}</div></div>
         <div class="lv">${lv.map((l, i) => { const u = P.unlocked(l.id); return `<button class="lvbtn ${u ? '' : 'locked'}" data-a="level" data-v="${l.id}"><span class="n">${u ? i + 1 : '🔒'}</span><span class="nm">${l.name}</span>${starsHtml(P.levelStars(l.id, diff))}</button>`; }).join('')}</div>
         ${open ? '' : `<div class="wlock">🔒<div>Schaffe die Welt davor!</div></div>`}</div>`;
     }).join('');
     const lastW = WORLDS.findIndex(w => w.id === (p.lastWorld || 'wiese'));
     this.after = () => { const ws = this.root.querySelector('.worlds'); const c = ws && ws.children[Math.max(0, lastW)]; if (c) ws.scrollLeft = c.offsetLeft - (ws.clientWidth - c.clientWidth) / 2; };
     return `<div class="screen" id="map">
-      <div class="maptop"><button class="who" data-a="profiles">${this.avatar(p)}<span>${esc(p.name)}</span></button><div class="chip">⭐ ${total}</div><div class="spacer"></div><button class="round" data-a="settings" aria-label="Einstellungen">⚙️</button></div>
-      <div class="seg">${Object.values(DIFFS).map(d => `<button data-a="diff" data-v="${d.id}" class="${d.id === diff ? 'sel' : ''}">${d.emoji} ${d.name}</button>`).join('')}</div>
+      <div class="maptop"><button class="who" data-a="profiles">${this.avatar(p)}<span>${esc(p.name)}</span></button><div class="chip">⭐ ${total}</div><div class="spacer"></div><button class="round" data-a="settings" aria-label="Einstellungen">⚙️</button>
+      <div class="seg">${Object.values(DIFFS).map(d => `<button data-a="diff" data-v="${d.id}" class="${d.id === diff ? 'sel' : ''}">${d.emoji} ${d.name}</button>`).join('')}</div></div>
       <div class="worlds">${worlds}</div>
       <div class="mapbar">
         <button class="tile" data-a="wardrobe">🎒<span>Garderobe</span></button>
@@ -183,12 +183,12 @@ export class UI {
     const third = D.id === 'schwer' ? '🔥 Schaffe eine große Kombo' : '⭐ Finde den versteckten Glitzerstern';
     const got = app.progress.levelStars(lvl.id, D.id);
     app.menuWorld(lvl.world);
-    return `<div class="screen dim"><div class="card">
+    return `<div class="screen dim"><div class="card wide"><div class="lvgrid"><div>
       <div class="lvhead"><div class="big">${lvl.daily ? '📅' : w.emoji}</div><h2>${lvl.name}</h2><div class="small">${w.name} · ${D.emoji} ${D.name}${lvl.daily ? ' · ' + todayStr() : ''}</div></div>
-      <div class="tasklist">${lvl.tasks.map(t => `<div>${TASKTXT[t.type](t)}</div>`).join('')}</div>
+      <div class="tasklist">${lvl.tasks.map(t => `<div>${TASKTXT[t.type](t)}</div>`).join('')}</div></div><div>
       <div class="goals"><div>⭐ Aufgabe schaffen</div><div>⭐ Schneller als ${par} Sekunden</div><div>${third}</div>${D.timeLimit ? `<div>⏱️ Zeitlimit: ${Math.round(lvl.par * 1.5)} Sekunden</div>` : '<div>🌱 Kein Zeitdruck – lass dir Zeit!</div>'}</div>
-      ${got ? `<p class="small">Bisher: ${starsHtml(got)}</p>` : ''}
-      <div class="row" style="margin-top:12px"><button class="btn soft" data-a="map">Zurück</button><button class="btn big" data-a="go" data-v="${lvl.id}">Los! 🦋</button></div>
+      ${got ? `<p class="small">Bisher: ${starsHtml(got)}</p>` : ''}</div></div>
+      <div class="row cta"><button class="btn soft" data-a="map">Zurück</button><button class="btn big" data-a="go" data-v="${lvl.id}">Los! 🦋</button></div>
     </div></div>`;
   }
   s_pause() {
@@ -208,13 +208,13 @@ export class UI {
       if (r.unlocks.length || r.badges.length) setTimeout(() => { this.app.audio.sfx('unlock'); this.app.haptics.buzz('unlock'); }, 600 + r.stars * 520);
     };
     const cheer = ['Toll gemacht!', 'Super geflogen!', 'Wunderbar!', 'Du bist ein Flug-Profi!'][r.stars] || 'Geschafft!';
-    return `<div class="screen dim"><div class="card" style="text-align:center">
+    return `<div class="screen dim"><div class="card wide" style="text-align:center"><div class="lvgrid"><div>
       <h2>${lvl.daily ? '📅 Tagesaufgabe geschafft!' : cheer} 🎉</h2>
       <div class="bigstars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
       <div class="facts"><div>⏱️ ${r.time.toFixed(1).replace('.', ',')} s ${r.time <= r.par ? '✅' : `(Ziel ${r.par} s)`}</div><div>🔥 Kombo ${r.maxCombo}${r.diff === 'schwer' ? ` / ${r.comboReq}` : ''}</div>${r.diff !== 'schwer' ? `<div>⭐ Glitzerstern ${r.bonus ? '✅' : '❌'}</div>` : ''}</div>
-      ${r.unlocks.map((u, k) => `<div class="unl" style="animation-delay:${1.6 + k * 0.2}s"><span class="e">${u.emoji}</span><span>Neu freigeschaltet:<br>${u.name}</span></div>`).join('')}
+      </div><div>${r.unlocks.map((u, k) => `<div class="unl" style="animation-delay:${1.6 + k * 0.2}s"><span class="e">${u.emoji}</span><span>Neu freigeschaltet:<br>${u.name}</span></div>`).join('')}
       ${r.badges.map((b, k) => `<div class="unl" style="animation-delay:${1.8 + k * 0.2}s"><span class="e">${b.emoji}</span><span>Abzeichen: ${b.name}</span></div>`).join('')}
-      <div class="row" style="margin-top:14px"><button class="btn soft" data-a="map">🗺️ Karte</button><button class="btn alt" data-a="again">🔄 Nochmal</button>${hasNext ? `<button class="btn big" data-a="next">Weiter ➜</button>` : ''}</div>
+      </div></div><div class="row cta"><button class="btn soft" data-a="map">🗺️ Karte</button><button class="btn alt" data-a="again">🔄 Nochmal</button>${hasNext ? `<button class="btn big" data-a="next">Weiter ➜</button>` : ''}</div>
     </div></div>`;
   }
   s_fail(d) {
@@ -242,27 +242,27 @@ export class UI {
     return `<div class="screen dim"><div class="card album"><h2>📖 Sammelalbum <span class="small">${n}/${ALBUM.length}</span></h2>
       <div class="grid">${ALBUM.map(e => `<button class="item ${p.album[e.id] ? '' : 'unk'}" data-a="fact" data-v="${e.id}">${p.album[e.id] ? e.emoji : '❓'}<span>${p.album[e.id] ? e.name : '???'}</span></button>`).join('')}</div>
       <div class="fact">Tippe auf ein Bild! Neue Seiten entdeckst du beim Fliegen.</div>
-      <div class="row" style="margin-top:12px"><button class="btn" data-a="map">Zurück</button></div></div></div>`;
+      <div class="row cta"><button class="btn" data-a="map">Zurück</button></div></div></div>`;
   }
   s_badges() {
     const p = this.app.progress.cur;
     this.app.progress.checkBadges(); this.app.progress.save();
     return `<div class="screen dim"><div class="card"><h2>🏅 Abzeichen</h2>
       <div class="grid">${BADGES.map(b => `<div class="item badge ${p.badges[b.id] ? '' : 'off'}">${b.emoji}<span>${b.name}</span><span style="font-weight:700">${b.desc}</span></div>`).join('')}</div>
-      <div class="row" style="margin-top:12px"><button class="btn" data-a="map">Zurück</button></div></div></div>`;
+      <div class="row cta"><button class="btn" data-a="map">Zurück</button></div></div></div>`;
   }
   s_settings() {
     const s = this.app.settings, r = this.app.renderer;
     const q = s.quality;
-    return `<div class="screen dim"><div class="card col"><h2>⚙️ Einstellungen</h2>
+    return `<div class="screen dim"><div class="card col wide"><h2>⚙️ Einstellungen</h2><div class="setgrid">
       <div class="set"><span>🎵 Musik</span><input type="range" min="0" max="100" value="${Math.round(s.music * 100)}" data-vol="music"><button class="toggle ${s.music > 0 ? 'on' : ''}" data-a="tog" data-v="music" aria-label="Musik an/aus"></button></div>
       <div class="set"><span>🔔 Effekte</span><input type="range" min="0" max="100" value="${Math.round(s.sfx * 100)}" data-vol="sfx"><button class="toggle ${s.sfx > 0 ? 'on' : ''}" data-a="tog" data-v="sfx" aria-label="Effekte an/aus"></button></div>
       <div class="set"><span>📳 Vibration</span><button class="toggle ${s.haptics ? 'on' : ''}" data-a="tog" data-v="haptics" aria-label="Vibration an/aus"></button></div>
-      <div class="set"><span>👆 Steuerung</span><div class="opts"><button data-a="ctl" data-v="zones" class="${s.control === 'zones' ? 'sel' : ''}">Tippen & Halten</button><button data-a="ctl" data-v="stick" class="${s.control === 'stick' ? 'sel' : ''}">Joystick</button></div></div>
-      <div class="set"><span>✨ Grafik</span><div class="opts">${[['auto', 'Auto'], ['0', 'Niedrig'], ['1', 'Mittel'], ['2', 'Hoch']].map(([v, n]) => `<button data-a="qual" data-v="${v}" class="${String(q) === v ? 'sel' : ''}">${n}</button>`).join('')}</div></div>
-      <div class="small">Jetzt: ${r.q.name} · ${this.app.fps} fps</div>
+      <div class="set stack"><span>👆 Steuerung</span><div class="opts"><button data-a="ctl" data-v="zones" class="${s.control === 'zones' ? 'sel' : ''}">Tippen & Halten</button><button data-a="ctl" data-v="stick" class="${s.control === 'stick' ? 'sel' : ''}">Joystick</button></div></div>
+      <div class="set stack"><span>✨ Grafik</span><div class="opts">${[['auto', 'Auto'], ['0', 'Niedrig'], ['1', 'Mittel'], ['2', 'Hoch']].map(([v, n]) => `<button data-a="qual" data-v="${v}" class="${String(q) === v ? 'sel' : ''}">${n}</button>`).join('')}</div></div>
+      </div><div class="small">Jetzt: ${r.q.name} · ${this.app.fps} fps</div>
       <button class="btn alt small" data-a="help">❓ So wird gespielt</button>
-      <button class="btn" data-a="setback">Fertig ✓</button>
+      <div class="row cta"><button class="btn" data-a="setback">Fertig ✓</button></div>
       <div class="small">Schmetterlingswiese 2.0 · Build ${BUILD} · offline spielbar</div></div></div>`;
   }
   s_help() {
@@ -275,7 +275,7 @@ export class UI {
         <div>🔥 Schnell hintereinander sammeln = Kombo!</div>
         <div>⌨️ Tastatur: Pfeile/WASD · Leertaste = Looping · Shift = Schraube · P = Pause</div>
       </div>
-      <div class="row"><button class="btn" data-a="helpback">Alles klar!</button></div></div></div>`;
+      <div class="row cta"><button class="btn" data-a="helpback">Alles klar!</button></div></div></div>`;
   }
 
   // ------------------------------------------------------------ HUD
