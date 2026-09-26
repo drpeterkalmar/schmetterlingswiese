@@ -3,6 +3,7 @@ import { WORLDS } from '../game/worlds.js';
 import { LEVELS, DIFFS, levelById, levelsOfWorld, dailyLevel, todayStr } from '../game/levels.js';
 import { AVATAR_COLORS, ALBUM, BADGES } from '../game/progress.js';
 import { CHARACTERS, COLORS, HATS, PATTERNS } from '../actors/characters.js';
+import { BUILD } from '../build.js';
 
 const WGRAD = { wiese: 'linear-gradient(160deg,#8ee39a,#5db4ea)', sonne: 'linear-gradient(160deg,#ffd45a,#ff9460)', teich: 'linear-gradient(160deg,#5fd6c8,#5a92e8)', kirsch: 'linear-gradient(160deg,#ffa6cc,#b48cf0)', abend: 'linear-gradient(160deg,#3e4396,#9a62b4)' };
 const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -262,7 +263,7 @@ export class UI {
       <div class="small">Jetzt: ${r.q.name} · ${this.app.fps} fps</div>
       <button class="btn alt small" data-a="help">❓ So wird gespielt</button>
       <button class="btn" data-a="setback">Fertig ✓</button>
-      <div class="small">Schmetterlingswiese ${this.app.constructor.VERSION || '2.0'} · offline spielbar</div></div></div>`;
+      <div class="small">Schmetterlingswiese 2.0 · Build ${BUILD} · offline spielbar</div></div></div>`;
   }
   s_help() {
     return `<div class="screen dim"><div class="card"><h2>❓ So wird gespielt</h2>

@@ -145,13 +145,14 @@ class CollectTask extends Task {
       { glow: true, glowI: kind === 'fireflies' ? 1.6 : 0.8, emis: kind === 'drop' ? 0.35 : 0.2, side: kind === 'blossoms' ? THREE.DoubleSide : THREE.FrontSide });
     const others = [];
     const hi = g.diff.id === 'schwer' ? 7 : 4.5;
-    const trees = g.world.trees.userData.cherry || g.world.trees.userData.round || [];
+    const trees = (g.world.trees.userData.cherry || g.world.trees.userData.round || []).filter(t => Math.hypot(t.x, t.z) < 85);
     for (let i = 0; i < n + extra; i++) {
       let p;
       if (kind === 'blossoms' && trees.length) {
         const t = trees[(g.rnd() * trees.length) | 0];
-        p = new THREE.Vector3(t.x + (g.rnd() - 0.5) * 5, 0, t.z + (g.rnd() - 0.5) * 5);
-        p.y = height(p.x, p.z) + 5 + g.rnd() * 3;
+        const a = g.rnd() * Math.PI * 2, rr = 2.9 * t.s + 0.8 + g.rnd() * 2;
+        p = new THREE.Vector3(t.x + Math.cos(a) * rr, 0, t.z + Math.sin(a) * rr);
+        p.y = height(p.x, p.z) + 4 + g.rnd() * 3;
       } else {
         p = spot(g, { others, gap: 9, water: cfg.overWater ? true : undefined, rMax: cfg.overWater ? 30 : 80, rMin: cfg.overWater ? 0 : 14 });
         p.y += (cfg.overWater ? 1.2 : 1.4) + g.rnd() * (hi - 1.4);

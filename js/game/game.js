@@ -354,8 +354,11 @@ export class Game {
     for (let i = 0; i < 4; i++) this.bursts.emit({ n: 40, pos: _v.copy(this.player.pos).add(_w.set(0, 2.5, 0)), colors: [0xff6f9a, 0xffd84a, 0x6fd0ff, 0x9cf07a, 0xc08cff, 0xffffff], shape: 2, size: 0.4, speed: 9, up: 4, life: 2.6, grav: -3.5, drag: 1.2, spin: 10 });
     this.app.onWon({ stars, time: this.time, par: this.par, maxCombo: this.maxCombo, comboReq: this.comboReq, bonus: this.bonusFound, hits: this.hits });
   }
+  sfx(name, pos) { this.app.audio.sfx(name, pos ? this.app.screenPan(pos) : 0); }
+  toast(txt) { this.app.ui.toast(txt); }
   // Test-Hilfe: nächsten Aufgabenschritt erledigen
   debugStep() {
+    if (this.player.landed) { this.player.landed = false; this.player.landSpot = null; }
     const t = this.tasks.find(q => !q.done);
     if (t) t.debugNext();
   }

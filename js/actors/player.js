@@ -183,7 +183,6 @@ export class Player {
       if (!this.stunt && Math.abs(c.tilt.rotation.x) > Math.PI) c.tilt.rotation.x = 0;
       if (!this.stunt && Math.abs(c.tilt.rotation.z) > Math.PI) c.tilt.rotation.z = 0;
       c.update(dt, t, { speed01: THREE.MathUtils.clamp(this.speed / 10, 0, 1), landed: this.landed, climb: this.landed ? 0 : this.pitch, flapBoost: Math.max(0, climb), cheer: this.cheer });
-      if (this.carry) { this.carry.position.set(this.pos.x, this.pos.y - 0.55 + Math.sin(t * 5) * 0.05, this.pos.z); }
     }
     // Schatten
     const sgh = height(this.pos.x, this.pos.z);
