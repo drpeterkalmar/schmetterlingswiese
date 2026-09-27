@@ -1,8 +1,9 @@
 # 🦋 Schmetterlingswiese
 
-Ein liebevolles 3D-Flugspiel für Kinder: Flieg als Schmetterling, Marienkäfer, Biene oder Libelle
-über fünf verzauberte Welten, sammle Nektar, flieg durch Blumenringe, lande auf Seerosen,
-besuche Bärenbabys und Capybaras – und sammle Sterne, Hüte und Album-Seiten.
+Ein liebevolles 3D-Flugspiel für Kinder: Flieg als Schmetterling, Marienkäfer, Biene, Libelle, Hummel
+oder Mondfalter über fünf verzauberte Welten, sammle Nektar, flieg durch Blumenringe, lande auf Seerosen,
+besuche Bärenbabys und Capybaras – und schalte mit Sternen verrückte Sachen frei (Mini-Drache,
+Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
 
 **▶️ Spielen:** https://drpeterkalmar.github.io/schmetterlingswiese/
 (am Handy „Zum Startbildschirm hinzufügen“ – läuft dann als App im Vollbild, auch offline)
@@ -17,8 +18,12 @@ besuche Bärenbabys und Capybaras – und sammle Sterne, Hüte und Album-Seiten.
 - **1–3 Sterne pro Level:** Aufgabe geschafft · schnell genug · Glitzerstern gefunden (Schwer: große Kombo)
 - **Schwierigkeit:** 🌱 Leicht (kein Zeitdruck, Zielpfeil, Magnet, man kann nicht verlieren) ·
   🌼 Mittel · 🔥 Schwer (Zeitlimit, Windböen, freche Wespen, kleinere Ringe)
-- **Belohnungen:** Figuren, Farben, Flügelmuster, Hüte, Sammelalbum mit Natur-Fakten,
-  Abzeichen und eine tägliche Aufgabe – ohne Käufe, ohne Werbung, ohne Wartezeiten
+- **Werkstatt (v2.2):** alle 6 Grundfiguren ab Start, freie Farbwahl je Figur (24er-Palette + 🎲 Zufall),
+  Größe, Flügelform, Fühler, Augenstil, Flügelmuster, Hüte – jede Figur merkt sich ihr eigenes Outfit
+- **Verrückte Freischaltungen:** 22 Stufen von 2 bis 95 ⭐ (Spuren, Hüte, Extras, Flügel-Skins, Figuren,
+  Riesen-/Winzling-Modus, Quietsch-Hupe) mit Konfetti-Karte „NEU freigeschaltet!“ und „Gleich anziehen“
+- **Belohnungen:** Sammelalbum mit Natur-Fakten, Abzeichen und eine tägliche Aufgabe –
+  ohne Käufe, ohne Werbung, ohne Wartezeiten
 - **Mehrere Spielerprofile** mit eigenem Namen, Fortschritt bleibt auf dem Gerät gespeichert
 
 ## Steuerung
