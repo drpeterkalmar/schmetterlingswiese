@@ -5,6 +5,7 @@ import { Renderer, GRASS_MAX } from './engine/renderer.js';
 import { World } from './world/world.js';
 import { height } from './world/terrain.js';
 import { Bursts } from './world/particles.js';
+import { Trail } from './world/trails.js';
 import { Player } from './actors/player.js';
 import { Game } from './game/game.js';
 import { LEVELS, DIFFS, levelById, worldOf, dailyLevel, todayStr } from './game/levels.js';
@@ -14,7 +15,7 @@ import { AudioEngine, Haptics, renderOffline, renderFlight, wavBase64, FLIGHT_NO
 import { Input } from './input.js';
 import { UI } from './ui/ui.js';
 
-export const VERSION = '2.0.0';
+export const VERSION = '2.2.0';
 
 class App {
   constructor() {
@@ -25,7 +26,8 @@ class App {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 1400);
     this.world = new World(this.scene);
-    this.bursts = new Bursts(700); this.scene.add(this.bursts.points);
+    this.bursts = new Bursts(1000); this.scene.add(this.bursts.points);
+    this.trail = new Trail(this.bursts, (k) => this.onPuff(k));
     this.player = new Player(this.scene);
     this.progress = new Progress();
     this.audio = new AudioEngine();
@@ -39,6 +41,7 @@ class App {
     this.focus = new THREE.Vector3();
     this.t = 0; this.last = performance.now(); this.frames = 0; this.fps = 60; this._fpsAcc = 0; this._fpsN = 0;
     this.showT = 0; this.showcaseView = 'orbit';
+    this._fw = new THREE.Vector3(); this._drift = new THREE.Vector3();
     this.applySettings();
     this.renderer.onTier = (q) => { this.world.setQuality(q); this.ui.onQuality && this.ui.onQuality(q); };
     this.bindGlobal();
@@ -85,16 +88,50 @@ class App {
   // ------------------------------------------------------------ Profil & Aussehen
   setLookFromProfile() {
     const p = this.progress.cur;
-    const L = p ? p.look : { char: 'schmetterling', color: {}, pattern: 'monarch', hat: 'none' };
-    this.player.setCharacter(L.char, { color: L.color[L.char] || 0, pattern: L.pattern, hat: L.hat });
+    const char = p ? p.look.char : 'schmetterling';
+    this.player.setCharacter(char, this.progress.lookOf(p, char));
   }
-  updateLook(ch) {
+  // Werkstatt: Teil-Änderung für die aktuelle Figur speichern und sofort am 3D-Modell zeigen
+  updateLook(patch) {
     const p = this.progress.cur; if (!p) return;
-    Object.assign(p.look, ch.look || {});
-    if (ch.color !== undefined) p.look.color[p.look.char] = ch.color;
-    this.progress.save();
+    this.progress.setLook(patch);
     this.setLookFromProfile();
     this.player.critter.happy(0.8);
+  }
+  selectChar(id) {
+    const p = this.progress.cur; if (!p) return;
+    p.look.char = id; this.progress.save();
+    this.setLookFromProfile();
+    this.player.critter.happy(0.8);
+  }
+  // Freischalt-Karte: Neues schon an der Figur zeigen (noch nicht gespeichert)
+  previewUnlock(u) {
+    const P = this.progress, p = P.cur; if (!p) return;
+    let char = p.look.char, look = P.lookOf(p, char);
+    if (u.type === 'char') { char = u.id; look = P.lookOf(p, char); }
+    else if (u.type === 'size') look = { ...look, size: 'xl' };
+    else if (u.type !== 'fun') look = { ...look, [u.type]: u.id };
+    this.player.setCharacter(char, look);
+    const c = this.player.critter; c.happy(1.2);
+    if (u.type === 'fun') setTimeout(() => this.audio.sfx(u.id), 600);
+    const pos = this.player.pos;
+    for (let i = 0; i < 3; i++) this.bursts.emit({ n: 40, pos, colors: [0xff6f9a, 0xffd84a, 0x6fd0ff, 0x9cf07a, 0xc08cff, 0xffffff], shape: 2, size: 0.2, speed: 6, up: 3, life: 2.4, grav: -3, drag: 1.2, spin: 10 });
+    this.bursts.emit({ n: 30, pos, colors: [0xffffff, 0xfff3b0, 0xffe07a], shape: 1, size: 0.35, speed: 4, up: 1, life: 1.2, grav: -1 });
+  }
+  wearUnlock(u) {
+    const P = this.progress, p = P.cur; if (!p) return;
+    if (u.type === 'char') p.look.char = u.id;
+    else if (u.type === 'fun') p.fun[u.id] = true;
+    else if (u.type === 'size') P.setLook({ size: 'xl' });
+    else P.setLook({ [u.type]: u.id });
+    P.markSeen([u.type + ':' + u.id]);
+    P.save();
+  }
+  funOn(id) { const p = this.progress.cur; return !!(p && p.fun && p.fun[id] && this.progress.isUnlocked('fun', id)); }
+  onPuff() {
+    const p = this.progress.cur;
+    if (!p || p.fun.pupsTon !== false) this.audio.sfx('pups', 0, { gain: 0.8 });
+    this.player.critter && this.player.critter.bump(3);
   }
 
   // ------------------------------------------------------------ Menü-Schaukasten
@@ -138,14 +175,15 @@ class App {
       const portrait = aspect < 1;
       const vf = portrait ? 50 : 40;
       const halfW = Math.tan(THREE.MathUtils.degToRad(vf / 2)) * aspect;
-      const d = portrait ? Math.max(4.5, 1.9 / halfW) : 5.2;
+      const zk = Math.max(1, c ? c.size : 1);
+      const d = (portrait ? Math.max(4.5, 1.9 / halfW) : 6.0) * zk;
       cam.fov = vf;
       cam.position.set(sp.x, sp.y + 0.9, sp.z - d);
       const visH = 2 * d * Math.tan(THREE.MathUtils.degToRad(vf / 2));
       if (portrait) cam.lookAt(sp.x, sp.y - visH * 0.24, sp.z);
-      else cam.lookAt(sp.x - d * halfW * 0.5, sp.y + 0.15, sp.z);
+      else cam.lookAt(sp.x - d * halfW * 0.47, sp.y + 0.15, sp.z);
     } else {
-      const a = t * 0.12 + 2.2, R = aspect < 1 ? 7.0 : 5.4;
+      const a = t * 0.12 + 2.2, R = (aspect < 1 ? 7.0 : 5.4) * Math.max(1, c ? c.size : 1);
       cam.position.set(sp.x + Math.sin(a) * R, sp.y + 1.3 + Math.sin(t * 0.2) * 0.4, sp.z + Math.cos(a) * R);
       cam.lookAt(sp.x, sp.y + (aspect < 1 ? 1.2 : 1.35), sp.z);
       cam.fov = aspect < 1 ? 64 : 55;
@@ -244,6 +282,19 @@ class App {
     // Zielkreis vermeiden: zu nah und seitlich → etwas wegfliegen
     this.input.injected = { turn: Math.abs(d) > 1.2 && dh < 6 ? 0 : turn, climb };
   }
+  // Spur hinter der Figur (im Spiel beim Fliegen, im Menü mit gedachtem Fahrtwind)
+  trailUpdate(dt) {
+    const pl = this.player, c = pl.critter, id = c && c.look ? c.look.trail : 'none';
+    if (!c || id === 'none') return;
+    if (this.mode === 'game') {
+      const st = this.game.state;
+      if ((st !== 'play' && st !== 'won') || pl.landed || pl.frozen) return;
+      this.trail.update(dt, id, pl.pos, pl.forward(), pl.speed, c.size, null);
+    } else {
+      const yaw = c.root.rotation.y;
+      this.trail.update(dt, id, pl.pos, this._fw.set(Math.sin(yaw), 0, Math.cos(yaw)), 0, c.size, this._drift.set(-Math.sin(yaw) * 1.4 + 2.2, 0.3, -Math.cos(yaw) * 1.4));
+    }
+  }
   screenPan(pos) {
     const v = pos.clone().project(this.camera);
     return THREE.MathUtils.clamp(v.x * 0.8, -0.9, 0.9);
@@ -268,6 +319,7 @@ class App {
         this._discT += dt;
         if (this._discT > 0.5) { this._discT = 0; this.proximityDiscover(); }
       } else this.showcaseUpdate(dt, this.t);
+      this.trailUpdate(dt);
       this.bursts.update(dt);
       this.focus.copy(this.player.pos);
       G.uWind.value.z = this.world.windBoost || 0;
@@ -310,6 +362,7 @@ class App {
 }
 
 const app = new App();
+app.THREE = THREE; // für Tests (Projektion, Boxen)
 window.__app = app;
 
 // ------------------------------------------------------------ Debug-/Test-API

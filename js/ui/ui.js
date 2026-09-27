@@ -2,7 +2,8 @@
 import { WORLDS } from '../game/worlds.js';
 import { LEVELS, DIFFS, levelById, levelsOfWorld, dailyLevel, todayStr } from '../game/levels.js';
 import { AVATAR_COLORS, ALBUM, BADGES } from '../game/progress.js';
-import { CHARACTERS, COLORS, HATS, PATTERNS } from '../actors/characters.js';
+import { CHARACTERS, COLORS, HATS, EXTRAS, PATTERNS, SKINS, TRAILS, SIZES, WINGFORMS, ANTENNAE, EYESTYLES, FUN, PALETTE, SLOT_NAMES, DEFAULT_LOOK, randomLook } from '../actors/characters.js';
+import { wingMask, glassWing, skinWing, tintMask, wingIcon } from '../engine/textures.js';
 import { BUILD } from '../build.js';
 
 const WGRAD = { wiese: 'linear-gradient(160deg,#8ee39a,#5db4ea)', sonne: 'linear-gradient(160deg,#ffd45a,#ff9460)', teich: 'linear-gradient(160deg,#5fd6c8,#5a92e8)', kirsch: 'linear-gradient(160deg,#ffa6cc,#b48cf0)', abend: 'linear-gradient(160deg,#3e4396,#9a62b4)' };
@@ -33,10 +34,16 @@ export class UI {
   }
   // ------------------------------------------------------------ Navigation
   show(name, data) {
+    const same = name && name === this.current;
+    const g0 = same ? this.root.querySelector('.card .grid') : null;
+    const keep = g0 && (name !== 'wardrobe' || this._shownTab === this.wardTab) ? g0.scrollTop : null;
     this.current = name; this.data = data;
     if (!name) { this.root.innerHTML = ''; return; }
     const html = this['s_' + name](data);
     this.root.innerHTML = html;
+    if (same) { const sc = this.root.querySelector('.screen'); sc && sc.classList.add('again'); }
+    if (keep != null) { const g = this.root.querySelector('.card .grid'); if (g) g.scrollTop = keep; }
+    this._shownTab = this.wardTab;
     this.after && this.after(); this.after = null;
   }
   tap() { this.app.audio.sfx('tap'); this.app.haptics.buzz('ui'); }
@@ -72,11 +79,32 @@ export class UI {
       case 'again': app.restart(); break;
       case 'wardrobe': app.toShowcase('wardrobe'); this.show('wardrobe'); break;
       case 'wtab': this.wardTab = v; this.show('wardrobe'); break;
-      case 'wchar': if (P.isUnlocked('char', v)) { app.updateLook({ look: { char: v } }); this.show('wardrobe'); } else this.lockMsg('char', v); break;
-      case 'wcolor': { const k = P.cur.look.char; if (P.isUnlocked('color', k + ':' + v)) { app.updateLook({ color: +v }); this.show('wardrobe'); } else this.lockMsg('color', k + ':' + v); break; }
-      case 'wpat': if (P.isUnlocked('pattern', v)) { app.updateLook({ look: { pattern: v } }); this.show('wardrobe'); } else this.lockMsg('pattern', v); break;
-      case 'what': if (P.isUnlocked('hat', v)) { app.updateLook({ look: { hat: v } }); this.show('wardrobe'); } else this.lockMsg('hat', v); break;
+      case 'wchar': if (P.isUnlocked('char', v)) { app.selectChar(v); this.show('wardrobe'); } else this.lockMsg('char', v); break;
+      case 'wslot': this.colorSlot = v; this.show('wardrobe'); break;
+      case 'wpal': app.updateLook({ [this.colorSlot || 'a']: v === 'def' ? null : +v }); this.show('wardrobe'); break;
+      case 'wrandcol': { const r = randomLook(P.cur.look.char); app.updateLook({ a: r.a, b: r.b, c: r.c, e: r.e }); this.show('wardrobe'); break; }
+      case 'wpreset': { const k = P.cur.look.char, c = COLORS[k][+v]; app.updateLook({ a: c.a, b: c.b ?? DEFAULT_LOOK[k].b, c: c.c, e: null }); this.show('wardrobe'); break; }
+      case 'wsize': this.wear('size', v, { size: v }); break;
+      case 'wwing': this.wear('wing', v, { wing: v }); break;
+      case 'want': this.wear('ant', v, { ant: v }); break;
+      case 'weyes': this.wear('eyes', v, { eyes: v }); break;
+      case 'wpat': this.wear('pattern', v, { pattern: v, skin: 'none' }); break;
+      case 'wskin': this.wear('skin', v, { skin: v }); break;
+      case 'what': this.wear('hat', v, { hat: v }); break;
+      case 'wextra': this.wear('extra', v, { extra: v }); break;
+      case 'wtrail': this.wear('trail', v, { trail: v }); if (v === 'pups' && P.cur.fun.pupsTon !== false) setTimeout(() => app.audio.sfx('pups'), 250); break;
+      case 'wfun': if (P.isUnlocked('fun', v)) { P.cur.fun[v] = !P.cur.fun[v]; P.save(); if (P.cur.fun[v]) app.audio.sfx(v); this.show('wardrobe'); } else this.lockMsg('fun', v); break;
+      case 'wpupston': P.cur.fun.pupsTon = P.cur.fun.pupsTon === false; P.save(); if (P.cur.fun.pupsTon) app.audio.sfx('pups'); this.show('wardrobe'); break;
+      case 'wrandom': { const k = P.cur.look.char; app.updateLook(randomLook(k, (t, id) => P.isUnlocked(t, id))); app.audio.sfx('glitter', 0, { gain: 0.5 }); this.show('wardrobe'); break; }
       case 'wdone': app.toShowcase(); this.show('map'); break;
+      case 'surprise': { const r = this.data; app.toShowcase('wardrobe'); this.show('unlock', { list: r.unlocks, i: 0, hasNext: !!r.hasNext }); break; }
+      case 'unlwear': case 'unlskip': {
+        const d = this.data, u = d.list[d.i];
+        if (a === 'unlwear') { app.wearUnlock(u); this.app.audio.sfx('unlock'); }
+        if (d.i + 1 < d.list.length) this.show('unlock', { ...d, i: d.i + 1 });
+        else { app.setLookFromProfile(); app.toShowcase(); if (d.hasNext) app.nextLevel(); else this.show('map'); }
+        break;
+      }
       case 'album': this.show('album'); break;
       case 'fact': { const e = ALBUM.find(x => x.id === v); const f = this.root.querySelector('.fact'); if (f && e) f.innerHTML = P.cur.album[v] ? `${e.emoji} <b>${e.name}</b><br>${e.fact}` : '❓ Noch nicht entdeckt – halte die Augen offen!'; break; }
       case 'badges': this.show('badges'); break;
@@ -93,10 +121,17 @@ export class UI {
     const t = e.target;
     if (t.dataset.vol) { this.app.setSetting(t.dataset.vol, +t.value / 100); if (t.dataset.vol === 'sfx') this.app.audio.sfx('tap'); }
   }
+  // Werkstatt: anziehen (mit Sperr-Prüfung)
+  wear(type, id, patch) {
+    const P = this.app.progress;
+    if (!P.isUnlocked(type, id)) { this.lockMsg(type, id); return; }
+    this.app.updateLook(patch); this.show('wardrobe');
+  }
   lockMsg(type, id) {
-    const u = this.app.progress.unlockables().find(x => x.type === type && x.id === id);
-    const need = u ? u.stars : (CHARACTERS.find(c => c.id === id) || {}).stars;
-    this.toastMenu(`🔒 Freischalten mit ${need} ⭐ (du hast ${this.app.progress.stars()})`);
+    const P = this.app.progress;
+    const u = P.unlockables().find(x => x.type === type && (x.id === id || (type === 'size' && x.id === 'xl')));
+    const need = u ? Math.max(1, u.stars - P.stars()) : '?';
+    this.toastMenu(`🔒 Noch ${need} ⭐ – sammle Sterne in den Leveln!`);
     this.app.audio.sfx('back');
   }
   toastMenu(txt) {
@@ -123,7 +158,7 @@ export class UI {
     if (t) t.textContent = `🎵 Klänge werden gezaubert … ${Math.round(k * 100)} %`;
     if (k >= 1) { this.root.querySelectorAll('.loadbar,.loadtxt').forEach(e => { e.style.transition = 'opacity .6s'; e.style.opacity = '0'; }); }
   }
-  avatar(p, size) { const ch = CHARACTERS.find(c => c.id === p.look.char); return `<div class="avatar" style="background:${p.color}${size ? `;width:${size}px;height:${size}px` : ''}">${ch ? ch.emoji : '🦋'}</div>`; }
+  avatar(p, size) { const ch = CHARACTERS.find(c => c.id === p.look.char); return `<div class="avatar" style="background:${p.color}${size ? `;width:${size}px;height:${size}px` : ''}">${ch ? (ch.icon || ch.emoji) : '🦋'}</div>`; }
   s_profiles() {
     const P = this.app.progress;
     return `<div class="screen dim"><div class="card"><h2>Wer fliegt heute? 🦋</h2>
@@ -171,7 +206,7 @@ export class UI {
       <div class="seg">${Object.values(DIFFS).map(d => `<button data-a="diff" data-v="${d.id}" class="${d.id === diff ? 'sel' : ''}">${d.emoji} ${d.name}</button>`).join('')}</div></div>
       <div class="worlds">${worlds}</div>
       <div class="mapbar">
-        <button class="tile" data-a="wardrobe">🎒<span>Garderobe</span></button>
+        <button class="tile" data-a="wardrobe">🎨<span>Werkstatt</span>${P.unseen().length ? '<i class="dot"></i>' : ''}</button>
         <button class="tile" data-a="daily">📅<span>Tagesaufgabe</span>${P.dailyDone() ? '' : '<i class="dot"></i>'}</button>
         <button class="tile" data-a="album">📖<span>Album</span></button>
         <button class="tile" data-a="badges">🏅<span>Abzeichen</span></button>
@@ -202,6 +237,7 @@ export class UI {
     const lvl = r.level;
     const i = LEVELS.findIndex(l => l.id === lvl.id);
     const hasNext = !lvl.daily && LEVELS[i + 1];
+    r.hasNext = !!hasNext;
     this.after = () => {
       const spans = this.root.querySelectorAll('.bigstars span');
       for (let k = 0; k < r.stars; k++) setTimeout(() => { spans[k] && spans[k].classList.add('on'); this.app.audio.sfx('star' + k); this.app.haptics.buzz('star'); }, 450 + k * 520);
@@ -212,29 +248,109 @@ export class UI {
       <h2>${lvl.daily ? '📅 Tagesaufgabe geschafft!' : cheer} 🎉</h2>
       <div class="bigstars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
       <div class="facts"><div>⏱️ ${r.time.toFixed(1).replace('.', ',')} s ${r.time <= r.par ? '✅' : `(Ziel ${r.par} s)`}</div><div>🔥 Kombo ${r.maxCombo}${r.diff === 'schwer' ? ` / ${r.comboReq}` : ''}</div>${r.diff !== 'schwer' ? `<div>⭐ Glitzerstern ${r.bonus ? '✅' : '❌'}</div>` : ''}</div>
-      </div><div>${r.unlocks.map((u, k) => `<div class="unl" style="animation-delay:${1.6 + k * 0.2}s"><span class="e">${u.icon || u.emoji}</span><span>Neu freigeschaltet:<br>${u.name}</span></div>`).join('')}
+      </div><div>${r.unlocks.map((u, k) => `<div class="unl" style="animation-delay:${1.6 + k * 0.2}s"><span class="e">${this.unlIcon(u)}</span><span>Neu freigeschaltet:<br>${esc(u.name)}</span></div>`).join('')}
       ${r.badges.map((b, k) => `<div class="unl" style="animation-delay:${1.8 + k * 0.2}s"><span class="e">${b.emoji}</span><span>Abzeichen: ${b.name}</span></div>`).join('')}
-      </div></div><div class="row cta"><button class="btn soft" data-a="map">🗺️ Karte</button><button class="btn alt" data-a="again">🔄 Nochmal</button>${hasNext ? `<button class="btn big" data-a="next">Weiter ➜</button>` : ''}</div>
+      </div></div><div class="row cta"><button class="btn soft" data-a="map">🗺️ Karte</button><button class="btn alt" data-a="again">🔄 Nochmal</button>${r.unlocks.length ? `<button class="btn big surprise" data-a="surprise"><i class="gift">🎁</i> Überraschung!</button>` : hasNext ? `<button class="btn big" data-a="next">Weiter ➜</button>` : ''}</div>
     </div></div>`;
   }
   s_fail(d) {
     return `<div class="screen dim"><div class="card col" style="text-align:center"><h2>Oh! 🦋</h2><p style="font-weight:800;font-size:19px">${esc(d.msg)}</p>
       <button class="btn big" data-a="again">🔄 Nochmal versuchen</button><button class="btn soft" data-a="quit">🗺️ Zur Karte</button></div></div>`;
   }
+  unlIcon(u) { return u.type === 'skin' ? `<img class="wimg" src="${this.skinIcon(u.id)}" alt="">` : (u.icon || u.emoji); }
+  skinIcon(id) { return wingIcon('skin:' + id, () => skinWing(id, 'rund')); }
+  wingShapeOf(char, form) {
+    const m = { schmetterling: { rund: 'rund', spitz: 'spitz', lang: 'lang' }, einhorn: { rund: 'rund', spitz: 'spitz', lang: 'lang' }, mondfalter: { rund: 'luna', spitz: 'spitz', lang: 'luna' } }[char];
+    if (m) return m[form];
+    return char === 'drache' ? 'drache' : char === 'katze' ? 'feder' : null;
+  }
+  patIcon(char, pat, L) {
+    const sh = this.wingShapeOf(char, L.wing || 'rund') || 'rund';
+    const key = ['pat', char, pat, sh, L.a, L.b, L.c].join(':');
+    return wingIcon(key, () => tintMask(wingMask(pat, sh), L.a, L.b, L.c));
+  }
+  formIcon(char, form, L) {
+    const sh = this.wingShapeOf(char, form);
+    const st = form === 'lang' ? 'transform:scale(1.12,.86)' : form === 'spitz' && (char === 'drache' || char === 'katze') ? 'transform:scale(1.08,.8)' : '';
+    if (sh) {
+      const pat = char === 'drache' ? 'membran' : char === 'katze' ? 'feder' : 'verlauf';
+      const ca = char === 'katze' ? L.b : L.a, cb = char === 'katze' ? 0xffffff : L.b, cc = char === 'katze' ? 0xc8b8a8 : L.c;
+      return `<img class="wimg" style="${st}" src="${wingIcon(['form', sh, pat, ca, cb, cc].join(':'), () => tintMask(wingMask(pat, sh), ca, cb, cc))}" alt="">`;
+    }
+    const g = char === 'libelle' ? (form === 'spitz' ? 'longtip' : 'long') : form === 'spitz' ? 'tip' : char === 'hummel' ? 'round' : 'bee';
+    return `<img class="wimg" style="${st}" src="${wingIcon('glass:' + g, () => glassWing(g))}" alt="">`;
+  }
+  antIcon(id) {
+    const tip = { kugel: '<circle cx="31" cy="11" r="5" fill="#ff7eb6"/>', herz: '<path d="M31 17 C24 12 25 6 29 7 C30 7.3 31 8.5 31 8.5 C31 8.5 32 7.3 33 7 C37 6 38 12 31 17 Z" fill="#ff5f8f"/>',
+      stern: '<path d="M31 4 l2 4.6 5 .5 -3.8 3.3 1.1 4.9 -4.3 -2.6 -4.3 2.6 1.1 -4.9 -3.8 -3.3 5 -.5 Z" fill="#ffc02e"/>',
+      ringel: '<path d="M27 16 C27 8 36 6 37 12 C38 17 31 18 31 13 C31 11 33 10.5 34 12" stroke="#6a4a7a" stroke-width="2.4" fill="none"/>',
+      feder: '<path d="M22 30 L31 8" stroke="#c89a5a" stroke-width="2"/>' + [0, 1, 2, 3, 4].map(i => { const x = 22 + i * 2, y = 28 - i * 4.5, l = 7 - i; return `<path d="M${x} ${y} l${-l} ${-l * 0.4} M${x} ${y} l${l} ${l * 0.3}" stroke="#e0b070" stroke-width="1.6"/>`; }).join('') }[id];
+    const stem = id === 'feder' ? '' : `<path d="M20 44 Q18 26 ${id === 'ringel' ? 27 : 31} ${id === 'ringel' ? 16 : 13}" stroke="#6a4a7a" stroke-width="2.4" fill="none"/>`;
+    return `<svg class="ico" viewBox="0 0 48 48">${stem}${tip}</svg>`;
+  }
+  eyeIcon(id) {
+    const iris = id === 'stern' ? '<path d="M24 16 l2.4 5 5.4 .6 -4 3.6 1.2 5.3 -5 -2.8 -5 2.8 1.2 -5.3 -4 -3.6 5.4 -.6 Z" fill="#3a2250"/>' : '<circle cx="24" cy="25" r="8" fill="#3a2250"/>';
+    const lash = id === 'wimpern' ? '<path d="M31 13 l5 -5 M35 17 l6 -3 M26 11 l2 -6" stroke="#3a2250" stroke-width="2.4" stroke-linecap="round"/>' : '';
+    return `<svg class="ico" viewBox="0 0 48 48"><ellipse cx="24" cy="25" rx="13" ry="14" fill="#fff" stroke="#b8a8c8" stroke-width="1.5"/>${iris}<circle cx="20" cy="20" r="3.2" fill="#fff"/>${lash}</svg>`;
+  }
+  charIcon(ch, px) { return ch.icon ? ch.icon.replace('class="ico"', `class="ico" style="width:${px}px;height:${px}px"`) : `<span style="font-size:${px}px;line-height:1">${ch.emoji}</span>`; }
   s_wardrobe() {
-    const P = this.app.progress, p = P.cur, L = p.look, s = P.stars(), tab = this.wardTab;
-    const item = (sel, lock, a, v, inner, req) => `<button class="item ${sel ? 'sel' : ''} ${lock ? 'lock' : ''}" data-a="${a}" data-v="${v}">${inner}${lock ? `<span class="req">${req} ⭐</span>` : ''}</button>`;
+    const P = this.app.progress, p = P.cur, char = p.look.char, L = P.lookOf(p), s = P.stars(), tab = this.wardTab;
+    const CH = CHARACTERS.find(c => c.id === char) || CHARACTERS[0];
+    const seen = [];
+    const item = (o) => `<button class="item ${o.cls || ''} ${o.sel ? 'sel' : ''} ${o.lock ? 'lock' : ''}" data-a="${o.a}" data-v="${o.v}"><span class="ic">${o.ic}</span><span>${esc(o.name)}</span>${o.lock ? `<span class="req">Noch ${o.need} ⭐</span>` : ''}${o.neu ? '<i class="neu">NEU</i>' : ''}</button>`;
+    const mk = (type, it, a, sel, ic, cls = '') => {
+      const lock = !!it.stars && s < it.stars, neu = !lock && P.isNew(type, it.id);
+      if (neu) seen.push(type === 'size' ? 'size:xl' : type + ':' + it.id);
+      return item({ a, v: it.id, sel, lock, need: it.stars - s, name: it.name, ic, neu, cls });
+    };
+    const sec = (t) => `<div class="sec">${t}</div>`;
     let body = '';
-    if (tab === 'figur') body = CHARACTERS.map(c => item(L.char === c.id, s < c.stars, 'wchar', c.id, `${c.emoji}<span>${c.name}</span>`, c.stars)).join('');
-    if (tab === 'farbe') body = COLORS[L.char].map((c, i) => item((L.color[L.char] || 0) === i, s < c.stars, 'wcolor', i, `<div class="swatch" style="background:linear-gradient(135deg,${hexCss(c.a)},${hexCss(c.b ?? c.a)})"></div><span>${c.name}</span>`, c.stars)).join('');
-    if (tab === 'muster') body = PATTERNS.map(pt => item(L.pattern === pt.id, s < pt.stars, 'wpat', pt.id, `🦋<span>${pt.name}</span>`, pt.stars)).join('');
-    if (tab === 'hut') body = HATS.map(h => item(L.hat === h.id, s < h.stars, 'what', h.id, `${h.icon || h.emoji}<span>${h.name}</span>`, h.stars)).join('');
-    const tabs = [['figur', '🦋', 'Figur'], ['farbe', '🎨', 'Farbe'], ...(L.char === 'schmetterling' ? [['muster', '✨', 'Muster']] : []), ['hut', '👒', 'Hut']];
+    if (tab === 'figur') body = CHARACTERS.map(c => mk('char', c, 'wchar', c.id === char, c.icon || c.emoji)).join('');
+    else if (tab === 'farbe') {
+      const slot = this.colorSlot || 'a', names = { ...SLOT_NAMES._, ...(SLOT_NAMES[char] || {}) };
+      const dot = (k) => k === 'e' && L.e == null ? 'background:conic-gradient(#3a2250 0 25%,#fff 0 50%,#3a2250 0 75%,#fff 0)' : `background:${hexCss(L[k])}`;
+      body = `<div class="slots">${['a', 'b', 'c', 'e'].map(k => `<button class="${slot === k ? 'sel' : ''}" data-a="wslot" data-v="${k}"><i style="${dot(k)}"></i>${names[k]}</button>`).join('')}</div>
+        <div class="pal">${slot === 'e' ? `<button class="sw def ${L.e == null ? 'sel' : ''}" data-a="wpal" data-v="def" aria-label="Standard">↺</button>` : ''}${PALETTE.map(pc => `<button class="sw ${L[slot] === pc.c ? 'sel' : ''}" data-a="wpal" data-v="${pc.c}" style="background:${hexCss(pc.c)}" aria-label="${pc.name}"></button>`).join('')}</div>
+        <button class="btn alt small dice" data-a="wrandcol">🎲 Zufallsfarben</button>
+        ${sec('Farb-Ideen')}${COLORS[char].map((c, i) => item({ a: 'wpreset', v: i, sel: L.a === c.a && L.c === c.c, name: c.name, ic: `<div class="swatch" style="background:linear-gradient(135deg,${hexCss(c.a)},${hexCss(c.b ?? DEFAULT_LOOK[char].b)})"></div>` })).join('')}`;
+    } else if (tab === 'form') {
+      body = sec('Größe') + SIZES.map(z => mk('size', z, 'wsize', L.size === z.id, this.charIcon(CH, Math.round(16 + z.k * 28)), 'opt')).join('')
+        + sec('Flügelform') + WINGFORMS.map(f => item({ a: 'wwing', v: f.id, sel: L.wing === f.id, name: f.name, ic: this.formIcon(char, f.id, L), cls: 'opt' })).join('')
+        + (CH.antennae ? sec('Fühler') + ANTENNAE.map(f => item({ a: 'want', v: f.id, sel: L.ant === f.id, name: f.name, ic: this.antIcon(f.id), cls: 'opt' })).join('') : '')
+        + sec('Augen') + EYESTYLES.map(f => item({ a: 'weyes', v: f.id, sel: L.eyes === f.id, name: f.name, ic: this.eyeIcon(f.id), cls: 'opt' })).join('');
+    } else if (tab === 'fluegel') {
+      body = (CH.patterns ? sec('Muster') + PATTERNS.map(pt => item({ a: 'wpat', v: pt.id, sel: L.pattern === pt.id && L.skin === 'none', name: pt.name, ic: `<img class="wimg" src="${this.patIcon(char, pt.id, L)}" alt="">` })).join('') : '')
+        + sec('Verrückte Flügel') + SKINS.map(sk => mk('skin', sk, 'wskin', L.skin === sk.id, sk.id === 'none' ? (CH.patterns ? `<img class="wimg" src="${this.patIcon(char, L.pattern, L)}" alt="">` : this.formIcon(char, L.wing, L)) : `<img class="wimg" src="${this.skinIcon(sk.id)}" alt="">`)).join('');
+    } else if (tab === 'hut') {
+      body = sec('Hüte') + HATS.map(h => mk('hat', h, 'what', L.hat === h.id, h.icon || h.emoji)).join('')
+        + sec('Extras') + EXTRAS.map(h => mk('extra', h, 'wextra', L.extra === h.id, h.icon || h.emoji)).join('');
+    } else { // Spur
+      body = sec('Spuren') + TRAILS.map(t => mk('trail', t, 'wtrail', L.trail === t.id, t.emoji)).join('')
+        + sec('Spaß') + FUN.map(f => mk('fun', f, 'wfun', !!p.fun[f.id], f.icon || f.emoji)).join('')
+        + (P.isUnlocked('trail', 'pups') ? item({ a: 'wpupston', v: 'x', sel: p.fun.pupsTon !== false, name: p.fun.pupsTon !== false ? 'Pups-Ton an' : 'Pups-Ton aus', ic: p.fun.pupsTon !== false ? '🔊' : '🔇' }) : '');
+    }
+    this.after = () => P.markSeen(seen);
+    const dot = (t) => { const u = P.unseen(); const map = { char: 'figur', size: 'form', skin: 'fluegel', hat: 'hut', extra: 'hut', trail: 'spur', fun: 'spur' }; return u.some(x => map[x.type] === t) && t !== tab ? '<i class="tdot"></i>' : ''; };
+    const tabs = [['figur', '🦋', 'Figur'], ['farbe', '🎨', 'Farbe'], ['form', '✂️', 'Form'], ['fluegel', '✨', 'Flügel'], ['hut', '🎩', 'Hut'], ['spur', '🌈', 'Spur']];
     return `<div class="screen" id="wardrobe"><div class="card">
-      <div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Garderobe</h2><div class="chip">⭐ ${s}</div></div>
-      <div class="tabs">${tabs.map(([k, e, n]) => `<button data-a="wtab" data-v="${k}" class="${tab === k ? 'sel' : ''}"><b>${e}</b>${n}</button>`).join('')}</div>
+      <div class="whead"><h2>Werkstatt</h2><button class="round dice" data-a="wrandom" aria-label="Zufalls-Outfit">🎲</button><div class="chip">⭐ ${s}</div></div>
+      <div class="tabs">${tabs.map(([k, e, n]) => `<button data-a="wtab" data-v="${k}" class="${tab === k ? 'sel' : ''}"><b>${e}</b>${n}${dot(k)}</button>`).join('')}</div>
       <div class="grid">${body}</div>
       <div class="row" style="margin-top:12px"><button class="btn big" data-a="wdone">Fertig ✓</button></div></div></div>`;
+  }
+  // Freischalt-Moment: Konfetti-Karte mit 3D-Vorschau (Figur oben im Bild trägt das Neue schon)
+  s_unlock(d) {
+    const u = d.list[d.i], app = this.app;
+    this.after = () => { app.previewUnlock(u); app.audio.sfx('fanfare', 0, { gain: 0.7 }); app.haptics.buzz('unlock'); };
+    const cols = ['#ff6f9a', '#ffd84a', '#6fd0ff', '#9cf07a', '#c08cff', '#ff9a3c'];
+    const conf = Array.from({ length: 28 }, (_, i) => `<i style="left:${(i * 37) % 100}%;background:${cols[i % cols.length]};animation-delay:${(i % 7) * 0.18}s;animation-duration:${2.2 + (i % 5) * 0.35}s"></i>`).join('');
+    const verb = u.type === 'fun' ? 'Gleich einschalten ✓' : u.type === 'char' ? 'Gleich losfliegen ✓' : 'Gleich anziehen ✓';
+    return `<div class="screen" id="unlock"><div class="confetti">${conf}</div><div class="card">
+      <div class="neutitle">🎉 NEU freigeschaltet!</div>
+      <div class="unlitem"><span class="e">${this.unlIcon(u)}</span><div><b>${esc(u.name)}</b><small>${u.kind} · ${u.stars} ⭐</small></div></div>
+      <div class="row"><button class="btn soft" data-a="unlskip">Später</button><button class="btn big" data-a="unlwear">${verb}</button></div>
+      ${d.list.length > 1 ? `<div class="small">${d.i + 1} von ${d.list.length}</div>` : ''}</div></div>`;
   }
   s_album() {
     const p = this.app.progress.cur;
@@ -263,7 +379,7 @@ export class UI {
       </div><div class="small">Jetzt: ${r.q.name} · ${this.app.fps} fps</div>
       <button class="btn alt small" data-a="help">❓ So wird gespielt</button>
       <div class="row cta"><button class="btn" data-a="setback">Fertig ✓</button></div>
-      <div class="small">Schmetterlingswiese 2.0 · Build ${BUILD} · offline spielbar</div></div></div>`;
+      <div class="small">Schmetterlingswiese 2.2 · Build ${BUILD} · offline spielbar</div></div></div>`;
   }
   s_help() {
     return `<div class="screen dim"><div class="card"><h2>❓ So wird gespielt</h2>
