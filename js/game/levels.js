@@ -17,7 +17,7 @@ export const LEVELS = [
   // --- Welt 1: Frühlingswiese
   { id: '1-1', world: 'wiese', name: 'Erster Flug', par: 70, tasks: [{ type: 'collect', n: 8 }], animals: [['baer', 2], ['capy', 2]], tutorial: true },
   { id: '1-2', world: 'wiese', name: 'Bärenbabys besuchen', par: 95, tasks: [{ type: 'visit', n: 4 }, { type: 'collect', n: 6 }], animals: [['baer', 3], ['capy', 2], ['hase', 2]] },
-  { id: '1-3', world: 'wiese', name: 'Ringe im Wind', par: 85, tasks: [{ type: 'rings', n: 8 }, { type: 'stunts', loop: 2, roll: 0 }], animals: [['baer', 2], ['hase', 2]] },
+  { id: '1-3', world: 'wiese', name: 'Ringe im Wind', par: 85, tasks: [{ type: 'rings', n: 8 }, { type: 'collect', n: 4 }], animals: [['baer', 2], ['hase', 2]] },
   // --- Welt 2: Sonnenblumenfeld
   { id: '2-1', world: 'sonne', name: 'Honigsammler', par: 90, tasks: [{ type: 'land', n: 5, on: 'sunflower' }, { type: 'collect', n: 6 }], animals: [['capy', 2], ['hase', 2]] },
   { id: '2-2', world: 'sonne', name: 'Sonnenblumen-Slalom', par: 90, tasks: [{ type: 'rings', n: 10, low: true }], animals: [['baer', 2], ['hase', 2]] },
@@ -28,7 +28,7 @@ export const LEVELS = [
   { id: '3-3', world: 'teich', name: 'Libellen-Rennen', par: 85, tasks: [{ type: 'race', n: 10, rival: 'libelle' }], animals: [['ente', 4], ['capy', 2]] },
   // --- Welt 4: Kirschblütenhain
   { id: '4-1', world: 'kirsch', name: 'Blütenregen', par: 90, tasks: [{ type: 'blossoms', n: 14 }], animals: [['hase', 3], ['baer', 2]] },
-  { id: '4-2', world: 'kirsch', name: 'Kunstflug', par: 110, tasks: [{ type: 'stunts', loop: 3, roll: 3 }, { type: 'rings', n: 6 }], animals: [['hase', 3], ['capy', 2]] },
+  { id: '4-2', world: 'kirsch', name: 'Kunstflug', par: 110, tasks: [{ type: 'rings', n: 9, wild: true }, { type: 'visit', n: 3 }], animals: [['hase', 3], ['capy', 2]] },
   { id: '4-3', world: 'kirsch', name: 'Kirschblüten-Parcours', par: 110, tasks: [{ type: 'rings', n: 12, wild: true }], animals: [['baer', 3], ['hase', 2]] },
   // --- Welt 5: Glühwürmchen-Abend
   { id: '5-1', world: 'abend', name: 'Glühwürmchen-Tanz', par: 100, tasks: [{ type: 'fireflies', n: 12 }], animals: [['hase', 3], ['baer', 2]], sleepy: true },
@@ -51,7 +51,6 @@ export function dailyLevel(id = 'daily-' + todayStr()) {
     () => ({ type: 'collect', n: 8 + ((r() * 5) | 0) }),
     () => ({ type: 'rings', n: 7 + ((r() * 4) | 0), wild: r() < 0.5 }),
     () => ({ type: 'visit', n: 4 }),
-    () => ({ type: 'stunts', loop: 1 + ((r() * 2) | 0), roll: 1 + ((r() * 2) | 0) }),
     () => ({ type: w.id === 'abend' ? 'fireflies' : 'blossoms', n: 10 }),
   ];
   const a = (r() * pool.length) | 0; let b = (r() * pool.length) | 0; if (b === a) b = (a + 2) % pool.length;

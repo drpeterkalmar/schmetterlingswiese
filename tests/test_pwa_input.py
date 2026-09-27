@@ -29,10 +29,8 @@ with sync_playwright() as pw:
     touch('touchEnd', [])
     res['one_finger_slide'] = {'left_up': r5a, 'left_down': r5b, 'mid_down': r5c,
                                'ok': r5a[0] == -1 and r5a[1] > 0.9 and r5b[0] == -1 and r5b[1] < -0.9 and r5c[0] == 0 and r5c[1] < 0}
-    # Stunt-Knopf
-    b = s.pg.locator('#bLoop').bounding_box()
-    touch('touchStart', [(b['x'] + 40, b['y'] + 40)]); time.sleep(0.1); touch('touchEnd', []); time.sleep(0.4)
-    res['loop_button'] = s.ev("!!__app.player.stunt || __app.player.stats.loops > 0")
+    # Stunt-Knöpfe gibt es nicht mehr (Schraube/Looping automatisch) → unten muss frei sein
+    res['no_stunt_buttons'] = s.ev("!document.getElementById('bLoop') && !document.getElementById('bRoll')")
     # Joystick
     s.ev("__app.setSetting('control', 'stick')")
     touch('touchStart', [(120, 700)]); touch('touchMove', [(120 + 50, 700 - 40)]); time.sleep(0.8)
@@ -46,9 +44,9 @@ with sync_playwright() as pw:
     s.open(); s.pg.mouse.click(640, 360); s.pg.fill('input.name', 'K'); s.pg.keyboard.press('Enter'); time.sleep(0.8)
     s.ev("__game.setQuality(0)"); s.ev("__game.start('1-1', 'leicht')"); time.sleep(1)
     s.pg.keyboard.down('ArrowLeft'); time.sleep(0.6); rk = s.ev("[__app.input.rawTurn, __app.input.rawClimb]"); s.pg.keyboard.up('ArrowLeft')
-    s.pg.keyboard.press('Space'); time.sleep(0.3); lk = s.ev("!!__app.player.stunt")
-    time.sleep(1.8); s.pg.keyboard.press('KeyP'); time.sleep(0.5); pk = s.ev("__app.ui.current")
-    res['keyboard'] = {'left': rk, 'space_loop': lk, 'p_pause': pk, 'enter_created': s.ev("!!__app.progress.cur")}
+    s.pg.keyboard.press('Space'); time.sleep(0.3); lk = s.ev("!__app.player.stunt")  # Leertaste löst nichts mehr aus
+    time.sleep(0.5); s.pg.keyboard.press('KeyP'); time.sleep(0.5); pk = s.ev("__app.ui.current")
+    res['keyboard'] = {'left': rk, 'space_no_stunt': lk, 'p_pause': pk, 'enter_created': s.ev("!!__app.progress.cur")}
     res['errors_kb'] = s.errors[:5]
     s.close()
     # --- PWA: Installierbarkeit + Offline

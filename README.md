@@ -12,7 +12,7 @@ besuche Bärenbabys und Capybaras – und sammle Sterne, Hüte und Album-Seiten.
 - **5 Welten × 3 Level** – Frühlingswiese (Morgen), Sonnenblumenfeld (Mittag), Seerosenteich
   (Nachmittag), Kirschblütenhain (goldene Stunde), Glühwürmchen-Abend (Nacht mit Sternen)
 - **Aufgaben:** Nektartropfen sammeln, Flugring-Parcours, auf Blüten/Seerosen landen und
-  Nektar naschen, Tierbabys besuchen, Beeren zu Capybaras bringen, Loopings & Schrauben,
+  Nektar naschen, Tierbabys besuchen, Beeren zu Capybaras bringen, Freuden-Schrauben & Sieger-Loopings,
   Wettfliegen gegen Flora Falter und Lilli Libelle, Glühwürmchen und fallende Kirschblüten fangen
 - **1–3 Sterne pro Level:** Aufgabe geschafft · schnell genug · Glitzerstern gefunden (Schwer: große Kombo)
 - **Schwierigkeit:** 🌱 Leicht (kein Zeitdruck, Zielpfeil, Magnet, man kann nicht verlieren) ·
@@ -26,9 +26,9 @@ besuche Bärenbabys und Capybaras – und sammle Sterne, Hüte und Album-Seiten.
 | Gerät | Bedienung |
 |---|---|
 | 📱 Tippen & Halten (Standard) | links/rechts halten = drehen · Mitte oben = steigen · Mitte unten = sinken/landen · Finger liegen lassen und hoch/runter schieben = steigen/sinken (auch beim Drehen, ohne loszulassen) |
-| 🕹️ Joystick (Einstellungen) | Daumen-Stick links, Knöpfe rechts |
-| 🤸 🌀 Knöpfe | Looping und Schraube (am Boden: abheben) |
-| ⌨️ Tastatur | Pfeile/WASD · Leertaste = Looping · Shift = Schraube · P/Esc = Pause |
+| 🕹️ Joystick (Einstellungen) | Daumen-Stick links |
+| 🌀 🤸 Kunststücke | automatisch: jedes geschaffte Teilziel = Freuden-Schraube, ganze Aufgabe = Sieger-Looping mit Regenbogen-Schweif und Feuerwerk |
+| ⌨️ Tastatur | Pfeile/WASD · P/Esc = Pause |
 
 ## Technik
 

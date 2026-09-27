@@ -76,13 +76,7 @@ class App {
       else this.audio.resume();
     });
     addEventListener('contextmenu', (e) => { if (e.target.tagName !== 'INPUT') e.preventDefault(); });
-    const hold = (id, act) => {
-      const el = document.getElementById(id);
-      el.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); el.classList.add('on'); this.input.actions.push(act); });
-      const off = () => el.classList.remove('on');
-      el.addEventListener('pointerup', off); el.addEventListener('pointercancel', off); el.addEventListener('pointerleave', off);
-    };
-    hold('bLoop', 'loop'); hold('bRoll', 'roll');
+    // Looping/Schraube-Knöpfe entfallen: Schraube kommt automatisch bei jedem Teilziel, Looping beim Levelsieg
     document.getElementById('bPause').addEventListener('click', () => { this.audio.sfx('tap'); this.pause(); });
     this.input.onFirst = () => this.ui.hideHint && 0;
   }

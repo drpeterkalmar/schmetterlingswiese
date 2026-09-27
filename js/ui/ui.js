@@ -272,9 +272,9 @@ export class UI {
         <div>☝️ Mitte oben halten = steigen · Mitte unten = sinken</div>
         <div>👆 Finger liegen lassen und hoch/runter schieben = steigen/sinken – auch beim Drehen!</div>
         <div>🛬 Über einem Leuchtring unten halten = landen, oben halten = abheben</div>
-        <div>🤸 Looping & 🌀 Schraube: Knöpfe unten</div>
+        <div>🌀 Jedes geschaffte Teilziel = Freuden-Schraube · 🤸 Aufgabe fertig = Sieger-Looping mit Feuerwerk</div>
         <div>🔥 Schnell hintereinander sammeln = Kombo!</div>
-        <div>⌨️ Tastatur: Pfeile/WASD · Leertaste = Looping · Shift = Schraube · P = Pause</div>
+        <div>⌨️ Tastatur: Pfeile/WASD · P = Pause</div>
       </div>
       <div class="row cta"><button class="btn" data-a="helpback">Alles klar!</button></div></div></div>`;
   }

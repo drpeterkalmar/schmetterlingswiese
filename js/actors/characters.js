@@ -192,7 +192,8 @@ export class Critter {
     this.body = new THREE.Group();      // Squash & Stretch
     this.root.add(this.tilt); this.tilt.add(this.body);
     this.mats = [];
-    this.flapT = Math.random() * 6; this.blinkT = 2; this.happyT = 0; this.squash = 0; this.squashV = 0; this.spin = 0;
+    this.flapT = Math.random() * 6; this.blinkT = 2; this.happyT = 0; this.squash = 0; this.squashV = 0;
+    this.rollAng = 0; this.rollVel = 0; this.rollTarget = 0; // Deko-Schraube (Feder, Steuerung bleibt frei)
     this.build(look);
   }
   mat(o) { const m = toonMat(o); this.mats.push(m); return m; }
@@ -317,7 +318,11 @@ export class Critter {
     this.dispose(true);
     this.build(look);
   }
-  happy(dur = 0.9) { this.happyT = dur; this.squashV += 5; this.spin = 1; }
+  happy(dur = 0.9) { this.happyT = dur; this.squashV += 5; this.roll(1); }
+  // Schraube um die Längsachse als Belohnung: dreht nur den Körper, Flugbahn/Steuerung bleiben unberührt.
+  // Mehrere Aufrufe stapeln sich (Kombo = mehr Umdrehungen).
+  roll(turns = 1, dir = 1) { this.rollTarget += turns * Math.PI * 2 * dir; this.happyT = Math.max(this.happyT, 0.6); }
+  get rolling() { return Math.abs(this.rollVel) > 2.5; }
   bump(v = 3) { this.squashV += v; }
   // st: {speed01, landed, climb, flapBoost, frozen}
   update(dt, t, st = {}) {
@@ -347,12 +352,18 @@ export class Critter {
     const wobble = Math.sin(this.flapT) * 0.02 * (landed ? 0.3 : 1);
     this.body.scale.set(1 - sq * 0.5, 1 + sq + wobble, 1 - sq * 0.5);
     this.body.position.y = Math.sin(this.flapT) * (landed ? 0.01 : 0.05);
-    // Freude: Drehung + ^^-Augen
-    if (this.happyT > 0) {
-      this.happyT -= dt;
-      this.spin = Math.max(0, this.spin - dt * 1.6);
-      this.body.rotation.z = (1 - this.spin) * Math.PI * 2 * (this.spin > 0 ? 1 : 0);
-    } else this.body.rotation.z = 0;
+    // Freude: ^^-Augen + Schraube (kritisch gedämpfte Feder, ~0,7 s pro Umdrehung inkl. Ausschwingen)
+    if (this.happyT > 0) this.happyT -= dt;
+    if (this.rollTarget !== 0 || this.rollAng !== 0) {
+      const h = Math.min(dt, 0.02); // Unterschritte → stabil auch bei 20-fps-Rucklern
+      for (let r = dt; r > 1e-6; r -= h) {
+        const s = Math.min(h, r);
+        this.rollVel += ((this.rollTarget - this.rollAng) * 64 - this.rollVel * 16) * s;
+        this.rollAng += this.rollVel * s;
+      }
+      if (Math.abs(this.rollTarget - this.rollAng) < 0.003 && Math.abs(this.rollVel) < 0.05) { this.rollAng = 0; this.rollTarget = 0; this.rollVel = 0; }
+    }
+    this.body.rotation.z = this.rollAng;
     const happy = this.happyT > 0 || st.cheer;
     this.eyesOpen.visible = !happy; this.eyesHappy.visible = !!happy;
     // Blinzeln

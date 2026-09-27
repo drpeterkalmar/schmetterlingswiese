@@ -8,6 +8,7 @@ import { makeTask, GlitterStar } from './objectives.js';
 import { DIFFS, worldOf } from './levels.js';
 
 const _v = new THREE.Vector3(), _w = new THREE.Vector3();
+const RAINBOW = [0xff5a6e, 0xff9a3c, 0xffd84a, 0x7ee06a, 0x4fc8ff, 0x8a7bff, 0xd67cff];
 
 export class Game {
   constructor(app) {
@@ -149,7 +150,8 @@ export class Game {
     this.bursts.clear();
     this.arrow.visible = false;
     this.state = 'idle';
-    this.player.frozen = false; this.player.cheer = false;
+    this.player.frozen = false; this.player.cheer = false; this.player.hover = false; this.finale = null;
+    document.body.classList.remove('won');
   }
 
   // Treffer: Kombo, Klang, Haptik, Partikel, Kamera-Kick
@@ -164,8 +166,11 @@ export class Game {
     this.bursts.emit({ n: 16 + Math.min(20, this.combo * 2), pos, colors: [col, 0xffffff, 0xfff3b0], shape: 1, size: 0.42, speed: 5, up: 1.5, life: 0.9, grav: -2 });
     this.bursts.emit({ n: 1, pos, colors: [col], shape: 5, size: 3.2, speed: 0, up: 0, life: 0.35, grav: 0, drag: 0 });
     const c = this.player.critter;
-    if (c) { c.happyT = 0.7; c.squashV += 4; if (this.combo % 3 === 0) c.spin = 1; }
+    if (c) { c.happyT = 0.7; c.squashV += 4; }
     this.player.kick(2.5 + Math.min(4, this.combo * 0.5), 0.08);
+    // Teilziel geschafft → automatische Freuden-Schraube (ersetzt den Schraube-Knopf)
+    const last = this.tasks.length && this.tasks.every(tk => tk.done);
+    if (!last) this.celebrateRoll(col, this.tasks.some(tk => tk.done && !tk._cheered && (tk._cheered = true)));
     this.app.ui.combo(this.combo);
     this.app.audio.setIntensity(Math.min(1, 0.55 + this.combo * 0.08));
     this.app.stat('collected');
@@ -173,6 +178,96 @@ export class Game {
     if (kind === 'visit' || kind === 'deliver') this.app.stat('animals');
     this.app.discover(kind);
     this.app.ui.hudTasks(this.tasks);
+  }
+  // Freuden-Schraube: Körper dreht um die Längsachse, Spiral-Glitzer, Woosh. Steuerung bleibt frei.
+  // big = eine ganze Teilaufgabe fertig (z. B. alle Ringe) → Doppel-Schraube + Sternenring.
+  celebrateRoll(col = 0xffe07a, big = false) {
+    const pl = this.player, c = pl.critter; if (!c) return;
+    const pending = Math.abs(c.rollTarget - c.rollAng) / (Math.PI * 2);
+    const add = big ? 2 : 1;
+    if (pending + add <= 2.6) { c.roll(add, (this.hits & 1) ? -1 : 1); this.app.stat('rolls'); }
+    this.app.audio.sfx('roll', 0, { gain: big ? 0.85 : 0.45, rate: big ? 0.92 : 1.12 });
+    this.rollCol = col; this.rollBig = big; // Doppel-Helix aus den Flügelspitzen → rollTrail()
+    if (big) {
+      this.bursts.emit({ n: 1, pos: pl.pos, colors: [0xfff3b0], shape: 5, size: 5, speed: 0, up: 0, life: 0.5, grav: 0, drag: 0 });
+      this.bursts.emit({ n: 24, pos: pl.pos, colors: [col, 0xffffff, 0xffe07a], shape: 1, size: 0.45, speed: 6, up: 1, life: 1.1, grav: -1 });
+      this.app.audio.sfx('combo'); this.app.haptics.buzz('star');
+      this.app.ui.toast('🌀 Teilaufgabe geschafft!');
+    }
+  }
+  // Während der Schraube: Glitzer an beiden Flügelspitzen → beim Vorwärtsflug entsteht eine Doppel-Helix
+  rollTrail(dt) {
+    const pl = this.player, c = pl.critter;
+    if (!c || !c.rolling) return;
+    const a = c.rollAng, s = pl.critter.wingSpan || 0.95;
+    const fx = Math.sin(pl.yaw), fz = Math.cos(pl.yaw), rx = Math.cos(pl.yaw), rz = -Math.sin(pl.yaw);
+    const n = Math.max(1, Math.round(dt * 60));
+    for (let side = -1; side <= 1; side += 2) {
+      const ca = Math.cos(a) * side * s, sa = Math.sin(a) * side * s;
+      for (let k = 0; k < n; k++) {
+        const back = -k / n * pl.speed * dt;
+        _v.set(pl.pos.x + rx * ca + fx * back, pl.pos.y + sa, pl.pos.z + rz * ca + fz * back);
+        this.bursts.emit({ n: 1, pos: _v, colors: [side > 0 ? (this.rollCol || 0xffe07a) : 0xffffff], shape: 1, size: this.rollBig ? 0.46 : 0.34, speed: 0.15, up: 0, life: 0.7, grav: 0, drag: 0 });
+      }
+    }
+  }
+  // Gesamtaufgabe geschafft → Sieger-Looping mit Regenbogen-Schweif, Feuerwerk am Scheitel, Konfetti am Ende
+  startFinale() {
+    const pl = this.player, c = pl.critter;
+    if (c) { const T = Math.PI * 2; c.rollTarget = Math.ceil(c.rollAng / T - 0.05) * T; if (c.rollTarget < c.rollAng) c.rollTarget += T; }
+    pl.stunt = null;
+    const ok = pl.tryStunt('loop', { grand: true, dur: 2.3 });
+    this.finale = { t: 0, loop: ok, apex: false, end: ok ? -1 : 0, hue: 0 };
+    this.app.audio.sfx('combo'); this.app.audio.sfx('loop', 0, { gain: 1.2, rate: 0.9 });
+    this.app.haptics.buzz('stunt');
+    pl.kick(9, 0.12);
+    this.bursts.emit({ n: 1, pos: pl.pos, colors: [0xffffff], shape: 5, size: 6, speed: 0, up: 0, life: 0.45, grav: 0, drag: 0 });
+    if (!ok) this.finaleEnd();
+  }
+  finaleUpdate(dt) {
+    const F = this.finale; if (!F) return;
+    F.t += dt;
+    const pl = this.player, S = pl.stunt;
+    if (S && S.grand) {
+      // Regenbogen-Schweif
+      F.hue = (F.hue + dt * 1.6) % 1;
+      const n = 2; // Lebensdauer 2,8 s > Looping-Dauer → Kreis schließt sich sichtbar
+      for (let i = 0; i < n; i++) {
+        _v.copy(pl.pos).add(_w.set((Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4));
+        this.bursts.emit({ n: 1, pos: _v, colors: [RAINBOW[(((F.hue * RAINBOW.length) | 0) + i) % RAINBOW.length]], shape: 0, size: 0.9, speed: 0.2, up: 0, life: 2.8, grav: 0.05, drag: 1 });
+      }
+      if (Math.random() < 0.5) this.bursts.emit({ n: 1, pos: pl.pos, colors: [0xffffff, 0xfff3b0], shape: 1, size: 0.45, speed: 1.2, up: 0, life: 1.1, grav: -0.5 });
+      if (!F.apex && S.t / S.dur > 0.5) {
+        F.apex = true;
+        this.firework(_v.copy(pl.pos).add(_w.set(0, 2.2, 0)), 0xffd84a);
+        this.app.audio.sfx('glitter'); this.app.haptics.buzz('star');
+      }
+    }
+    // Nachzügler-Feuerwerk nach dem Looping
+    if (F.end >= 0) {
+      F.end += dt;
+      if (F.end > 0.45 && !F.fw2) { F.fw2 = true; this.firework(_v.copy(pl.pos).add(_w.set(-3.5, 4.5, 2)), 0xff7eb6); }
+      if (F.end > 0.8 && !F.fw3) { F.fw3 = true; this.firework(_v.copy(pl.pos).add(_w.set(3.5, 5, -1.5)), 0x7cc4ff); }
+    }
+    if (F.loop && !S && F.end < 0) this.finaleEnd(); // Sicherheitsnetz, falls stuntDone nicht kam
+  }
+  finaleEnd() {
+    const F = this.finale; if (!F || F.end > 0.001) return;
+    F.end = 0.0011;
+    const pl = this.player;
+    pl.cheer = true; pl.hover = true;
+    this.app.audio.sfx('fanfare');
+    this.app.audio.setIntensity(1);
+    this.app.haptics.buzz('win');
+    pl.kick(6, 0.3);
+    this.bursts.emit({ n: 1, pos: pl.pos, colors: [0xfff3b0], shape: 5, size: 8, speed: 0, up: 0, life: 0.6, grav: 0, drag: 0 });
+    for (let i = 0; i < 4; i++) this.bursts.emit({ n: 40, pos: _v.copy(pl.pos).add(_w.set(0, 2.5, 0)), colors: [0xff6f9a, 0xffd84a, 0x6fd0ff, 0x9cf07a, 0xc08cff, 0xffffff], shape: 2, size: 0.26, speed: 9, up: 4, life: 2.6, grav: -3.5, drag: 1.2, spin: 10 });
+  }
+  firework(pos, col) {
+    this.bursts.emit({ n: 1, pos, colors: [col], shape: 5, size: 4.5, speed: 0, up: 0, life: 0.5, grav: 0, drag: 0 });
+    this.bursts.emit({ n: 44, pos, colors: [col, 0xffffff, col], shape: 1, size: 0.5, speed: 8, up: 0, life: 1.5, grav: -2.2, drag: 1.6 });
+    this.bursts.emit({ n: 18, pos, colors: [0xfff3b0], shape: 0, size: 0.35, speed: 4, up: 0, life: 1.2, grav: -3, drag: 1.2 });
+    this.app.audio.sfx('glitter', this.app.screenPan(pos), { gain: 0.6, rate: 1.1 + Math.random() * 0.2 });
   }
   bonus(pos) {
     this.bonusFound = true;
@@ -193,6 +288,7 @@ export class Game {
   }
   onStuntDone(type) {
     this.app.stat(type === 'loop' ? 'loops' : 'rolls');
+    if (this.state === 'won') { this.finaleEnd(); return; }
     this.bursts.emit({ n: 18, pos: this.player.pos, colors: [0xffe07a, 0xb0e0ff, 0xffb0e0], shape: 1, size: 0.35, speed: 3.5, up: 1, life: 0.9, grav: -1 });
     for (const t of this.tasks) if (t.onStunt) t.onStunt(type);
     this.app.ui.hudTasks(this.tasks);
@@ -222,8 +318,7 @@ export class Game {
     if (playing) {
       this.time += dt;
       for (const a of input.take()) {
-        if (a === 'loop' || a === 'roll') pl.tryStunt(a);
-        else if (a === 'pause') this.app.pause();
+        if (a === 'pause') this.app.pause();
       }
     }
     pl.update(dt, t, playing ? input : null);
@@ -232,6 +327,7 @@ export class Game {
     this.flyers.update(dt, t);
     for (const task of this.tasks) task.update(dt, t);
     if (this.glitter) this.glitter.update(dt, t);
+    this.rollTrail(dt);
     if (playing) this.hazards(dt, t);
     else this.wasps.update(dt, t, null);
     // Kombo verfällt
@@ -249,8 +345,10 @@ export class Game {
     }
     if (this.state === 'won') {
       this.wonT += dt;
-      if (this.wonT > 2.3 && !this.resultShown) { this.resultShown = true; this.app.ui.show('result', this.app.lastResult); }
-      if (Math.random() < dt * 14) this.bursts.emit({ n: 6, pos: _v.copy(pl.pos).add(_w.set((Math.random() - 0.5) * 6, 3 + Math.random() * 2, (Math.random() - 0.5) * 6)), colors: [0xff6f9a, 0xffd84a, 0x6fd0ff, 0x9cf07a, 0xc08cff], shape: 2, size: 0.22, speed: 2, up: 0, life: 2.2, grav: -2.2, drag: 1.5, spin: 8 });
+      this.finaleUpdate(dt);
+      const F = this.finale, ready = F && F.end > 1.6;
+      if ((ready || this.wonT > 6) && !this.resultShown) { this.resultShown = true; this.app.ui.show('result', this.app.lastResult); }
+      if (F && F.end > 0 && Math.random() < dt * 14) this.bursts.emit({ n: 6, pos: _v.copy(pl.pos).add(_w.set((Math.random() - 0.5) * 6, 3 + Math.random() * 2, (Math.random() - 0.5) * 6)), colors: [0xff6f9a, 0xffd84a, 0x6fd0ff, 0x9cf07a, 0xc08cff], shape: 2, size: 0.22, speed: 2, up: 0, life: 2.2, grav: -2.2, drag: 1.5, spin: 8 });
     }
     this.app.ui.hudTime(this.time, this.limit, this.par);
   }
@@ -339,20 +437,17 @@ export class Game {
     if (this.level.tutorial && T > 5 && !H.t2) { H.t2 = true; ui.hint('☝️ Mitte oben halten = steigen · Mitte unten = sinken'); }
     if (this.level.tutorial && T > 11 && !H.t3) { H.t3 = true; ui.hint('✨ Fliege durch die glitzernden Tropfen!'); }
     if (this.tasks.some(t => t.cfg.type === 'land') && T > 3 && !H.land) { H.land = true; ui.hint('🛬 Über dem Leuchtring ▼ unten halten = landen'); }
-    if (this.tasks.some(t => t.cfg.type === 'stunts') && T > 2 && !H.stunt) { H.stunt = true; ui.hint('🤸 Tippe auf Looping oder Schraube!'); }
     if (this.tasks.some(t => t.cfg.type === 'deliver') && T > 2 && !H.del) { H.del = true; ui.hint('🍓 Hol Beeren von den Büschen und bring sie den Tierbabys'); }
   }
   win() {
     this.state = 'won'; this.wonT = 0; this.resultShown = false;
     const stars = 1 + (this.time <= this.par ? 1 : 0) + ((this.diffCfg.id === 'schwer' ? this.maxCombo >= this.comboReq : this.bonusFound) ? 1 : 0);
     this.stars = stars;
-    this.player.cheer = true; this.player.hover = true;
     this.player.frozen = false;
     this.arrow.visible = false;
-    this.app.audio.sfx('fanfare');
-    this.app.audio.setIntensity(1);
-    this.app.haptics.buzz('win');
-    for (let i = 0; i < 4; i++) this.bursts.emit({ n: 40, pos: _v.copy(this.player.pos).add(_w.set(0, 2.5, 0)), colors: [0xff6f9a, 0xffd84a, 0x6fd0ff, 0x9cf07a, 0xc08cff, 0xffffff], shape: 2, size: 0.26, speed: 9, up: 4, life: 2.6, grav: -3.5, drag: 1.2, spin: 10 });
+    document.body.classList.add('won'); // Steuer-Pfeile ausblenden – Bühne frei fürs Finale
+    this.app.audio.setIntensity(0.9);
+    this.startFinale();
     this.app.onWon({ stars, time: this.time, par: this.par, maxCombo: this.maxCombo, comboReq: this.comboReq, bonus: this.bonusFound, hits: this.hits });
   }
   sfx(name, pos) { this.app.audio.sfx(name, pos ? this.app.screenPan(pos) : 0); }

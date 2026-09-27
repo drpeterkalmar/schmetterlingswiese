@@ -43,15 +43,27 @@ export class Player {
   reset(pos, yaw) {
     this.pos.copy(pos); this.yaw = yaw; this.pitch = 0; this.yawRate = 0; this.ext.set(0, 0, 0);
     this.landed = false; this.landSpot = null; this.landing = null; this.stunt = null; this.wetT = 0; this.dizzyT = 0; this.carry = null;
-    this.camInit = false; this.orbit = 0; this.hover = false; this.cheer = false;
+    this.camInit = false; this.orbit = 0; this.hover = false; this.cheer = false; this.grandBlend = 0;
   }
   emit(ev, a) { const f = this.on[ev]; if (f) f(a); }
-  tryStunt(type) {
-    if (this.landed && !this.frozen) { this.takeoff(); return false; }
+  // o.grand = Sieger-Looping (länger, größerer Kreis, Seitenkamera)
+  tryStunt(type, o = {}) {
+    if (this.landed && !this.frozen) { this.takeoff(); if (!o.grand) return false; }
     if (this.stunt || this.frozen) return false;
-    const dur = type === 'loop' ? 1.35 : 1.0;
-    this.stunt = { type, t: 0, dur, dir: this.yawRate > 0.2 ? -1 : 1 };
+    const dur = o.dur || (type === 'loop' ? 1.35 : 1.0);
+    this.stunt = { type, t: 0, dur, dir: this.yawRate > 0.2 ? -1 : 1, grand: !!o.grand };
     if (type === 'loop') this.pos.y = Math.max(this.pos.y, height(this.pos.x, this.pos.z) + 1.6);
+    if (o.grand) {
+      // Kreis: Radius aus Tempo·Dauer; Tiefpunkt mind. 2,6 m über dem Boden (Rest wird in den ersten 35 % angehoben)
+      const R = this.baseSpeed * 1.5 * dur / TAU, fx = Math.sin(this.yaw), fz = Math.cos(this.yaw);
+      const lift = Math.max(0, height(this.pos.x, this.pos.z) + 2.6 - this.pos.y);
+      this.stunt.lift = this.stunt.lift0 = lift;
+      this.stunt.c = new THREE.Vector3(this.pos.x + fx * R * 0.3, this.pos.y + lift + R, this.pos.z + fz * R * 0.3);
+      // Kamera-Seite schräg von hinten (Hochformat 55°, quer 75°) → Kreis als Ellipse, passt ins schmale Bild
+      const port = (this.camAspect || 1) < 1, th = port ? 0.8 : 1.3;
+      this.stunt.side = new THREE.Vector3(fz * Math.sin(th) - fx * Math.cos(th), 0, -fx * Math.sin(th) - fz * Math.cos(th));
+      this.stunt.R = R;
+    }
     this.emit('stunt', type);
     return true;
   }
@@ -85,7 +97,10 @@ export class Player {
       const p = Math.min(1, S.t / S.dur), e = ease(p);
       this.yawRate *= Math.max(0, 1 - dt * 4);
       this.yaw += this.yawRate * dt;
-      const sp = this.baseSpeed * 1.15;
+      const sp = this.baseSpeed * (S.grand ? 1.5 : 1.15);
+      if (S.grand && S.lift > 0) { // Sieger-Looping: sanft auf Sicherheitshöhe heben (erste 35 %)
+        const dy = Math.min(S.lift, S.lift0 * dt / (S.dur * 0.35)); this.pos.y += dy; S.lift -= dy;
+      }
       if (S.type === 'loop') {
         const a = e * TAU;
         const cp = Math.cos(a);
@@ -210,13 +225,42 @@ export class Player {
   kick(fov = 4, shake = 0.15) { this.fovKick = Math.max(this.fovKick, fov); this.shakeT = Math.max(this.shakeT, shake); }
 
   updateCamera(cam, dt, t) {
-    const aspect = cam.aspect;
+    const aspect = cam.aspect; this.camAspect = aspect;
     const portrait = aspect < 1;
     const dist = portrait ? 6.4 : 4.7, hgt = portrait ? 2.3 : 1.6;
     _f.set(Math.sin(this.yaw), 0, Math.cos(this.yaw));
     // gelandet: Kamera schwenkt langsam nach vorn (Gesicht zeigen)
-    const orbitT = this.hover ? 2.75 : this.landed ? 2.2 : 0;
+    // Sieger-Looping: Kamera schwenkt zur Seite (Kreis gut sichtbar), danach weiter nach vorn zum Jubel
+    const grand = this.stunt && this.stunt.grand ? this.stunt : null;
+    const orbitT = this.hover ? 2.75 : this.landed ? 2.2 : grand ? Math.PI / 2 : 0;
+    if (grand) this.grandBlend = 0.7; else this.grandBlend = Math.max(0, (this.grandBlend || 0) - dt);
     this.orbit += (orbitT - this.orbit) * Math.min(1, dt * (this.landed || this.hover ? 0.9 : 3));
+    if (grand) {
+      // Sieger-Looping: Kamera steht seitlich am Kreis → der ganze Looping ist als Kreis zu sehen
+      // Polar um den Kreismittelpunkt fahren (Winkel/Radius/Höhe getrennt) – ein Positions-Lerp würde die
+      // Sehne schneiden und die Kamera mitten durch die Figur schicken.
+      // Abstand so, dass der ganze Kreis (+20 % Rand) ins Bild passt; Blick fast fest auf die Kreismitte
+      const portrait = cam.aspect < 1, D = Math.max(7, grand.R * (portrait ? 2.4 : 2.1));
+      if (!this.camInit) { this.camPos.copy(grand.c).addScaledVector(grand.side, D); this.camLook.copy(grand.c); this.camInit = true; }
+      if (!grand.cam) {
+        const dx = this.camPos.x - grand.c.x, dz = this.camPos.z - grand.c.z;
+        grand.cam = { a: Math.atan2(dx, dz), r: Math.max(3, Math.hypot(dx, dz)), y: this.camPos.y - grand.c.y };
+      }
+      const K = grand.cam, k = 1 - Math.exp(-dt * 3.4);
+      let da = Math.atan2(grand.side.x, grand.side.z) - K.a; da = Math.atan2(Math.sin(da), Math.cos(da));
+      K.a += da * k; K.r += (D - K.r) * k; K.y += (0.9 - K.y) * k;
+      this.camPos.set(grand.c.x + Math.sin(K.a) * K.r, grand.c.y + K.y, grand.c.z + Math.cos(K.a) * K.r);
+      const g2 = height(this.camPos.x, this.camPos.z) + 0.8; if (this.camPos.y < g2) this.camPos.y = g2;
+      _w.copy(grand.c).lerp(this.pos, 0.2);
+      this.camLook.lerp(_w, 1 - Math.exp(-dt * 6));
+      cam.position.copy(this.camPos);
+      cam.lookAt(this.camLook);
+      this.fovKick = Math.max(0, this.fovKick - dt * 12);
+      const base = portrait ? THREE.MathUtils.clamp(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(33)) / cam.aspect) * 180 / Math.PI, 60, 76) : 62;
+      cam.fov += (base + this.fovKick - cam.fov) * Math.min(1, dt * 5);
+      cam.updateProjectionMatrix();
+      return;
+    }
     const ca = Math.cos(this.orbit), sa = Math.sin(this.orbit);
     const bx = -_f.x * ca + _f.z * sa, bz = -_f.z * ca - _f.x * sa;
     const d = this.landed || this.hover ? dist * 0.72 : dist;
@@ -227,7 +271,7 @@ export class Player {
     if (!this.camInit) { this.camPos.copy(_v); this.camLook.copy(this.pos); this.camInit = true; }
     // im Orbit (gelandet/Jubel) direkt auf dem Kreis bleiben – nie durch die Figur schneiden
     const orbiting = this.orbit > 0.05;
-    this.camPos.lerp(_v, 1 - Math.exp(-dt * (orbiting ? 14 : this.stunt ? 3.2 : 5.5)));
+    this.camPos.lerp(_v, 1 - Math.exp(-dt * (this.grandBlend > 0 ? 3.5 : orbiting ? 14 : this.stunt ? 3.2 : 5.5)));
     _w.copy(this.pos).addScaledVector(_f, this.landed || this.hover ? 0 : 2.4); _w.y += this.landed || this.hover ? 0.15 : 0.45;
     this.camLook.lerp(_w, 1 - Math.exp(-dt * 9));
     cam.position.copy(this.camPos);

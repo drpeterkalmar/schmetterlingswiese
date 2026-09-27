@@ -16,6 +16,7 @@ button { font-family: inherit; color: inherit; border: 0; background: none; padd
 /* ---------- Zonen-Hinweise ---------- */
 #zones { position: fixed; inset: 0; pointer-events: none; z-index: 3; display: none; }
 body.playing.zones #zones { display: block; }
+body.won #zones, body.won #stick { display: none !important; }
 .z { position: absolute; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 30px; font-weight: 900;
   opacity: .28; transition: opacity .15s, background .15s; text-shadow: 0 2px 8px rgba(60, 20, 80, .45); }
 .z.on { opacity: 1; }
@@ -61,14 +62,6 @@ body.playing #hud { display: block; }
 #toast.show { opacity: 1; transform: translateX(-50%) scale(1); }
 #count { position: absolute; left: 50%; top: 38%; transform: translate(-50%, -50%); font-size: 110px; font-weight: 900; color: #fff; text-shadow: 0 6px 0 #ff6fa8, 0 12px 30px rgba(120,40,90,.5); opacity: 0; }
 #count.show { animation: countIn .9s ease-out forwards; }
-.act { pointer-events: auto; position: absolute; bottom: calc(var(--sb) + 18px); width: 84px; height: 84px; border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.95), rgba(255,236,250,.8)); border: 3px solid rgba(255,255,255,.95);
-  box-shadow: 0 6px 0 rgba(200, 90, 150, .35), 0 10px 26px rgba(80, 30, 90, .28); font-size: 34px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; touch-action: none; }
-.act span { font-size: 11px; font-weight: 900; margin-top: 3px; letter-spacing: .3px; color: var(--ink2); }
-.act:active, .act.on { transform: translateY(3px) scale(.95); box-shadow: 0 3px 0 rgba(200,90,150,.35), 0 6px 16px rgba(80,30,90,.25); }
-#bLoop { left: calc(var(--sl) + 14px); }
-#bRoll { right: calc(var(--sr) + 14px); }
-body.stick #bLoop { left: auto; right: calc(var(--sr) + 112px); }
 
 /* ---------- Screens ---------- */
 #ui { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
@@ -252,7 +245,6 @@ input[type=range] { width: 130px; accent-color: #ff7eb6; height: 44px; }
 @keyframes breathe { 0%, 100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.06); opacity: 1; } }
 @keyframes flutter { 0%, 100% { transform: translateY(0) rotate(-6deg) scaleX(1); } 25% { transform: translateY(-8px) rotate(0) scaleX(.7); } 50% { transform: translateY(-4px) rotate(6deg) scaleX(1); } 75% { transform: translateY(-10px) rotate(0) scaleX(.75); } }
 @media (max-height: 460px) {
-  .act { width: 72px; height: 72px; font-size: 28px; }
   #hint { bottom: calc(var(--sb) + 92px); font-size: 16px; }
   .wcard { min-height: min(62dvh, 300px); padding: 12px; }
   .wcard .we { font-size: 40px; } .wcard h3 { font-size: 22px; }
