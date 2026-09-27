@@ -123,8 +123,17 @@ void main(){
     a = smoothstep(0.62, 0.52, v); c *= 1.1;
   } else if (sh < 4.5) { // Tropfen/Strich (Richtung über Rotation)
     a = smoothstep(0.07, 0.015, abs(r.x)) * smoothstep(0.5, 0.15, abs(r.y));
-  } else { // Ring
+  } else if (sh < 5.5) { // Ring
     float d = length(q) * 2.0; a = smoothstep(0.12, 0.0, abs(d - 0.8)); c *= 1.4;
+  } else if (sh < 6.5) { // Seifenblase: zarter Rand, fast durchsichtige Füllung, Glanzpunkt
+    float d = length(q) * 2.0;
+    float rim = smoothstep(0.16, 0.0, abs(d - 0.84)) * 0.85;
+    float fill = (1.0 - smoothstep(0.7, 0.9, d)) * 0.12;
+    float hl = smoothstep(0.16, 0.05, length(q - vec2(-0.17, 0.17)));
+    a = max(rim, fill) + hl; c = mix(c * 1.2, vec3(1.0), hl);
+  } else { // Wölkchen: weicher, deckender Klecks aus drei Kreisen
+    float d = min(min(length(q - vec2(-0.13, -0.04)), length(q - vec2(0.13, -0.04))), length(q - vec2(0.0, 0.1)) * 0.95);
+    a = smoothstep(0.26, 0.17, d) * 0.9; c *= 1.05 - 0.15 * smoothstep(0.1, -0.2, q.y);
   }
   gl_FragColor = vec4(c, a * vP.y);
   if (gl_FragColor.a < 0.01) discard;

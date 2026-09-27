@@ -187,6 +187,7 @@ export class Game {
     const add = big ? 2 : 1;
     if (pending + add <= 2.6) { c.roll(add, (this.hits & 1) ? -1 : 1); this.app.stat('rolls'); }
     this.app.audio.sfx('roll', 0, { gain: big ? 0.85 : 0.45, rate: big ? 0.92 : 1.12 });
+    if (this.app.funOn('hupe')) this.app.audio.sfx('hupe', 0, { gain: 0.9 });
     this.rollCol = col; this.rollBig = big; // Doppel-Helix aus den Flügelspitzen → rollTrail()
     if (big) {
       this.bursts.emit({ n: 1, pos: pl.pos, colors: [0xfff3b0], shape: 5, size: 5, speed: 0, up: 0, life: 0.5, grav: 0, drag: 0 });
@@ -199,7 +200,7 @@ export class Game {
   rollTrail(dt) {
     const pl = this.player, c = pl.critter;
     if (!c || !c.rolling) return;
-    const a = c.rollAng, s = pl.critter.wingSpan || 0.95;
+    const a = c.rollAng, s = (c.wingSpan || 0.95) * (c.size || 1);
     const fx = Math.sin(pl.yaw), fz = Math.cos(pl.yaw), rx = Math.cos(pl.yaw), rz = -Math.sin(pl.yaw);
     const n = Math.max(1, Math.round(dt * 60));
     for (let side = -1; side <= 1; side += 2) {
@@ -219,6 +220,7 @@ export class Game {
     const ok = pl.tryStunt('loop', { grand: true, dur: 2.3 });
     this.finale = { t: 0, loop: ok, apex: false, end: ok ? -1 : 0, hue: 0 };
     this.app.audio.sfx('combo'); this.app.audio.sfx('loop', 0, { gain: 1.2, rate: 0.9 });
+    if (this.app.funOn('hupe')) setTimeout(() => this.app.audio.sfx('hupe', 0, { gain: 1 }), 700);
     this.app.haptics.buzz('stunt');
     pl.kick(9, 0.12);
     this.bursts.emit({ n: 1, pos: pl.pos, colors: [0xffffff], shape: 5, size: 6, speed: 0, up: 0, life: 0.45, grav: 0, drag: 0 });

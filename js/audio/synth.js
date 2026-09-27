@@ -309,6 +309,37 @@ export async function renderSfx(onProgress) {
   add('back', 0.4, 2, (c, o, t) => { const s = osc(c, 'sine', 900, t, t + 0.15); s.frequency.exponentialRampToValueAtTime(520, t + 0.06); const a = g(c, 0); env(a.gain, t, 0.002, 0.8, 0.03, t + 0.15); chain(s, a, o); }, { wet: 0.12, peak: 0.6 });
   add('combo', 1.4, 2, (c, o, t) => { [0, 2, 4, 5, 7].forEach((d, i) => kalimba(c, o, t + i * 0.045, mtof(84 + degreeToSemi(d)), 0.35, { dur: 0.8 })); }, { wet: 0.3 });
   add('sip', 0.9, 2, (c, o, t) => { for (let k = 0; k < 4; k++) { const tt = t + k * 0.12; const s = osc(c, 'sine', 380, tt, tt + 0.1); s.frequency.exponentialRampToValueAtTime(900, tt + 0.07); const a = g(c, 0); env(a.gain, tt, 0.004, 0.5, 0.025, tt + 0.1); chain(s, a, o); } }, { wet: 0.2 });
+  // Pups-Wölkchen (v2.2): kurzes, lustiges „Pfrrt“ – flatternder tiefer Ton + Luft, weich gefiltert, mit Plopp am Ende
+  for (let v = 0; v < 3; v++) add('pups', 0.8, 2, (c, o, t) => {
+    const len = 0.32 + v * 0.08, f0 = 150 - v * 18;
+    const s = osc(c, 'sawtooth', f0, t, t + len + 0.05); s.frequency.setValueAtTime(f0, t); s.frequency.exponentialRampToValueAtTime(f0 * 0.62, t + len);
+    const fl = osc(c, 'square', 26 + v * 4, t, t + len + 0.05); const fg = g(c, 0.45); fl.connect(fg);
+    const lp = filt(c, 'lowpass', 900, 1.2); lp.frequency.setValueAtTime(1100, t); lp.frequency.exponentialRampToValueAtTime(380, t + len);
+    const a = g(c, 0); env(a.gain, t, 0.015, 0.8, len * 0.45, t + len + 0.05, 0.25); fg.connect(a.gain);
+    chain(s, lp, a, o);
+    const n = noise(c, t, t + len); const bp = filt(c, 'bandpass', 520, 1.1); const na = g(c, 0); env(na.gain, t, 0.01, 0.25, len * 0.4, t + len); chain(n, bp, na, o);
+    const pl = osc(c, 'sine', 520, t + len, t + len + 0.12); pl.frequency.exponentialRampToValueAtTime(900, t + len + 0.06); const pa = g(c, 0); env(pa.gain, t + len, 0.003, 0.3, 0.03, t + len + 0.12); chain(pl, pa, o);
+  }, { wet: 0.12, peak: 0.65 });
+  // Quietsch-Hupe (v2.2): „Tröt-tröt“ (Fahrradhupe) bzw. Quietsche-Ente
+  for (let v = 0; v < 2; v++) add('hupe', 0.9, 2, (c, o, t) => {
+    if (v === 0) {
+      [0, 0.2].forEach((dt, k) => {
+        const t0 = t + dt, f = k ? 392 : 440;
+        const s = osc(c, 'square', f, t0, t0 + 0.17); s.frequency.setValueAtTime(f * 1.04, t0); s.frequency.exponentialRampToValueAtTime(f * 0.96, t0 + 0.16);
+        const s2 = osc(c, 'sawtooth', f * 1.5, t0, t0 + 0.17);
+        const bp = filt(c, 'bandpass', 1300, 2.2), a = g(c, 0); env(a.gain, t0, 0.01, 0.7, 0.08, t0 + 0.17, 0.5);
+        s.connect(bp); s2.connect(bp); chain(bp, a, o);
+      });
+    } else {
+      [0, 0.18].forEach((dt) => {
+        const t0 = t + dt, s = osc(c, 'sine', 900, t0, t0 + 0.15);
+        s.frequency.setValueAtTime(950, t0); s.frequency.linearRampToValueAtTime(1500, t0 + 0.05); s.frequency.linearRampToValueAtTime(1150, t0 + 0.14);
+        const s2 = osc(c, 'triangle', 1900, t0, t0 + 0.15); s2.frequency.linearRampToValueAtTime(2900, t0 + 0.05); s2.frequency.linearRampToValueAtTime(2300, t0 + 0.14);
+        const a = g(c, 0); env(a.gain, t0, 0.008, 0.7, 0.06, t0 + 0.15, 0.4); const a2 = g(c, 0); env(a2.gain, t0, 0.008, 0.18, 0.05, t0 + 0.15);
+        chain(s, a, o); chain(s2, a2, o);
+      });
+    }
+  }, { wet: 0.15, peak: 0.6 });
   let done = 0; jobs.forEach(j => j.then(() => onProgress && onProgress(++done / jobs.length)));
   await Promise.all(jobs);
   return S;
