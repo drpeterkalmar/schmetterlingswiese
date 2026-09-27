@@ -1,6 +1,6 @@
 // Fortschritt & Profile (localStorage), Sammelalbum, Abzeichen, Freischaltungen
 import { LEVELS, todayStr } from './levels.js';
-import { CHARACTERS, COLORS, HATS, PATTERNS } from '../actors/characters.js';
+import { CHARACTERS, HATS, EXTRAS, SKINS, TRAILS, SIZES, FUN, fullLook } from '../actors/characters.js';
 
 const KEY = 'schmetterlingswiese.v2';
 export const AVATAR_COLORS = ['#ff7eb6', '#7cc4ff', '#ffc94a', '#9ce07a', '#b89cff', '#ff9a5a'];
@@ -54,10 +54,35 @@ function newProfile(name, color) {
   return {
     id: 'p' + Date.now().toString(36) + Math.floor(Math.random() * 1e4), name, color,
     created: Date.now(), diff: 'leicht',
-    look: { char: 'schmetterling', color: { schmetterling: 0, marienkaefer: 0, biene: 0, libelle: 0 }, pattern: 'monarch', hat: 'none' },
+    look: { char: 'schmetterling', per: {} },
     levels: {}, stats: {}, album: {}, badges: {}, daily: { done: {} }, seen: {},
+    fun: { hupe: false, pupsTon: true }, seenUnl: {}, lv: 22,
   };
 }
+// v2.0/2.1 → v2.2: Aussehen je Figur (Farben explizit, Hut je Figur). Alte Felder bleiben unangetastet erhalten.
+const OLD_CHARS = ['schmetterling', 'marienkaefer', 'biene', 'libelle'];
+export function migrateProfile(p) {
+  p.look = p.look || { char: 'schmetterling' };
+  const L = p.look;
+  if (!L.per) {
+    L.per = {};
+    for (const k of OLD_CHARS) {
+      const old = { color: (L.color && L.color[k]) || 0, hat: L.hat || 'none' };
+      if (k === 'schmetterling' && L.pattern) old.pattern = L.pattern;
+      const f = fullLook(k, old);
+      L.per[k] = { a: f.a, b: f.b, c: f.c, hat: f.hat, ...(k === 'schmetterling' ? { pattern: f.pattern } : {}) };
+    }
+  }
+  if (!CHARACTERS.some(c => c.id === L.char)) L.char = 'schmetterling';
+  p.fun = { hupe: false, pupsTon: true, ...(p.fun || {}) };
+  p.seenUnl = p.seenUnl || {};
+  p.levels = p.levels || {}; p.stats = p.stats || {}; p.album = p.album || {}; p.badges = p.badges || {};
+  p.daily = p.daily || { done: {} }; p.daily.done = p.daily.done || {}; p.seen = p.seen || {};
+  p.lv = 22;
+  return p;
+}
+const LISTS = { char: CHARACTERS, hat: HATS, extra: EXTRAS, skin: SKINS, trail: TRAILS, size: SIZES, fun: FUN };
+const TYPE_NAME = { char: 'Figur', hat: 'Hut', extra: 'Extra', skin: 'Flügel', trail: 'Spur', size: 'Spaß', fun: 'Spaß' };
 
 export class Progress {
   constructor(storage = globalThis.localStorage) {
@@ -65,6 +90,7 @@ export class Progress {
     this.data = defaults();
     try { const raw = this.st && this.st.getItem(KEY); if (raw) this.data = { ...defaults(), ...JSON.parse(raw) }; } catch (e) { this.data = defaults(); }
     this.data.settings = { ...defaults().settings, ...(this.data.settings || {}) };
+    this.data.profiles = (this.data.profiles || []).filter(p => p && typeof p === 'object').map(migrateProfile);
   }
   save() { try { this.st && this.st.setItem(KEY, JSON.stringify(this.data)); } catch (e) { /* voll/privat */ } }
   get settings() { return this.data.settings; }
@@ -92,15 +118,39 @@ export class Progress {
     if (i <= 0) return true;
     return this.bestStars(LEVELS[i - 1].id, p) > 0;
   }
-  // Freischaltbares nach Sternen
+  // Freischaltbares nach Sternen (v2.2: Figuren, Farben und Muster sind frei – freigeschaltet werden verrückte Sachen)
   unlockables() {
     const out = [];
-    CHARACTERS.forEach(c => out.push({ type: 'char', id: c.id, name: c.name, emoji: c.emoji, stars: c.stars }));
-    for (const k of Object.keys(COLORS)) COLORS[k].forEach((c, i) => { if (c.stars > 0) out.push({ type: 'color', id: k + ':' + i, name: `${c.name} (${CHARACTERS.find(x => x.id === k).name})`, emoji: '🎨', stars: c.stars }); });
-    HATS.forEach(h => { if (h.stars > 0) out.push({ type: 'hat', id: h.id, name: h.name, emoji: h.emoji, icon: h.icon, stars: h.stars }); });
-    PATTERNS.forEach(pt => { if (pt.stars > 0) out.push({ type: 'pattern', id: pt.id, name: 'Flügelmuster ' + pt.name, emoji: '🦋', stars: pt.stars }); });
-    return out;
+    for (const [type, list] of Object.entries(LISTS)) for (const it of list) {
+      if (!it.stars || (type === 'size' && it.id === 'xs')) continue;
+      out.push({ type, id: it.id, name: type === 'size' ? 'Riesen- & Winzling-Modus' : it.name, emoji: type === 'size' ? '🐘' : type === 'skin' ? '🦋' : it.emoji, icon: it.icon, stars: it.stars, kind: TYPE_NAME[type] });
+    }
+    return out.sort((a, b) => a.stars - b.stars);
   }
+  // Aussehen der Figur (vollständig, mit Standardwerten)
+  lookOf(p = this.cur, char) {
+    const k = char || (p && p.look.char) || 'schmetterling';
+    return fullLook(k, (p && p.look.per && p.look.per[k]) || {});
+  }
+  setLook(patch, char, p = this.cur) {
+    if (!p) return;
+    const k = char || p.look.char;
+    p.look.per = p.look.per || {};
+    p.look.per[k] = { ...(p.look.per[k] || {}), ...patch };
+    this.save();
+  }
+  // Freigeschaltet, aber in der Werkstatt noch nicht angesehen
+  unseen(p = this.cur) {
+    if (!p) return [];
+    const s = this.stars(p);
+    return this.unlockables().filter(u => s >= u.stars && !p.seenUnl[u.type + ':' + u.id]);
+  }
+  isNew(type, id, p = this.cur) {
+    if (!p) return false;
+    const key = type === 'size' ? 'size:xl' : type + ':' + id;
+    return this.isUnlocked(type, id, p) && !p.seenUnl[key] && this.unlockables().some(u => u.type + ':' + u.id === key);
+  }
+  markSeen(keys, p = this.cur) { if (!p || !keys.length) return; let ch = false; for (const k of keys) if (!p.seenUnl[k]) { p.seenUnl[k] = Date.now(); ch = true; } if (ch) this.save(); }
   record(levelId, diff, res, isDaily) {
     const p = this.cur; if (!p) return { unlocks: [], badges: [] };
     const before = this.stars(p);
@@ -129,11 +179,10 @@ export class Progress {
   dailyDone(p = this.cur) { return !!(p && p.daily.done[todayStr()]); }
   firstTime(key) { const p = this.cur; if (!p) return true; if (p.seen[key]) return false; p.seen[key] = 1; this.save(); return true; }
   isUnlocked(type, id, p = this.cur) {
-    const s = this.stars(p);
-    if (type === 'char') return s >= (CHARACTERS.find(c => c.id === id)?.stars ?? 999);
-    if (type === 'hat') return s >= (HATS.find(h => h.id === id)?.stars ?? 999);
-    if (type === 'pattern') return s >= (PATTERNS.find(h => h.id === id)?.stars ?? 999);
-    if (type === 'color') { const [k, i] = id.split(':'); return s >= (COLORS[k]?.[+i]?.stars ?? 999); }
-    return false;
+    const list = LISTS[type];
+    if (!list) return true; // Farben, Muster, Formen, Augen, Fühler: alles frei
+    const it = list.find(x => x.id === id);
+    if (!it) return false;
+    return !it.stars || this.stars(p) >= it.stars;
   }
 }
