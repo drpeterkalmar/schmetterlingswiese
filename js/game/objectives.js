@@ -179,7 +179,13 @@ class CollectTask extends Task {
         }
         // Magnet
         _v.subVectors(pl, it.pos); const d = _v.length();
-        if (d < D.magnet && d > 0.01 && !g.player.stunt) { it.pos.addScaledVector(_v, Math.min(1, dt * 4.5 / Math.max(0.6, d / D.magnet))); if (this.kind !== 'collect') it.base.addScaledVector(_v, Math.min(1, dt * 3)); }
+        // Magnet zieht in 3D. Früher wurde bei Tropfen nur pos verschoben und y jedes Frame aus base neu gesetzt →
+        // der Tropfen klebte waagrecht UNTER dem Spieler ("lila Ding am unteren Rand"), unerreichbar, Zielpfeil aus.
+        if (d < D.magnet && d > 0.01 && !g.player.stunt) {
+          const k = Math.min(1, dt * 4.5 / Math.max(0.6, d / D.magnet));
+          it.pos.addScaledVector(_v, k);
+          if (this.kind === 'collect') it.base.addScaledVector(_v, k); else it.base.addScaledVector(_v, Math.min(1, dt * 3));
+        }
         if (d < R && this.cur < this.max) this.take(it);
       }
       const spin = this.kind === 'blossoms' ? t * 1.5 + it.ph : t * 1.6 + it.ph;
