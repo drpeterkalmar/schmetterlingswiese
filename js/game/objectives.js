@@ -549,8 +549,10 @@ export class GlitterStar {
   constructor(g) {
     this.g = g;
     const p = spot(g, { rMin: 30, rMax: 85, treeGap: 0 });
-    // gern hoch oben oder bei einem Baum versteckt
-    const trees = g.treePts;
+    // gern hoch oben oder bei einem Baum versteckt – aber nur an Bäumen im Spielfeld: Bäume stehen bis
+    // 150 m (Hügelrand), die Spielergrenze liegt bei player.bounds = 108 m (Bug 27.09.: Stern draußen).
+    // Gefiltert wird auf die fertige Sternposition (Baum + Versatz) < 85 m, wie bei den Kirschblüten-Bäumen.
+    const trees = g.treePts.filter(t => Math.hypot(t.x + 2.8 * t.s, t.z + 1.5) < 85);
     if (trees.length && g.rnd() < 0.6) { const t = trees[(g.rnd() * trees.length) | 0]; p.set(t.x + 2.8 * t.s, height(t.x, t.z) + 2.2, t.z + 1.5); }
     else p.y += 6 + g.rnd() * 6;
     this.pos = p; this.found = false; this.s = 1;
