@@ -36,6 +36,19 @@ export class Input {
     if (x > w * 0.7) return 'R';
     return y < h * 0.46 ? 'U' : 'D';
   }
+  // Ein Finger kann alles: Seite = drehen, Mitte oben/unten = steigen/sinken (wie bisher),
+  // dazu Finger liegen lassen und hoch/runter schieben = steigen/sinken (auch beim Drehen).
+  // Wer mitten oben/unten startet und zur Seite gleitet, steigt/sinkt dabei weiter.
+  axes(p) {
+    const w = innerWidth, x = p.x;
+    const t = x < w * 0.3 ? -1 : x > w * 0.7 ? 1 : 0;
+    const dy = p.y - p.ay, DZ = 26, FULL = 42;
+    let c;
+    if (Math.abs(dy) > DZ) c = -Math.sign(dy) * Math.min(1, (Math.abs(dy) - DZ) / FULL + 0.35);
+    else if (t === 0) c = p.y < innerHeight * 0.46 ? 1 : -1;
+    else c = p.c0;
+    return [t, c];
+  }
   down(e) {
     if (!this.enabled) return;
     e.preventDefault();
@@ -47,13 +60,20 @@ export class Input {
       }
       return;
     }
-    this.ptr.set(e.pointerId, { zone: this.zoneOf(e.clientX, e.clientY) });
+    const z = this.zoneOf(e.clientX, e.clientY);
+    this.ptr.set(e.pointerId, { x: e.clientX, y: e.clientY, ay: e.clientY, c0: z === 'U' ? 1 : z === 'D' ? -1 : 0, t: 0, c: 0 });
     this.paintZones();
   }
   move(e) {
     if (this.stick && e.pointerId === this.stick.id) { this.stick.x = e.clientX; this.stick.y = e.clientY; this.showStick(true); return; }
     const p = this.ptr.get(e.pointerId);
-    if (p) { const z = this.zoneOf(e.clientX, e.clientY); if (z !== p.zone) { p.zone = z; this.paintZones(); } }
+    if (p) {
+      p.x = e.clientX; p.y = e.clientY;
+      // Anker folgt, wenn man über den Voll-Ausschlag hinaus schiebt → Umkehren wirkt sofort
+      const MAX = 68, d = p.y - p.ay;
+      if (d > MAX) p.ay = p.y - MAX; else if (d < -MAX) p.ay = p.y + MAX;
+      this.paintZones();
+    }
   }
   up(e) {
     if (this.stick && e.pointerId === this.stick.id) { this.stick = null; this.showStick(false); }
@@ -61,7 +81,10 @@ export class Input {
   }
   paintZones() {
     const act = { L: 0, R: 0, U: 0, D: 0 };
-    for (const p of this.ptr.values()) act[p.zone] = 1;
+    for (const p of this.ptr.values()) {
+      const [t, c] = this.axes(p); p.t = t; p.c = c;
+      if (t < 0) act.L = 1; if (t > 0) act.R = 1; if (c > 0.05) act.U = 1; if (c < -0.05) act.D = 1;
+    }
     for (const k in this.zoneEls) this.zoneEls[k].classList.toggle('on', !!act[k]);
   }
   showStick(on) {
@@ -83,9 +106,12 @@ export class Input {
       c = Math.max(-1, Math.min(1, -(this.stick.y - this.stick.y0) / R));
       if (Math.abs(t) < 0.12) t = 0; if (Math.abs(c) < 0.12) c = 0;
     } else {
-      let nL = 0, nR = 0, nU = 0, nD = 0;
-      for (const p of this.ptr.values()) { if (p.zone === 'L') nL = 1; else if (p.zone === 'R') nR = 1; else if (p.zone === 'U') nU = 1; else nD = 1; }
-      t = nR - nL; c = nU - nD;
+      let nL = 0, nR = 0, cU = 0, cD = 0;
+      for (const p of this.ptr.values()) {
+        if (p.t < 0) nL = 1; else if (p.t > 0) nR = 1;
+        if (p.c > 0) cU = Math.max(cU, p.c); else if (p.c < 0) cD = Math.max(cD, -p.c);
+      }
+      t = nR - nL; c = cU - cD;
     }
     const k = this.keys;
     if (k.ArrowLeft || k.KeyA) t -= 1; if (k.ArrowRight || k.KeyD) t += 1;

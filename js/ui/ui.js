@@ -270,6 +270,7 @@ export class UI {
       <div class="tasklist">
         <div>👈👉 Links oder rechts <b>halten</b> = drehen</div>
         <div>☝️ Mitte oben halten = steigen · Mitte unten = sinken</div>
+        <div>👆 Finger liegen lassen und hoch/runter schieben = steigen/sinken – auch beim Drehen!</div>
         <div>🛬 Über einem Leuchtring unten halten = landen, oben halten = abheben</div>
         <div>🤸 Looping & 🌀 Schraube: Knöpfe unten</div>
         <div>🔥 Schnell hintereinander sammeln = Kombo!</div>

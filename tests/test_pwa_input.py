@@ -21,6 +21,14 @@ with sync_playwright() as pw:
     # Multitouch: rechts + unten gleichzeitig
     touch('touchStart', [(380, 450), (206, 800)]); time.sleep(0.6); r3 = s.ev("[__app.input.rawTurn, __app.input.rawClimb]"); touch('touchEnd', [])
     res['zone_multi'] = r3
+    # Ein Finger ohne Loslassen: links halten, dann hochschieben (steigen), dann runterschieben (sinken)
+    touch('touchStart', [(40, 500)]); time.sleep(0.3)
+    touch('touchMove', [(40, 420)]); time.sleep(0.5); r5a = s.ev("[__app.input.rawTurn, __app.input.rawClimb]")
+    touch('touchMove', [(40, 560)]); time.sleep(0.5); r5b = s.ev("[__app.input.rawTurn, __app.input.rawClimb]")
+    touch('touchMove', [(206, 560)]); time.sleep(0.3); r5c = s.ev("[__app.input.rawTurn, __app.input.rawClimb]")
+    touch('touchEnd', [])
+    res['one_finger_slide'] = {'left_up': r5a, 'left_down': r5b, 'mid_down': r5c,
+                               'ok': r5a[0] == -1 and r5a[1] > 0.9 and r5b[0] == -1 and r5b[1] < -0.9 and r5c[0] == 0 and r5c[1] < 0}
     # Stunt-Knopf
     b = s.pg.locator('#bLoop').bounding_box()
     touch('touchStart', [(b['x'] + 40, b['y'] + 40)]); time.sleep(0.1); touch('touchEnd', []); time.sleep(0.4)

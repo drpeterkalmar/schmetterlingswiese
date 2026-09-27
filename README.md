@@ -25,7 +25,7 @@ besuche Bärenbabys und Capybaras – und sammle Sterne, Hüte und Album-Seiten.
 
 | Gerät | Bedienung |
 |---|---|
-| 📱 Tippen & Halten (Standard) | links/rechts halten = drehen · Mitte oben = steigen · Mitte unten = sinken/landen |
+| 📱 Tippen & Halten (Standard) | links/rechts halten = drehen · Mitte oben = steigen · Mitte unten = sinken/landen · Finger liegen lassen und hoch/runter schieben = steigen/sinken (auch beim Drehen, ohne loszulassen) |
 | 🕹️ Joystick (Einstellungen) | Daumen-Stick links, Knöpfe rechts |
 | 🤸 🌀 Knöpfe | Looping und Schraube (am Boden: abheben) |
 | ⌨️ Tastatur | Pfeile/WASD · Leertaste = Looping · Shift = Schraube · P/Esc = Pause |
