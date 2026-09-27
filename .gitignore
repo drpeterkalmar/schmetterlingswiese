@@ -8,3 +8,5 @@ __pycache__/
 proto*.html
 
 !tests/shots/v21/
+!tests/shots/v22/
+tests/shots/v22/*.png
