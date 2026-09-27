@@ -34,7 +34,7 @@ export const FLIGHT_NORM = 9;
 const MIX = {
   pling: 0.5, ring: 0.42, loop: 0.5, roll: 0.46, land: 0.5, takeoff: 0.36, boing: 0.5, gust: 0.42, splash: 0.4, pick: 0.45,
   aww: 0.32, glitter: 0.5, fanfare: 0.62, star0: 0.5, star1: 0.52, star2: 0.55, unlock: 0.55, tick: 0.3, go: 0.45, fail: 0.45,
-  tap: 0.32, back: 0.3, combo: 0.4, sip: 0.35, pups: 0.42, hupe: 0.4,
+  tap: 0.32, back: 0.3, combo: 0.4, sip: 0.35, pups: 0.42, hupe: 0.5,
 };
 const DUCK = { fanfare: [0.3, 3.0], unlock: [0.45, 1.8], glitter: [0.55, 1.4], star0: [0.6, 0.8], star1: [0.6, 0.8], star2: [0.55, 1.0], combo: [0.75, 0.6], fail: [0.6, 1.0] };
 const PITCHED = new Set(['fanfare', 'unlock', 'glitter', 'star0', 'star1', 'star2', 'combo', 'go', 'fail']);

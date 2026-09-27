@@ -36,11 +36,11 @@ export class Trail {
     }
     this.acc += dt;
     if (id === 'schweif') { // Regenbogen-Band: 7 Farbstreifen nebeneinander
-      const every = 0.022;
+      const every = 0.03;
       let guard = 0;
       while (this.acc >= every && guard++ < 8) {
         this.acc -= every;
-        o.n = 1; o.shape = 0; o.size = 0.3 * k; o.speed = 0; o.up = 0; o.life = 1.1; o.grav = 0; o.drag = 2; o.spread = 0.02; o.spin = 0;
+        o.n = 1; o.shape = 0; o.size = 0.28 * Math.min(k, 1.2); o.speed = 0; o.up = 0; o.life = 0.95; o.grav = 0; o.drag = 2; o.spread = 0.02; o.spin = 0;
         o.vel.set(0, 0, 0); if (drift) o.vel.copy(drift);
         // waagerecht nebeneinander → von hinten eine Regenbogen-Straße (rot außen links, lila rechts)
         const back = this.acc * speed; // Zwischenpositionen, wenn mehrere Emissionen in einen Frame fallen
