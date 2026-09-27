@@ -156,7 +156,7 @@ void main(){
   if (!gl_FrontFacing) N = -N;
   vec3 V = normalize(uCam - vWP);
   vec3 c = toon(alb, N, V, uRimAmt, uGloss, uSoft);
-#ifdef WINGMASK
+#if defined(WINGMASK) || defined(TRANSLUCENT)
   // Durchscheinen bei Gegenlicht (Flügel leuchten in der Sonne)
   float tr = pow(clamp(dot(-V, uSunDir), 0.0, 1.0), 2.0) * 0.6;
   c += alb * uSunCol * tr;
@@ -177,6 +177,7 @@ export function toonMat(o = {}) {
   const defines = {};
   if (o.map) defines.USE_MAPX = '';
   if (o.wing) defines.WINGMASK = '';
+  if (o.trans) defines.TRANSLUCENT = '';
   if (o.instWing) defines.USE_INSTANCE_WING = '';
   if (o.sway) defines.SWAY = '';
   if (o.flap) defines.WINGFLAP = '';
