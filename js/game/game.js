@@ -6,9 +6,15 @@ import { height, pond } from '../world/terrain.js';
 import { Flyers, Animals, Wasps } from '../actors/npcs.js';
 import { makeTask, GlitterStar } from './objectives.js';
 import { DIFFS, worldOf } from './levels.js';
+import { pickStunt, stuntByKey, stuntName, COOLDOWN, C as SC, ease } from './stunts.js';
 
 const _v = new THREE.Vector3(), _w = new THREE.Vector3();
 const RAINBOW = [0xff5a6e, 0xff9a3c, 0xffd84a, 0x7ee06a, 0x4fc8ff, 0x8a7bff, 0xd67cff];
+// Ein wiederverwendetes Options-Objekt für alle Einlagen-Effekte (keine Allokation pro Frame)
+const FO = { n: 1, pos: null, colors: null, shape: 0, size: 0.3, speed: 0, up: 0, life: 1, grav: 0, drag: 1.2, spin: 3, spread: 0.3, vel: null };
+const _x = new THREE.Vector3(), _y = new THREE.Vector3();
+const RB1 = RAINBOW.map(c => [c]), PUFF = [0xffffff, 0xfff4e8], DUST = [0xfff3b0, 0xcfe8ff], FLASH = [0xfff3b0];
+const ZZ = [['a', 1 / 6], ['b', 0.5], ['c', 5 / 6]], WK = [['a', 0.125], ['b', 0.375], ['c', 0.625], ['d', 0.875]];
 
 export class Game {
   constructor(app) {
@@ -32,6 +38,7 @@ export class Game {
     this.rainGeo = rb.build();
     this.rainMat = toonMat({ vc: true, color: 0x9aa4c4, rim: 0.8, soft: 0.4 });
     this.rains = [];
+    this.showLast = null; this.showAt = -99; this.showLog = [];
   }
 
   get diff() { return this.diffCfg; }
@@ -130,7 +137,9 @@ export class Game {
       land: (s) => this.onLand(s), takeoff: () => this.app.audio.sfx('takeoff'),
       stunt: (tp) => { this.app.audio.sfx(tp === 'loop' ? 'loop' : 'roll'); this.app.haptics.buzz('stunt'); this.player.kick(7, 0); },
       stuntDone: (tp) => this.onStuntDone(tp),
+      showDone: (id) => this.onShowDone(id),
     };
+    this.showAt = -99;
     this.app.player.critter.happyT = 0;
     this.app.audio.setWorld(w);
     this.app.audio.setIntensity(0.35);
@@ -295,6 +304,160 @@ export class Game {
     for (const t of this.tasks) if (t.onStunt) t.onStunt(type);
     this.app.ui.hudTasks(this.tasks);
   }
+  // ---------------------------------------------------------------- 🎪 Zufalls-Einlagen (Knopf „STUNT“)
+  // Purer Spaß: keine Aufgaben-Zählung, kein onStunt/onStuntDone; Kombo und Zeit laufen weiter.
+  showReady() {
+    const pl = this.player;
+    return this.state === 'play' && !this.finale && !pl.frozen && !pl.stunt && this.time - this.showAt >= COOLDOWN;
+  }
+  showCd() { return Math.min(1, Math.max(0, (this.time - this.showAt) / COOLDOWN)); }
+  showStunt(key = null, force = false) {
+    const pl = this.player;
+    if (this.state !== 'play' || this.finale || pl.frozen || pl.stunt) return false; // nie in Sieg/Finale/laufende Kunststücke
+    if (!force && this.time - this.showAt < COOLDOWN) return false;
+    const def = stuntByKey(key ?? this.app.stuntOverride) || pickStunt(this.showLast);
+    if (!pl.tryShow(def, Math.random() < 0.5 ? -1 : 1)) return false;
+    this.showLast = def.id; this.showAt = this.time; this.showLog.push(def.id);
+    if (this.showLog.length > 60) this.showLog.shift();
+    const S = pl.stunt; S.ev = {}; S.acc = 0;
+    this.em(1, pl.pos, SC.GOLD, 5, 3.2, 0, 0, 0.4, 0, 0);
+    this.em(14, pl.pos, SC.STAR, 1, 0.34, 3.5, 0.6, 0.7, -0.6);
+    this.app.audio.sfx('zauber', 0, { gain: 0.7, rate: 0.95 + Math.random() * 0.1 });
+    this.app.haptics.buzz('stunt');
+    pl.kick(6, 0.05);
+    this.app.ui.toast(`${def.emoji} ${stuntName(def, this.world.def.id)}!`);
+    return true;
+  }
+  em(n, pos, colors, shape, size, speed, up, life, grav, drag = 1.2, spread = 0.3, vel = null, spin = 3) {
+    const o = FO; o.n = n; o.pos = pos; o.colors = colors; o.shape = shape; o.size = size; o.speed = speed; o.up = up;
+    o.life = life; o.grav = grav; o.drag = drag; o.spread = spread; o.vel = vel; o.spin = spin;
+    this.bursts.emit(o);
+  }
+  // Ring aus Partikeln, der waagerecht nach außen fliegt (Sternenring, Konfetti-Kranz)
+  ringOut(pos, n, colors, shape, size, sp, up, life, grav = 0) {
+    for (let k = 0; k < n; k++) {
+      const a = k / n * Math.PI * 2;
+      _y.set(Math.cos(a) * sp, up, Math.sin(a) * sp);
+      this.em(1, pos, colors, shape, size, 0, 0, life, grav, 1.4, 0.1, _y);
+    }
+  }
+  // Effekte je Einlage (Partikel-Pool, vorgerenderte Klänge, Haptik, Kamera-Kick)
+  showFx(dt) {
+    const pl = this.player, S = pl.stunt;
+    if (!S || S.type !== 'show') return;
+    const p = S.p, E = S.ev, P = pl.pos, au = this.app.audio;
+    const fx = Math.sin(S.yaw), fz = Math.cos(S.yaw), rx = Math.cos(S.yaw), rz = -Math.sin(S.yaw);
+    const once = this.once; // (E, p, Schlüssel, ab) – einmalige Ereignisse je Einlage
+    S.acc += dt * 60; const n = Math.min(4, S.acc | 0); S.acc -= n; // ~60 Emissionen/s, bildratenunabhängig
+    switch (S.id) {
+      case 'doppel':
+        if (once(E, p, 'l1', 0.02)) au.sfx('loop', 0, { gain: 0.9, rate: 1.05 });
+        if (once(E, p, 'l2', 0.5)) au.sfx('loop', 0, { gain: 0.9, rate: 1.18 });
+        for (let i = 0; i < n * 2; i++) this.em(1, P, RB1[((p * 40 | 0) + i) % RB1.length], 0, 0.5, 0.2, 0, 1.8, 0.05, 1, 0.35); // 0,75/2,4 s: vor der Kamera zu wuchtig
+        break;
+      case 'korkenzieher': {
+        if (once(E, p, 's', 0.02)) au.sfx('roll', 0, { gain: 0.8, rate: 0.95 });
+        if (once(E, p, 'f', 0.6)) au.sfx('funkel', 0, { gain: 0.7 });
+        const a = S.side * Math.PI * 2 * ease(p), r = 1.0;
+        for (let side = -1; side <= 1; side += 2) for (let i = 0; i < n; i++) {
+          const ca = Math.cos(a) * r * side, sa = Math.sin(a) * r * side;
+          _x.set(P.x + rx * ca, P.y + sa, P.z + rz * ca);
+          this.em(1, _x, side > 0 ? SC.GOLD : SC.STAR, 1, 0.42, 0.15, 0, 0.9, 0, 0, 0.05);
+        }
+        break;
+      }
+      case 'salto':
+        if (once(E, p, 's', 0.02)) au.sfx('swoosh', 0, { gain: 0.8, rate: 1.1 });
+        if (once(E, p, 'm', 0.5)) this.em(10, P, SC.STAR, 1, 0.3, 2.5, 0.5, 0.6, -0.5);
+        if (once(E, p, 'e', 0.93)) {
+          this.em(1, P, FLASH, 5, 5.5, 0, 0, 0.5, 0, 0);
+          this.ringOut(P, 20, SC.STAR, 1, 0.55, 6, 0.4, 1.1);
+          au.sfx('funkel', 0, { gain: 0.9 }); this.app.haptics.buzz('star');
+        }
+        break;
+      case 'bumerang':
+        if (once(E, p, 's', 0.02)) au.sfx('swoosh', 0, { gain: 0.8, rate: 0.9 });
+        if (once(E, p, 'm', 0.5)) {
+          this.em(16, P, SC.HEART, 3, 0.55, 4, 1.2, 1.3, -0.6);
+          au.sfx('pop', 0, { gain: 0.8 }); au.sfx('swoosh', 0, { gain: 0.7, rate: 1.15 });
+        }
+        if (n && Math.random() < 0.6) this.em(1, P, SC.HEART, 3, 0.5, 0.5, 0.5, 1.3, 0.3, 1.5);
+        break;
+      case 'zickzack':
+        if (once(E, p, 's', 0.0)) pl.kick(9, 0.05);
+        for (const [k, at] of ZZ) if (once(E, p, k, at)) {
+          pl.kick(10, 0.08); au.sfx('swoosh', 0, { gain: 0.75, rate: 1.1 + (k.charCodeAt(0) - 97) * 0.12 });
+          this.em(12, P, SC.BOLT, 1, 0.4, 6, 0.3, 0.5, 0);
+        }
+        for (let i = 0; i < n * 2; i++) this.em(1, P, SC.BOLT, 1, 0.34, 0.3, 0, 0.5, 0, 1, 0.25);
+        break;
+      case 'rakete':
+        if (once(E, p, 's', 0.0)) { au.sfx('rakete', 0, { gain: 0.9 }); this.ringOut(P, 30, SC.CONF, 2, 0.26, 7, 2.5, 1.8, -3); }
+        if (p < 0.5) {
+          _x.copy(P); _x.y -= 0.4;
+          for (let i = 0; i < n * 2; i++) this.em(1, _x, SC.FIRE, 0, 0.45, 1.2, -1.5, 0.7, -3, 1.2, 0.2);
+          if (n && Math.random() < 0.3) this.em(1, _x, PUFF, 7, 0.9, 0.4, -0.3, 1.0, 0.3, 1.5, 0.2);
+        } else for (let i = 0; i < n; i++) this.em(1, P, SC.GOLD, 1, 0.3, 0.2, 0, 0.7, -0.5, 1, 0.3);
+        if (once(E, p, 'top', 0.5)) {
+          this.firework(_x.copy(P).add(_y.set(fx * 2, 2.2, fz * 2)), 0xffd84a);
+          this.firework(_x.copy(P).add(_y.set(rx * 3 * S.side + fx * 5, 4.2, rz * 3 * S.side + fz * 5)), 0xff7eb6);
+          au.sfx('pop', 0, { gain: 1, rate: 0.9 }); this.app.haptics.buzz('star'); pl.kick(8, 0.12);
+        }
+        break;
+      case 'sternschnuppe':
+        if (once(E, p, 's', 0.0)) { pl.kick(11, 0.04); au.sfx('swoosh', 0, { gain: 0.9, rate: 0.8 }); }
+        if (once(E, p, 'f', 0.4)) au.sfx('funkel', 0, { gain: 0.8, rate: 1.1 });
+        for (let i = 0; i < n * 3; i++) this.em(1, P, SC.STAR, 1, 0.3, 0.35, 0, 1.6, -0.35, 0.8, 0.35);
+        for (let i = 0; i < n; i++) this.em(1, P, DUST, 0, 0.7, 0.1, 0, 1.0, 0, 1, 0.2);
+        break;
+      case 'tauchen':
+        if (once(E, p, 's', 0.0)) au.sfx('swoosh', 0, { gain: 0.7, rate: 0.75 });
+        if (once(E, p, 'b', 0.36)) { au.sfx('blubb', 0, { gain: 0.9 }); this.em(14, P, SC.BUBBLE, 6, 0.55, 2.5, 1.2, 1.5, 0.8, 1.6); }
+        if (once(E, p, 'r', 0.45)) au.sfx('roll', 0, { gain: 0.8, rate: 1.1 });
+        if (n && Math.random() < 0.55) this.em(1, P, SC.BUBBLE, 6, 0.4 + Math.random() * 0.3, 0.6, 0.4, 1.4, 0.7, 1.5, 0.5);
+        break;
+      case 'wackeltanz':
+        for (const [k, at] of WK) if (once(E, p, k, at)) {
+          this.em(16, P, SC.CONF, 2, 0.24, 5, 2.2, 1.6, -3, 1.2, 0.3, null, 10);
+          if (k === 'a' || k === 'c') au.sfx('wackel', 0, { gain: 0.9, rate: k === 'a' ? 1 : 1.12 });
+          pl.critter && pl.critter.bump(6);
+        }
+        break;
+      case 'superschraube': {
+        if (once(E, p, 's', 0.0)) au.sfx('roll', 0, { gain: 0.9, rate: 1.2 });
+        if (once(E, p, 'f', 0.5)) au.sfx('funkel', 0, { gain: 0.8 });
+        const a = S.side * 3 * Math.PI * 2 * ease(p), r = 1.3;
+        if (n) for (let k = 0; k < 8; k++) {
+          const b = a + k * Math.PI / 4, ca = Math.cos(b) * r, sa = Math.sin(b) * r;
+          _x.set(P.x + rx * ca, P.y + sa, P.z + rz * ca);
+          this.em(1, _x, SC.STAR, 1, 0.34, 0, 0, 0.24, 0, 0, 0.02);
+        }
+        if (once(E, p, 'e', 0.95)) this.ringOut(P, 14, SC.GOLD, 1, 0.45, 4.5, 0.6, 0.9);
+        break;
+      }
+      case 'wirbel': {
+        if (once(E, p, 's', 0.0)) au.sfx('zauber', 0, { gain: 0.6, rate: 0.85 });
+        if (once(E, p, 'f', 0.5)) au.sfx('funkel', 0, { gain: 0.8, rate: 0.95 });
+        const wid = this.world.def.id;
+        const cols = wid === 'kirsch' ? SC.PETAL : wid === 'abend' ? SC.FIREFLY : this.world.def.flowers;
+        const shape = wid === 'abend' ? 0 : 2, sz = wid === 'abend' ? 0.42 : 0.2; // 0,5/0,3 und 3/Frame: Konfetti-Sturm vor der Kamera
+        const a0 = S.side * 2 * Math.PI * 2 * ease(p) * 1.25, r = 1.8 - 0.7 * p;
+        for (let i = 0; i < n; i++) for (let k = 0; k < 2; k++) {
+          const b = a0 + k * Math.PI + i * 0.3;
+          _x.set(P.x + Math.cos(b) * r, P.y - 0.6 + p * 1.6 + k * 0.25, P.z + Math.sin(b) * r);
+          _y.set(-Math.sin(b) * 2.2 * S.side, 0.8, Math.cos(b) * 2.2 * S.side);
+          this.em(1, _x, cols, shape, sz, 0, 0, 0.85, -0.3, 1.2, 0.1, _y, 6);
+        }
+        break;
+      }
+    }
+  }
+  once(E, p, k, at) { if (p >= at && !E[k]) { E[k] = true; return true; } return false; }
+  onShowDone() {
+    const pl = this.player;
+    this.em(10, pl.pos, SC.STAR, 1, 0.3, 2.5, 0.8, 0.7, -0.8);
+    pl.critter && pl.critter.bump(3);
+  }
   fail(msg) {
     if (this.state !== 'play') return;
     this.state = 'failed';
@@ -321,9 +484,11 @@ export class Game {
       this.time += dt;
       for (const a of input.take()) {
         if (a === 'pause') this.app.pause();
+        if (a === 'show') this.showStunt();
       }
     }
     pl.update(dt, t, playing ? input : null);
+    this.showFx(dt);
     pl.updateCamera(this.app.camera, dt, t);
     this.animals.update(dt, t, pl.pos);
     this.flyers.update(dt, t);

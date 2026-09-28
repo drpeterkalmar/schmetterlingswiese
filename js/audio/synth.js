@@ -340,6 +340,71 @@ export async function renderSfx(onProgress) {
       });
     }
   }, { wet: 0.15, peak: 0.6 });
+  // ---- v2.3: Klänge der Zufalls-Einlagen (🎪) und der Wiesen-Bewohner – kurz, weich, ohne Dauer-Loops
+  // Zauber-Start: Glitzer-Arpeggio aufwärts + Luft-Schwelle
+  for (let v = 0; v < 2; v++) add('zauber', 1.5, 2, (c, o, t) => {
+    [0, 2, 4, 7, 9, 12].forEach((d, i) => bell(c, o, t + i * 0.045, mtof(79 + v * 2 + degreeToSemi(d % 5) + (d >= 12 ? 12 : 0)), 0.26, { tau: 0.3, dur: 1.1 }));
+    const n = noise(c, t, t + 0.7); const bp = filt(c, 'bandpass', 2500, 1.2); bp.frequency.setValueAtTime(1200, t); bp.frequency.exponentialRampToValueAtTime(6000, t + 0.4);
+    const a = g(c, 0); env(a.gain, t, 0.15, 0.35, 0.12, t + 0.7); chain(n, bp, a, o);
+  }, { wet: 0.35 });
+  // Wusch: schneller Luftzug mit Stereo-Wischer
+  for (let v = 0; v < 3; v++) add('swoosh', 0.9, 2, (c, o, t) => {
+    const n = noise(c, t, t + 0.6); const bp = filt(c, 'bandpass', 700, 2);
+    bp.frequency.setValueAtTime(500 + v * 120, t); bp.frequency.exponentialRampToValueAtTime(3000 + v * 400, t + 0.22); bp.frequency.exponentialRampToValueAtTime(700, t + 0.55);
+    const a = g(c, 0); a.gain.setValueAtTime(0, t); a.gain.linearRampToValueAtTime(0.9, t + 0.18); a.gain.linearRampToValueAtTime(0, t + 0.55);
+    const p = c.createStereoPanner(); p.pan.setValueAtTime(v % 2 ? 0.7 : -0.7, t); p.pan.linearRampToValueAtTime(v % 2 ? -0.7 : 0.7, t + 0.5);
+    chain(n, bp, a, p, o);
+  }, { wet: 0.25 });
+  // Rakete: Pfeifen steigt, Zischen, kleiner Knall am Ende
+  add('rakete', 1.9, 2, (c, o, t) => {
+    const s = osc(c, 'sine', 500, t, t + 1.3); s.frequency.exponentialRampToValueAtTime(2600, t + 1.25);
+    const vb = osc(c, 'sine', 9, t, t + 1.3); const vg = g(c, 25); vb.connect(vg); vg.connect(s.frequency);
+    const a = g(c, 0); env(a.gain, t, 0.08, 0.3, 0.8, t + 1.3, 0.25); chain(s, a, o);
+    const n = noise(c, t, t + 1.3); const hp = filt(c, 'highpass', 3000); const na = g(c, 0); env(na.gain, t, 0.05, 0.3, 0.5, t + 1.3, 0.15); chain(n, hp, na, o);
+    const k = noise(c, t + 1.3, t + 1.45); const kl = filt(c, 'lowpass', 2500); const ka = g(c, 0); env(ka.gain, t + 1.3, 0.002, 0.9, 0.04, t + 1.45); chain(k, kl, ka, o);
+    [0, 4, 7].forEach((d, i) => bell(c, o, t + 1.34 + i * 0.03, mtof(84 + d), 0.25, { tau: 0.35, dur: 0.5 }));
+  }, { wet: 0.3 });
+  // Konfetti-Plopp (Knallbonbon)
+  for (let v = 0; v < 3; v++) add('pop', 0.6, 2, (c, o, t) => {
+    const n = noise(c, t, t + 0.08); const bp = filt(c, 'bandpass', 1800 + v * 400, 0.9); const na = g(c, 0); env(na.gain, t, 0.001, 0.9, 0.018, t + 0.08); chain(n, bp, na, o);
+    const s = osc(c, 'sine', 420 + v * 60, t, t + 0.2); s.frequency.exponentialRampToValueAtTime(160, t + 0.12); const a = g(c, 0); env(a.gain, t, 0.002, 0.6, 0.04, t + 0.2); chain(s, a, o);
+    for (let k = 0; k < 4; k++) { const tt = t + 0.06 + k * 0.05 + Math.random() * 0.02; kalimba(c, o, tt, mtof(88 + degreeToSemi(k + v)), 0.12, { dur: 0.35 }); }
+  }, { wet: 0.2 });
+  // Blubb (Seifenblasen)
+  for (let v = 0; v < 2; v++) add('blubb', 0.9, 2, (c, o, t) => {
+    for (let k = 0; k < 4; k++) {
+      const tt = t + k * 0.11 + v * 0.02, f = 320 + k * 70 + v * 40;
+      const s = osc(c, 'sine', f, tt, tt + 0.12); s.frequency.exponentialRampToValueAtTime(f * 2.4, tt + 0.09);
+      const a = g(c, 0); env(a.gain, tt, 0.004, 0.55, 0.03, tt + 0.12); chain(s, a, o);
+    }
+  }, { wet: 0.25 });
+  // Wackel-Boing: federndes „boi-oi-oing“
+  for (let v = 0; v < 2; v++) add('wackel', 1.0, 2, (c, o, t) => {
+    const s = osc(c, 'triangle', 260 + v * 40, t, t + 0.8); s.frequency.linearRampToValueAtTime(420 + v * 50, t + 0.06);
+    const vib = osc(c, 'sine', 11 - v * 2, t, t + 0.8); const vg = g(c, 90); vg.gain.setTargetAtTime(8, t + 0.05, 0.25); vib.connect(vg); vg.connect(s.frequency);
+    const a = g(c, 0); env(a.gain, t, 0.005, 0.8, 0.25, t + 0.8); chain(s, a, o);
+    const s2 = osc(c, 'sine', 520 + v * 80, t, t + 0.5); const a2 = g(c, 0); env(a2.gain, t, 0.004, 0.25, 0.12, t + 0.5); chain(s2, a2, o);
+  }, { wet: 0.15 });
+  // Funkeln: helle Glöckchen-Tupfer (Sternenring, Halo)
+  for (let v = 0; v < 2; v++) add('funkel', 1.4, 2, (c, o, t) => {
+    for (let i = 0; i < 7; i++) bell(c, o, t + i * 0.07 + (i % 2) * 0.015, mtof(91 + degreeToSemi((i * 3 + v) % 7)), 0.16, { tau: 0.25, dur: 0.9, ratio: 3.5 });
+    const n = noise(c, t, t + 0.8); const hp = filt(c, 'highpass', 8000); const a = g(c, 0); env(a.gain, t, 0.1, 0.15, 0.25, t + 0.8); chain(n, hp, a, o);
+  }, { wet: 0.4 });
+  // Wiesen-Leben: leises Bienen-Summen (einzelner, weich gefilterter Ton ohne Schwebung, kein Loop)
+  for (let v = 0; v < 2; v++) add('summ', 1.2, 2, (c, o, t) => {
+    const f = 205 + v * 22;
+    const s = osc(c, 'sawtooth', f, t, t + 1.1); s.frequency.setValueAtTime(f, t); s.frequency.linearRampToValueAtTime(f * (v ? 0.94 : 1.06), t + 1.0);
+    const lp = filt(c, 'lowpass', 850, 0.8); const bp = filt(c, 'highpass', 160);
+    const a = g(c, 0); a.gain.setValueAtTime(0, t); a.gain.linearRampToValueAtTime(0.5, t + 0.25); a.gain.setValueAtTime(0.5, t + 0.7); a.gain.linearRampToValueAtTime(0, t + 1.08);
+    const p = c.createStereoPanner(); p.pan.setValueAtTime(v ? 0.4 : -0.4, t); p.pan.linearRampToValueAtTime(v ? -0.3 : 0.3, t + 1.0);
+    chain(s, lp, bp, a, p, o);
+  }, { wet: 0.15, peak: 0.5 });
+  // Fisch-Platscher: Plopp + Tropfen
+  add('platsch', 1.0, 2, (c, o, t) => {
+    const s = osc(c, 'sine', 380, t, t + 0.18); s.frequency.exponentialRampToValueAtTime(120, t + 0.14); const a = g(c, 0); env(a.gain, t, 0.003, 0.8, 0.05, t + 0.18); chain(s, a, o);
+    const n = noise(c, t, t + 0.35); const bp = filt(c, 'bandpass', 1400, 0.8); const na = g(c, 0); env(na.gain, t, 0.005, 0.45, 0.08, t + 0.35); chain(n, bp, na, o);
+    for (let k = 0; k < 4; k++) { const tt = t + 0.12 + k * 0.07; const d = osc(c, 'sine', 900 + k * 180, tt, tt + 0.08); d.frequency.exponentialRampToValueAtTime(1600 + k * 200, tt + 0.05); const da = g(c, 0); env(da.gain, tt, 0.002, 0.25, 0.02, tt + 0.08); chain(d, da, o); }
+  }, { wet: 0.25 });
   let done = 0; jobs.forEach(j => j.then(() => onProgress && onProgress(++done / jobs.length)));
   await Promise.all(jobs);
   return S;

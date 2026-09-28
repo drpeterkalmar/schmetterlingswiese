@@ -14,8 +14,9 @@ import { Progress, ALBUM } from './game/progress.js';
 import { AudioEngine, Haptics, renderOffline, renderFlight, wavBase64, FLIGHT_NORM } from './audio/audio.js';
 import { Input } from './input.js';
 import { UI } from './ui/ui.js';
+import { STUNTS } from './game/stunts.js';
 
-export const VERSION = '2.2.0';
+export const VERSION = '2.3.0';
 
 class App {
   constructor() {
@@ -42,6 +43,7 @@ class App {
     this.t = 0; this.last = performance.now(); this.frames = 0; this.fps = 60; this._fpsAcc = 0; this._fpsN = 0;
     this.showT = 0; this.showcaseView = 'orbit';
     this._fw = new THREE.Vector3(); this._drift = new THREE.Vector3();
+    this.stuntOverride = new URLSearchParams(location.search).get('stunt'); // ?stunt=<n|id> (A/B, Tests)
     this.applySettings();
     this.renderer.onTier = (q) => { this.world.setQuality(q); this.ui.onQuality && this.ui.onQuality(q); };
     this.bindGlobal();
@@ -79,7 +81,13 @@ class App {
       else this.audio.resume();
     });
     addEventListener('contextmenu', (e) => { if (e.target.tagName !== 'INPUT') e.preventDefault(); });
-    // Looping/Schraube-Knöpfe entfallen: Schraube kommt automatisch bei jedem Teilziel, Looping beim Levelsieg
+    // Looping/Schraube-Knöpfe entfallen: Schraube kommt automatisch bei jedem Teilziel, Looping beim Levelsieg.
+    // v2.3: EIN Knopf 🎪 für Zufalls-Einlagen (purer Spaß, zählt nicht). Muster wie das alte hold(): pointerdown + stopPropagation.
+    const bs = this.showBtn = document.getElementById('bShow');
+    bs.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); bs.classList.add('on'); if (this.mode === 'game' && this.game.state === 'play') this.input.actions.push('show'); });
+    const off = () => bs.classList.remove('on');
+    bs.addEventListener('pointerup', off); bs.addEventListener('pointercancel', off); bs.addEventListener('pointerleave', off);
+    this._cd = -1;
     document.getElementById('bPause').addEventListener('click', () => { this.audio.sfx('tap'); this.pause(); });
     this.input.onFirst = () => this.ui.hideHint && 0;
   }
@@ -295,6 +303,14 @@ class App {
       this.trail.update(dt, id, pl.pos, this._fw.set(Math.sin(yaw), 0, Math.cos(yaw)), 0, c.size, this._drift.set(-Math.sin(yaw) * 1.4 + 2.2, 0.3, -Math.cos(yaw) * 1.4));
     }
   }
+  // Abklingring als Kind-Element (der Knopf selbst bleibt ruhig) – DOM nur bei Änderung anfassen
+  showBtnUpdate() {
+    const g = this.game, ready = g.showReady(), cd = ready ? 1 : Math.round(g.showCd() * 50) / 50;
+    if (cd === this._cd) return;
+    this._cd = cd;
+    this.showBtn.classList.toggle('ready', ready);
+    this.showBtn.lastElementChild.style.setProperty('--cd', cd);
+  }
   screenPan(pos) {
     const v = pos.clone().project(this.camera);
     return THREE.MathUtils.clamp(v.x * 0.8, -0.9, 0.9);
@@ -318,6 +334,7 @@ class App {
         this.game.update(dt, this.t, this.input);
         this._discT += dt;
         if (this._discT > 0.5) { this._discT = 0; this.proximityDiscover(); }
+        this.showBtnUpdate();
       } else this.showcaseUpdate(dt, this.t);
       this.trailUpdate(dt);
       this.bursts.update(dt);
@@ -378,6 +395,8 @@ window.__game = {
   freeze: (on = true) => { window.__freeze = on ? 1 : undefined; },
   start: (id, diff) => { if (diff) app.setDiff(diff); app.startLevel(id); },
   step: () => app.game.debugStep(),
+  stunt: (n = null, force = true) => app.game.showStunt(n, force), // 🎪 Einlage n (Index oder id) direkt; ohne n = Zufall
+  stunts: () => STUNTS.map(d => ({ id: d.id, name: d.name, dur: d.dur })),
   autopilot: (on = true) => { app.autopilot = on; if (!on) app.input.injected = null; },
   levels: () => LEVELS.map(l => l.id),
   daily: () => dailyLevel().id,

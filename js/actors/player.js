@@ -3,10 +3,11 @@ import * as THREE from 'three';
 import { Critter } from './characters.js';
 import { height } from '../world/terrain.js';
 import { blobTex } from '../engine/textures.js';
+import { showOffset, showOrient, showLift, liftAt } from '../game/stunts.js';
 
 const TAU = Math.PI * 2;
 const ease = (p) => 0.5 - 0.5 * Math.cos(Math.PI * p);
-const _v = new THREE.Vector3(), _w = new THREE.Vector3(), _f = new THREE.Vector3();
+const _v = new THREE.Vector3(), _w = new THREE.Vector3(), _f = new THREE.Vector3(), _q = new THREE.Quaternion();
 
 export class Player {
   constructor(scene) {
@@ -42,7 +43,7 @@ export class Player {
   }
   reset(pos, yaw) {
     this.pos.copy(pos); this.yaw = yaw; this.pitch = 0; this.yawRate = 0; this.ext.set(0, 0, 0);
-    this.landed = false; this.landSpot = null; this.landing = null; this.stunt = null; this.wetT = 0; this.dizzyT = 0; this.carry = null;
+    this.landed = false; this.landSpot = null; this.landing = null; this.stunt = null; this.wetT = 0; this.dizzyT = 0; this.carry = null; this.showReset = true;
     this.camInit = false; this.orbit = 0; this.hover = false; this.cheer = false; this.grandBlend = 0;
   }
   emit(ev, a) { const f = this.on[ev]; if (f) f(a); }
@@ -65,6 +66,18 @@ export class Player {
       this.stunt.R = R;
     }
     this.emit('stunt', type);
+    return true;
+  }
+  // 🎪 Zufalls-Einlage (v2.3): gleiche Muster wie der Sieger-Looping (abheben am Boden, Sicherheitshöhe, harter
+  // Winkel-Reset am Ende), Bahn aus stunts.js. Feuert bewusst weder 'stunt' noch 'stuntDone' → zählt nicht als Aufgabe.
+  tryShow(def, side = 1) {
+    if (this.frozen || this.stunt || !def) return false;
+    if (this.landed) this.takeoff();
+    const sp = this.baseSpeed * (def.spd || 1.15);
+    const S = { type: 'show', def, id: def.id, t: 0, dur: def.dur, L: sp * def.dur, side: side < 0 ? -1 : 1, yaw: this.yaw,
+      prev: new THREE.Vector3(), anchor: this.pos.clone(), qt: new THREE.Quaternion(), q: new THREE.Quaternion(), p: 0 };
+    S.lift = showLift(S, this.pos.x, this.pos.y, this.pos.z, height);
+    this.stunt = S; this.yawRate = 0; this.pitch = 0; this.landing = null;
     return true;
   }
   forward(out = _f) { const cp = Math.cos(this.pitch); return out.set(Math.sin(this.yaw) * cp, Math.sin(this.pitch), Math.cos(this.yaw) * cp); }
@@ -91,6 +104,23 @@ export class Player {
       this.pitch *= Math.max(0, 1 - dt * 5);
       this.landT += dt;
       if (climb > 0.35 && this.landT > 0.25) this.takeoff();
+    } else if (this.stunt && this.stunt.type === 'show') {
+      // Zufalls-Einlage: Bahn schrittweise (Δ der gemeinsamen Bahnfunktion) → Schubser/Hindernisse wirken wie sonst
+      const S = this.stunt;
+      S.t += dt;
+      const p = S.p = Math.min(1, S.t / S.dur);
+      const fx = Math.sin(S.yaw), fz = Math.cos(S.yaw), rx = Math.cos(S.yaw), rz = -Math.sin(S.yaw);
+      showOffset(S, p, _v); _v.y += S.lift * liftAt(p);
+      const dx = _v.x - S.prev.x, dy = _v.y - S.prev.y, dz = _v.z - S.prev.z;
+      this.pos.x += rx * dx + fx * dz; this.pos.y += dy; this.pos.z += rz * dx + fz * dz;
+      S.prev.copy(_v);
+      // Kamera-Anker: nahe der Fluglinie (70 % des Figuren-Ausschlags herausgerechnet) → ruhiges Bild, Figur bleibt drin
+      const ox = _v.x, oy = _v.y - S.lift * liftAt(p), oz = _v.z - S.L * p;
+      S.anchor.set(this.pos.x - (rx * ox + fx * oz) * 0.7, this.pos.y - oy * 0.7, this.pos.z - (rz * ox + fz * oz) * 0.7);
+      showOrient(S, p, S.q);
+      this.speed = this.baseSpeed;
+      this.pos.y = Math.max(this.pos.y, gh + 0.6);
+      if (p >= 1) { const id = S.id; this.stunt = null; this.showReset = true; this.emit('showDone', id); } // Winkel hart nullen (unten)
     } else if (this.stunt) {
       const S = this.stunt;
       S.t += dt;
@@ -197,10 +227,14 @@ export class Player {
       const R = c.root;
       R.position.copy(this.pos);
       R.rotation.y = this.yaw;
+      if (this.stunt && this.stunt.type === 'show') c.tilt.quaternion.copy(this.stunt.q);
+      else {
+      if (this.showReset || Math.abs(c.tilt.rotation.y) > 1e-6) { c.tilt.rotation.set(0, 0, 0); this.showReset = false; } // Einlage vorbei/abgebrochen: hart nullen
       c.tilt.rotation.x += (-visPitch - c.tilt.rotation.x) * (this.stunt ? 1 : Math.min(1, dt * 10));
       c.tilt.rotation.z += (visRoll - c.tilt.rotation.z) * (this.stunt ? 1 : Math.min(1, dt * 8));
       if (!this.stunt && Math.abs(c.tilt.rotation.x) > Math.PI) c.tilt.rotation.x = 0;
       if (!this.stunt && Math.abs(c.tilt.rotation.z) > Math.PI) c.tilt.rotation.z = 0;
+      }
       c.update(dt, t, { speed01: THREE.MathUtils.clamp(this.speed / 10, 0, 1), landed: this.landed, climb: this.landed ? 0 : this.pitch, flapBoost: Math.max(0, climb), cheer: this.cheer });
     }
     // Schatten
@@ -232,7 +266,9 @@ export class Player {
     // gelandet: Kamera schwenkt langsam nach vorn (Gesicht zeigen)
     // Sieger-Looping: Kamera schwenkt zur Seite (Kreis gut sichtbar), danach weiter nach vorn zum Jubel
     const grand = this.stunt && this.stunt.grand ? this.stunt : null;
-    const orbitT = this.hover ? 2.75 : this.landed ? 2.2 : grand ? Math.PI / 2 : 0;
+    // 🎪 Einlagen mit Loopings: Kamera etwas seitlich (Kreis als Ellipse sichtbar), vor dem Ende zurück
+    const show = this.stunt && this.stunt.type === 'show' ? this.stunt : null;
+    const orbitT = this.hover ? 2.75 : this.landed ? 2.2 : grand ? Math.PI / 2 : show && show.p < 0.8 ? (show.def.cam || 0) : 0;
     if (grand) this.grandBlend = 0.7; else this.grandBlend = Math.max(0, (this.grandBlend || 0) - dt);
     this.orbit += (orbitT - this.orbit) * Math.min(1, dt * (this.landed || this.hover ? 0.9 : 3));
     if (grand) {
@@ -264,14 +300,15 @@ export class Player {
     const ca = Math.cos(this.orbit), sa = Math.sin(this.orbit);
     const bx = -_f.x * ca + _f.z * sa, bz = -_f.z * ca - _f.x * sa;
     const d = this.landed || this.hover ? dist * 0.72 : dist;
-    const pitchLift = this.stunt ? 1.2 : THREE.MathUtils.clamp(-this.pitch * 2.2, -1.0, 2.0);
-    _v.set(this.pos.x + bx * d, this.pos.y + hgt + pitchLift - (this.landed || this.hover ? 0.7 : 0), this.pos.z + bz * d);
+    const pitchLift = this.stunt ? (show ? 0.7 : 1.2) : THREE.MathUtils.clamp(-this.pitch * 2.2, -1.0, 2.0);
+    const A = this.stunt && this.stunt.anchor ? this.stunt.anchor : this.pos; // Zufalls-Einlage: Kamera folgt der Fluglinie
+    _v.set(A.x + bx * d, A.y + hgt + pitchLift - (this.landed || this.hover ? 0.7 : 0), A.z + bz * d);
     const g = height(_v.x, _v.z) + 0.8;
     if (_v.y < g) _v.y = g;
     if (!this.camInit) { this.camPos.copy(_v); this.camLook.copy(this.pos); this.camInit = true; }
     // im Orbit (gelandet/Jubel) direkt auf dem Kreis bleiben – nie durch die Figur schneiden
     const orbiting = this.orbit > 0.05;
-    this.camPos.lerp(_v, 1 - Math.exp(-dt * (this.grandBlend > 0 ? 3.5 : orbiting ? 14 : this.stunt ? 3.2 : 5.5)));
+    this.camPos.lerp(_v, 1 - Math.exp(-dt * (this.grandBlend > 0 ? 3.5 : orbiting ? 14 : this.stunt ? (show ? 5 : 3.2) : 5.5)));
     _w.copy(this.pos).addScaledVector(_f, this.landed || this.hover ? 0 : 2.4); _w.y += this.landed || this.hover ? 0.15 : 0.45;
     this.camLook.lerp(_w, 1 - Math.exp(-dt * 9));
     cam.position.copy(this.camPos);
@@ -283,7 +320,7 @@ export class Player {
     // FOV: Seitenverhältnis + Tempo + Kick
     const base = portrait ? THREE.MathUtils.clamp(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(33)) / aspect) * 180 / Math.PI, 60, 76) : 62;
     this.fovKick = Math.max(0, this.fovKick - dt * 12);
-    const fov = base + (this.stunt ? 7 : 0) + this.fovKick + (this.speed - this.baseSpeed) * 0.6;
+    const fov = base + (this.stunt ? (show ? 3 : 7) : 0) + this.fovKick + (this.speed - this.baseSpeed) * 0.6;
     cam.fov += (fov - cam.fov) * Math.min(1, dt * 5);
     cam.updateProjectionMatrix();
   }

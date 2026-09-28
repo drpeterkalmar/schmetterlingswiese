@@ -23,6 +23,7 @@ export class Input {
       if (e.code === 'Space' || e.code === 'KeyL') this.actions.push('loop');
       if (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyR' || e.code === 'KeyK') this.actions.push('roll');
       if (e.code === 'Escape' || e.code === 'KeyP') this.actions.push('pause');
+      if (e.code === 'KeyC') this.actions.push('show'); // 🎪 Zufalls-Stunt
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
     });
     addEventListener('keyup', (e) => { this.keys[e.code] = false; });
