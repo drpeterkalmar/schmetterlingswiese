@@ -66,8 +66,8 @@ export const STUNTS = [
     // Wunsch „2½ Umdrehungen“ → 3 (eine halbe endet kopfüber)
     shape: (p, L, s, o) => o.set(0, 1.0 * bump(p), 0.15 * L * ease(p)),
     spin: (p, s, o) => o.set(0, 0, s * 3 * TAU * ease(p)) },
-  { id: 'wirbel', name: 'Blumenwirbel', emoji: '🌸', dur: 2.4, spd: 1.05,
-    names: { kirsch: 'Blütenwirbel', abend: 'Glühwürmchen-Wirbel' },
+  { id: 'wirbel', name: 'Blumenwirbel', emoji: '🌼', dur: 2.4, spd: 1.05,
+    names: { kirsch: 'Blütenwirbel', abend: 'Glühwürmchen-Wirbel' }, emojis: { kirsch: '🌸', abend: '✨' },
     shape: (p, L, s, o) => o.set(0, 1.6 * bump(p), -0.35 * L * slow(p)),
     spin: (p, s, o) => o.set(0, s * 2 * TAU * ease(p), 0) },
 ];

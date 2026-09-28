@@ -29,7 +29,8 @@ REC = """(() => { window.__rec = []; window.__recOn = true;
     __rec.push([__app.t, p.pos.x, p.pos.y, p.pos.z, __H(p.pos.x, p.pos.z), S && S.type === 'show' ? S.p : -1, q.x, q.y, q.z, q.w,
       p.critter.tilt.rotation.x, p.critter.tilt.rotation.z, p.yaw]); } requestAnimationFrame(f); })(); })()"""
 
-def run_stunt(s, i, sid, dur):
+def run_stunt(s, i, sid, dur, name=None):
+    name = name or sid
     place(s)
     st0 = s.ev("JSON.stringify(__app.progress.cur.stats)")
     tasks0 = s.ev("__app.game.tasks.map(t => t.cur).join(',')")
@@ -44,7 +45,7 @@ def run_stunt(s, i, sid, dur):
     while k < 6:
         if s.ev("__app.t") - t0 >= 0.08 + k * gap:
             s.ev("__game.freeze(true)")
-            s.pg.screenshot(path=f'{OUT}/{sid}_{k}.png')
+            s.pg.screenshot(path=f'{OUT}/{name}_{k}.png')
             v = s.ev("""(() => { const p = __app.player.pos.clone().project(__app.camera); return [p.x, p.y, p.z]; })()""")
             view.append([round(v[0], 2), round(v[1], 2)])
             s.ev("__game.freeze(false)"); k += 1
@@ -122,6 +123,19 @@ with sync_playwright() as pw:
         res['stunts'][d['id']] = r
         grid(d['id'])
         print(d['id'], 'ok' if r['ok'] else 'FEHLER', json.dumps({k: r[k] for k in ['min_clear', 'min_clear_main', 'end_lateral', 'end_forward', 'end_up', 'yaw_change', 'wobble_after', 'in_view', 'stats_unchanged', 'min_speed']}), flush=True)
+    # --- Welt-Varianten des Wirbels (Kirschhain: Blütenwirbel, Abend: Glühwürmchen-Wirbel) + Doppel-Looping am Abend
+    res['variants'] = {}
+    for lid, wid in [('4-1', 'kirsch'), ('5-1', 'abend')]:
+        s.ev(f"__game.start('{lid}', 'leicht')"); sim_wait(s, 1.0)
+        for sid in ['wirbel', 'doppel']:
+            d = next(x for x in stunts if x['id'] == sid)
+            r = run_stunt(s, [x['id'] for x in stunts].index(sid), sid, d['dur'], f'{wid}_{sid}')
+            if not r['ok']: print('variante', wid, sid, json.dumps(r), flush=True)
+            res['variants'][f'{wid}_{sid}'] = r['ok']
+            grid(f'{wid}_{sid}')
+        res['variants'][wid + '_name'] = s.ev("document.getElementById('toast').textContent")
+    print('varianten', res['variants'], flush=True)
+    s.ev("__game.start('1-1', 'leicht')"); sim_wait(s, 1.0)
     # --- Knopf: 10 × echt tippen (Zufall ohne direkte Wiederholung)
     B = res['button']
     B['geom_P'] = btn_geom(s)
@@ -210,6 +224,7 @@ with sync_playwright() as pw:
 B = res['button']
 geo_ok = all(g['w'] >= 48 and g['h'] >= 48 and g['inView'] and not g['overlaps'] and g['display'] != 'none' for g in [B['geom_P'], B['geom_L']])
 res['ok'] = (res['n_stunts'] >= 8 and all(r['ok'] for r in res['stunts'].values()) and B['no_repeat'] and B['distinct'] >= 5
+             and all(v for k, v in res['variants'].items() if not k.endswith('_name'))
              and B['ignored_while_running'] and B['cooldown_blocks'] and B['after_cooldown'] and B['key_c'] and B['from_ground']
              and (B['from_ground_min_clear'] or 0) > 0.3 and B['won_blocked'] and B['won_blocked_after_finale'] and B['cd_ring_visible']
              and B['url_override'] == ['rakete', 'rakete'] and geo_ok and not res['errors'])

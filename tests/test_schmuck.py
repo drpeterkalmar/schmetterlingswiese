@@ -110,6 +110,13 @@ with sync_playwright() as pw:
             look(s, 'teich_fisch', f"[{f['x']} + 3.5, 1.6, {f['z']} + 3.5]", f"[{f['x']}, 0.5, {f['z']}]", 45)
             look(s, 'teich_wasserringe', "[18, 9, 18]", "[0, 0, 0]", 55)
         if wid == 'wiese':
+            # Überraschung: Wildhäschen hoppelt weg, wenn man ganz nah (und tief) kommt – Blick = Laufrichtung
+            s.ev("(() => { const B = __app.world.life.bunnies[0], p = __app.player; p.pos.set(B.pos.x + 3, B.pos.y + 1.2, B.pos.z); p.yaw = -Math.PI / 2; B.run = 0; })()")
+            sim_wait(s, 0.25)
+            W['hase_flieht'] = s.ev("__app.world.life.bunnies[0].run > 0")
+            W['anat_hase'] = {k: v for k, v in anatomy(s, wid, 1.2).items() if k == 'hase'}
+            b = json.loads(s.ev("JSON.stringify(__app.world.life.bunnies[0].pos)"))
+            look(s, 'wiese_hase_flucht', f"[{b['x']} + 3, {b['y']} + 1.5, {b['z']} + 3]", f"[{b['x']}, {b['y']} + 0.5, {b['z']}]", 45)
             # Regenbogen: Blick gegenüber der Sonne, leicht über den Horizont; Wolkenschatten von oben
             s.ev("window.__sd = __app.camera.position.constructor ? null : null")
             look(s, 'wiese_regenbogen', "[__app.player.pos.x, __app.player.pos.y + 3, __app.player.pos.z]",
@@ -122,13 +129,14 @@ with sync_playwright() as pw:
             res['shots'].append('abend_sternschnuppe')
         W['errors'] = list(s.errors)
         res['worlds'][wid] = W
-        print(wid, json.dumps({'calls': W['info']['calls'], 'tris': W['info']['tris'], 'counts': W['counts'], 'anat': W['anat'], 'fisch': W.get('anat_fisch')}), flush=True)
+        print(wid, json.dumps({'calls': W['info']['calls'], 'tris': W['info']['tris'], 'counts': W['counts'], 'anat': W['anat'], 'fisch': W.get('anat_fisch'), 'hase': W.get('anat_hase'), 'flieht': W.get('hase_flieht')}), flush=True)
     res['errors'] = s.errors[:5]
     s.close()
 anat_ok = True
 for wid, W in res['worlds'].items():
-    for k, v in list(W['anat'].items()) + list((W.get('anat_fisch') or {}).items()):
+    for k, v in list(W['anat'].items()) + list((W.get('anat_fisch') or {}).items()) + list((W.get('anat_hase') or {}).items()):
         if v['min'] <= 0: anat_ok = False
-res['ok'] = not res['errors'] and anat_ok and all(W['info']['calls'] < 150 for W in res['worlds'].values())
+hw = res['worlds'].get('wiese', {})
+res['ok'] = not res['errors'] and anat_ok and hw.get('hase_flieht') and 'hase' in (hw.get('anat_hase') or {}) and all(W['info']['calls'] < 150 for W in res['worlds'].values())
 json.dump(res, open('tests/out/schmuck.json', 'w'), indent=1)
 print('shots', len(res['shots']), 'errors', res['errors'], 'ok', res['ok'])

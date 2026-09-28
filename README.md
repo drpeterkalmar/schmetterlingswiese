@@ -25,6 +25,9 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
 - **Belohnungen:** Sammelalbum mit Natur-Fakten, Abzeichen und eine tägliche Aufgabe –
   ohne Käufe, ohne Werbung, ohne Wartezeiten
 - **Mehrere Spielerprofile** mit eigenem Namen, Fortschritt bleibt auf dem Gerät gespeichert
+- **Lebendige Wiese (v2.3):** Singvögel fliegen von Baum zu Baum, Bienen besuchen Blüten, ein Schmetterlings-Schwarm
+  tanzt über den Blumen, Marienkäfer krabbeln auf Büschen, ein Häschen hoppelt davon, im Teich springt ein Fisch;
+  Glockenblumen, Mohn, Heide, Blütenteppiche, Wolkenschatten, Regenbogen, Sternschnuppen am Abend
 
 ## Steuerung
 
@@ -33,6 +36,7 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
 | 📱 Tippen & Halten (Standard) | links/rechts halten = drehen · Mitte oben = steigen · Mitte unten = sinken/landen · Finger liegen lassen und hoch/runter schieben = steigen/sinken (auch beim Drehen, ohne loszulassen) |
 | 🕹️ Joystick (Einstellungen) | Daumen-Stick links |
 | 🌀 🤸 Kunststücke | automatisch: jedes geschaffte Teilziel = Freuden-Schraube, ganze Aufgabe = Sieger-Looping mit Regenbogen-Schweif und Feuerwerk |
+| 🎪 Stunt-Knopf (v2.3) | unten rechts tippen (Computer: Taste C) = eine von 11 zufälligen Flugeinlagen mit Effekten (Doppel-Looping, Feuerwerk-Rakete, Bumerang, Blitz-Zickzack …); nur Spaß, zählt nicht als Aufgabe, kurze Pause (Ring) bis zum nächsten Mal |
 | ⌨️ Tastatur | Pfeile/WASD · P/Esc = Pause |
 
 ## Technik
@@ -56,6 +60,8 @@ tests/run_all.sh                     # Headless-Tests (Python-Playwright, Pixel-
 ```
 
 Debug-Hilfe im Browser: `window.__game` (Zustand, Level starten, Autopilot, Einfrieren, Audio-Messung).
+Stunt-Einlagen: `__game.stunts()` listet alle, `__game.stunt(n | 'id')` startet eine direkt; `?stunt=rakete` in der URL
+legt den Knopf auf eine feste Einlage (A/B-Vergleich).
 
 *Gebaut mit viel Liebe für die Familie. 🌸*
 

@@ -325,7 +325,8 @@ export class Game {
     this.app.audio.sfx('zauber', 0, { gain: 0.7, rate: 0.95 + Math.random() * 0.1 });
     this.app.haptics.buzz('stunt');
     pl.kick(6, 0.05);
-    this.app.ui.toast(`${def.emoji} ${stuntName(def, this.world.def.id)}!`);
+    const wid = this.world.def.id;
+    this.app.ui.toast(`${(def.emojis && def.emojis[wid]) || def.emoji} ${stuntName(def, wid)}!`);
     return true;
   }
   em(n, pos, colors, shape, size, speed, up, life, grav, drag = 1.2, spread = 0.3, vel = null, spin = 3) {
@@ -440,7 +441,7 @@ export class Game {
         if (once(E, p, 'f', 0.5)) au.sfx('funkel', 0, { gain: 0.8, rate: 0.95 });
         const wid = this.world.def.id;
         const cols = wid === 'kirsch' ? SC.PETAL : wid === 'abend' ? SC.FIREFLY : this.world.def.flowers;
-        const shape = wid === 'abend' ? 0 : 2, sz = wid === 'abend' ? 0.42 : 0.2; // 0,5/0,3 und 3/Frame: Konfetti-Sturm vor der Kamera
+        const shape = wid === 'abend' ? 0 : 2, sz = wid === 'abend' ? 0.28 : 0.2; // 0,5/0,3 und 3/Frame: Konfetti-Sturm vor der Kamera
         const a0 = S.side * 2 * Math.PI * 2 * ease(p) * 1.25, r = 1.8 - 0.7 * p;
         for (let i = 0; i < n; i++) for (let k = 0; k < 2; k++) {
           const b = a0 + k * Math.PI + i * 0.3;

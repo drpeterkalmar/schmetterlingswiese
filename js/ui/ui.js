@@ -144,7 +144,8 @@ export class UI {
   s_title() {
     const k = this.loadK;
     return `<div class="screen" id="title" data-a="start">
-      <div class="logo"><div class="bfly">🦋</div><div class="t1">Schmetterlings&shy;wiese</div><div class="t2">Fliegen · Sammeln · Tierbabys besuchen</div></div>
+      <div class="logo"><div class="bfly"><i class="sp s1">✨</i>🦋<i class="sp s2">✨</i></div><div class="t1">Schmetterlings&shy;wiese</div><div class="t2">Fliegen · Sammeln · Tierbabys besuchen</div>
+        <div class="neu">Neu: 🎪 Stunt-Knopf!</div></div>
       <div class="bottom"><div class="tapgo">👆 Tippe, um loszufliegen!</div>
       <div class="loadbar" style="${k >= 1 ? 'opacity:0' : ''}"><div style="width:${Math.round(k * 100)}%"></div></div>
       <div class="loadtxt" style="${k >= 1 ? 'opacity:0' : ''}">🎵 Klänge werden gezaubert … ${Math.round(k * 100)} %</div></div>
@@ -195,7 +196,8 @@ export class UI {
     const worlds = WORLDS.map((w, wi) => {
       const lv = levelsOfWorld(w.id);
       const open = P.unlocked(lv[0].id);
-      return `<div class="wcard" style="background:${WGRAD[w.id]}"><div class="whead"><div class="we">${w.emoji}</div><h3>${w.name}</h3><div class="tod">Welt ${wi + 1} · ${w.tod}</div></div>
+      const ws = lv.reduce((a, l) => a + P.levelStars(l.id, diff), 0);
+      return `<div class="wcard" data-e="${w.emoji}" style="background:${WGRAD[w.id]}"><div class="whead"><div class="we">${w.emoji}</div><h3>${w.name}</h3><div class="tod">Welt ${wi + 1} · ${w.tod}</div>${open ? `<div class="wstars">⭐ ${ws} / ${lv.length * 3}</div>` : ''}</div>
         <div class="lv">${lv.map((l, i) => { const u = P.unlocked(l.id); return `<button class="lvbtn ${u ? '' : 'locked'}" data-a="level" data-v="${l.id}"><span class="n">${u ? i + 1 : '🔒'}</span><span class="nm">${l.name}</span>${starsHtml(P.levelStars(l.id, diff))}</button>`; }).join('')}</div>
         ${open ? '' : `<div class="wlock">🔒<div>Schaffe die Welt davor!</div></div>`}</div>`;
     }).join('');
