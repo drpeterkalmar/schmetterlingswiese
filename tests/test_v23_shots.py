@@ -42,16 +42,20 @@ with sync_playwright() as pw:
     # Höhenfunktion aus dem (gleichen, gecachten) Modul – läuft auch gegen alte Stände
     s.ev("import('./js/world/terrain.js').then(m => { __app.heightAt = m.height; })"); time.sleep(0.5)
     # Draw-Calls/Dreiecke in fester Ansicht je Stufe
-    for q in [0, 1, 2]:
+    for q in ([] if os.environ.get('FAST') else [0, 1, 2]):
         s.ev(f"__game.setQuality({q})")
         for lid, wid in WORLDS:
             fly_view(s, lid)
             res['info'][f'q{q}_{lid}'] = info(s)
             s.ev("__game.freeze(false)")
         print('q', q, {k: (v['calls'], v['tris']) for k, v in res['info'].items() if k.startswith(f'q{q}_')}, flush=True)
+    if os.environ.get('INFO_ONLY'):
+        json.dump(res, open(f'tests/out/v23_info_{LABEL}.json', 'w'), indent=1); print('errors', s.errors[:5]); sys.exit(0)
     # Bilder (Stufe Mittel = Handy-Standard)
     s.ev("__game.setQuality(1)")
+    only = os.environ.get('ONLY')
     for lid, wid in WORLDS:
+        if only and wid not in only.split(','): continue
         fly_view(s, lid, 2.5)
         s.pg.screenshot(path=f'{OUT}/{LABEL}_{wid}_spiel.png')
         cam(s, "[0.6, 1.1, -1.5]", "[0, 0.1, 7]", 62)
@@ -61,6 +65,8 @@ with sync_playwright() as pw:
         s.ev("__game.freeze(false)")
     res['errors'] += s.errors[:5]
     s.close()
+    if os.environ.get('FAST'):
+        json.dump(res, open(f'tests/out/v23_info_{LABEL}.json', 'w'), indent=1); print('errors', res['errors']); sys.exit(0)
     s = Session(pw, device=PIXEL7_LAND)
     s.open(); s.tap('#title'); s.pg.fill('input.name', 'Bild'); s.tap('[data-a=create]')
     s.ev("__game.setQuality(1)")

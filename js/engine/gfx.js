@@ -26,7 +26,17 @@ export const G = {
   uGrassB: { value: new THREE.Color(0.45, 0.7, 0.2) },
   uGrassC: { value: new THREE.Color(0.8, 0.85, 0.35) },
   uWaterY: { value: -99 },
+  // v2.3: Sand-/Pfad-Flecken (Stärke, Maßstab, Phase x/z), goldene Graslichter (rgb, Stärke), Wolkenschatten (x, z, r, Stärke)
+  uPatch: { value: new THREE.Vector4(0, 1, 0, 0) },
+  uGold: { value: new THREE.Vector4(1, 0.9, 0.6, 0) },
+  uCloudSh: { value: [0, 1, 2, 3, 4, 5].map(() => new THREE.Vector4(0, 0, 1, 0)) },
 };
+// Wolkenschatten: weiche dunkle Flecken, die mit dem Wind über die Wiese ziehen (nur Boden + Gras, kein Draw-Call)
+const CLOUD_SH = /* glsl */`
+uniform vec4 uCloudSh[6];
+float cloudShade(vec2 p){ float s = 0.0;
+  for (int i = 0; i < 6; i++) { vec4 c = uCloudSh[i]; s = max(s, c.w * (1.0 - smoothstep(c.z * 0.25, c.z, length(p - c.xy)))); }
+  return s; }`;
 
 export const GLSL_TERRAIN = /* glsl */`
 uniform vec4 uT1, uT2, uT3, uPond; uniform vec3 uEdge;
@@ -42,6 +52,13 @@ float terrainH(vec2 p){
   float e = smoothstep(uEdge.x, uEdge.y, r);
   h += uEdge.z * e * e;
   return h;
+}
+uniform vec4 uPatch;
+// Sand-/Pfad-Flecken (identisch zu patchAmt() in terrain.js)
+float patchAmt(vec2 p){
+  float k = uPatch.y;
+  float s = sin(p.x * 0.061 * k + 1.3 + uPatch.z + sin(p.y * 0.031) * 1.7) * sin(p.y * 0.057 * k - 0.7 + uPatch.w + sin(p.x * 0.027) * 1.9);
+  return smoothstep(0.62, 0.92, s) * uPatch.x;
 }`;
 
 const V_COMMON = /* glsl */`
@@ -114,9 +131,11 @@ void main(){
 #endif
   vec4 wp = m * vec4(pos, 1.0);
 #ifdef SWAY
-  float hh = max(position.y, 0.0) * uSway;
-  float ph2 = dot(wp.xz, vec2(0.21, 0.17));
-  float g = 0.55 + 0.45 * sin(uTime * 1.9 + ph2) + uWind.z * 0.8;
+  // v2.3: Phase + Stärke je Instanz → Felder schaukeln versetzt, nicht im Gleichtakt
+  float ih = hash12(m[3].xz + 0.37);
+  float hh = max(position.y, 0.0) * uSway * (0.7 + 0.6 * ih);
+  float ph2 = dot(wp.xz, vec2(0.21, 0.17)) + ih * 6.2831;
+  float g = 0.55 + 0.45 * sin(uTime * (1.6 + 0.6 * ih) + ph2) + uWind.z * 0.8;
   wp.xz += uWind.xy * g * hh + vec2(sin(uTime * 2.7 + ph2 * 1.3), cos(uTime * 2.3 + ph2)) * 0.12 * hh;
 #endif
   vN = normalize(mat3(m) * nrm);
@@ -220,6 +239,7 @@ void main(){
 }`;
 const TERRAIN_F = /* glsl */`
 ${F_LIGHT}
+${CLOUD_SH}
 uniform float uTime; uniform float uWaterY;
 varying vec3 vN; varying vec3 vWP; varying vec3 vCol;
 float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
@@ -235,6 +255,7 @@ void main(){
   float wet = 1.0 - smoothstep(uWaterY + 0.05, uWaterY + 0.6, vWP.y);
   alb = mix(alb, alb * vec3(0.62, 0.66, 0.7), wet * 0.8);
   vec3 c = toon(alb, N, V, 0.12, 0.0, 0.25);
+  c *= 1.0 - cloudShade(vWP.xz);
   c = applyFog(c, vWP);
   gl_FragColor = vec4(c, 1.0);
   #include <tonemapping_fragment>
@@ -261,6 +282,7 @@ void main(){
   s *= smoothstep(uWaterY + 0.45, uWaterY + 0.95, gh);
   s *= 1.0 - smoothstep(uEdge.x + 25.0, uEdge.x + 50.0, length(p));
   s *= smoothstep(0.8, 3.2, length(p - uCam.xz)); // keine Riesenhalme direkt vor der Kamera
+  s *= 1.0 - 1.1 * patchAmt(p); // v2.3: Sand-/Pfad-Flecken bleiben licht
   float ang = aOff.z * 6.2831;
   float ca = cos(ang), sa = sin(ang);
   vec3 lp = position * vec3(1.0 + aOff.z * 0.6, s, 1.0);
@@ -285,11 +307,15 @@ void main(){
 }`;
 const GRASS_F = /* glsl */`
 ${F_LIGHT}
-uniform vec3 uGrassA, uGrassB, uGrassC;
+${CLOUD_SH}
+uniform vec3 uGrassA, uGrassB, uGrassC; uniform vec4 uGold;
 varying vec3 vWP; varying float vH; varying float vR; varying float vWave; varying vec3 vN;
 void main(){
   float patchN = sin(vWP.x * 0.07 + sin(vWP.z * 0.05) * 2.0) * 0.5 + 0.5;
   vec3 tip = mix(uGrassB, uGrassC, patchN * 0.7 + vR * 0.3);
+  // v2.3: goldene Lichtflecken (Morgen/Goldene Stunde)
+  float gold = smoothstep(0.55, 0.95, sin(vWP.x * 0.043 + sin(vWP.z * 0.061) * 2.3) * sin(vWP.z * 0.039 - 1.1 + sin(vWP.x * 0.05)));
+  tip = mix(tip, uGold.rgb, uGold.a * gold);
   vec3 alb = mix(uGrassA, tip, smoothstep(0.0, 1.0, vH));
   alb += vec3(0.07, 0.08, 0.03) * vWave * vH;
   vec3 V = normalize(uCam - vWP);
@@ -299,6 +325,7 @@ void main(){
   // Durchleuchten gegen die Sonne (goldene Grasspitzen)
   float back = pow(clamp(dot(-V, uSunDir), 0.0, 1.0), 3.0);
   c += uSunCol * tip * back * vH * vH * 0.9;
+  c *= 1.0 - cloudShade(vWP.xz);
   c = applyFog(c, vWP);
   gl_FragColor = vec4(c, 1.0);
   #include <tonemapping_fragment>
@@ -317,6 +344,7 @@ varying vec3 vDir;
 void main(){ vDir = position; vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }`;
 const SKY_F = /* glsl */`
 uniform vec3 uZenith, uHorizon, uSunDir, uSunCol, uGlow, uMoonDir; uniform float uSunSize, uStars, uTime, uMoon;
+uniform float uRainbow, uShootT; uniform vec3 uShootA, uShootB;
 varying vec3 vDir;
 float h3(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
 void main(){
@@ -332,13 +360,31 @@ void main(){
     vec3 p = d * 180.0; vec3 cell = floor(p); float r = h3(cell);
     vec3 f = fract(p) - 0.5;
     float st = step(0.975, r) * smoothstep(0.22, 0.0, length(f)) * smoothstep(0.0, 0.25, h);
-    st *= 0.6 + 0.4 * sin(uTime * (1.0 + r * 3.0) + r * 40.0);
-    col += vec3(1.0, 0.95, 0.85) * st * uStars * 1.6;
+    // v2.3: kräftigeres Funkeln (alt: 0,6 + 0,4·sin), manche Sterne leicht bläulich/golden
+    float tw = 0.5 + 0.5 * sin(uTime * (1.3 + r * 4.0) + r * 40.0);
+    st *= 0.3 + 0.7 * tw * tw;
+    col += mix(vec3(1.0, 0.95, 0.85), vec3(0.8, 0.88, 1.0), fract(r * 7.0)) * st * uStars * 1.8;
+    // Sternschnuppe (Kopf + ausblendender Schweif, alle ~20 s)
+    if (uShootT >= 0.0) {
+      vec3 hd = normalize(mix(uShootA, uShootB, uShootT)), tl = normalize(mix(uShootA, uShootB, max(0.0, uShootT - 0.28)));
+      vec3 ab = hd - tl; float tt = clamp(dot(d - tl, ab) / max(dot(ab, ab), 1e-6), 0.0, 1.0);
+      float dl = length(d - (tl + ab * tt));
+      col += vec3(1.0, 0.96, 0.86) * smoothstep(0.0035, 0.0, dl) * tt * tt * sin(3.14159 * uShootT) * 2.6;
+    }
+  }
+  if (uRainbow > 0.0) { // dezenter Regenbogen gegenüber der Sonne (≈ 42°)
+    float ang = acos(clamp(dot(d, -uSunDir), -1.0, 1.0));
+    float t = (ang - 0.695) / 0.075;
+    if (t > 0.0 && t < 1.0) {
+      vec3 rb = clamp(abs(fract(vec3(0.78 - t * 0.8) + vec3(0.0, 2.0 / 3.0, 1.0 / 3.0)) * 6.0 - 3.0) - 1.0, 0.0, 1.0);
+      col = mix(col, rb * 1.05 + 0.1, sin(3.14159 * t) * 0.2 * uRainbow * smoothstep(0.0, 0.06, h) * (1.0 - smoothstep(0.2, 0.36, h)));
+    }
   }
   if (uMoon > 0.0) {
     float md = dot(d, uMoonDir);
     col += vec3(1.0, 0.97, 0.88) * smoothstep(0.9993, 0.9996, md) * 2.2 * uMoon;
-    col += vec3(0.6, 0.65, 0.9) * pow(max(md, 0.0), 60.0) * 0.35 * uMoon;
+    col += vec3(0.6, 0.65, 0.9) * pow(max(md, 0.0), 60.0) * 0.3 * uMoon;
+    col += vec3(0.55, 0.6, 0.95) * pow(max(md, 0.0), 14.0) * 0.1 * uMoon; // v2.3: weicherer, weiter Halo
   }
   // Dither gegen Farbstufen
   col += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
@@ -353,6 +399,7 @@ export function skyMat() {
       uSunDir: G.uSunDir, uSunCol: { value: new THREE.Color() }, uGlow: { value: new THREE.Color() },
       uSunSize: { value: 0.045 }, uStars: { value: 0 }, uTime: G.uTime,
       uMoonDir: { value: new THREE.Vector3(-0.5, 0.4, -0.6).normalize() }, uMoon: { value: 0 },
+      uRainbow: { value: 0 }, uShootT: { value: -1 }, uShootA: { value: new THREE.Vector3(0, 0.5, 1) }, uShootB: { value: new THREE.Vector3(0.3, 0.4, 1) },
     },
     vertexShader: SKY_V, fragmentShader: SKY_F, side: THREE.BackSide, depthWrite: false,
   });

@@ -23,6 +23,14 @@ export function normalAt(x, z, out = new THREE.Vector3()) {
   return out.set(height(x - e, z) - height(x + e, z), 2 * e, height(x, z - e) - height(x, z + e)).normalize();
 }
 
+// v2.3: Sand-/Pfad-Flecken (identisch zu patchAmt() im Gras-Shader)
+let PATCH = [0, 1, 0, 0];
+export function setPatch(p) { PATCH = p || [0, 1, 0, 0]; G.uPatch.value.fromArray(PATCH); }
+export function patchAmt(x, z) {
+  const k = PATCH[1];
+  const s = Math.sin(x * 0.061 * k + 1.3 + PATCH[2] + Math.sin(z * 0.031) * 1.7) * Math.sin(z * 0.057 * k - 0.7 + PATCH[3] + Math.sin(x * 0.027) * 1.9);
+  return ss(0.62, 0.92, s) * PATCH[0];
+}
 export function setTerrain(t) {
   T1 = t.t1; T2 = t.t2; T3 = t.t3; POND = t.pond || [9999, 9999, 0.001, 0]; EDGE = t.edge || [120, 180, 22];
   G.uT1.value.fromArray(T1); G.uT2.value.fromArray(T2); G.uT3.value.fromArray(T3);
@@ -36,6 +44,7 @@ export function buildTerrain(world) {
   const pos = [], col = [], idx = [];
   const cA = new THREE.Color(world.ground[0]), cB = new THREE.Color(world.ground[1]), cC = new THREE.Color(world.ground[2]);
   const sand = new THREE.Color(world.sand || 0xd9c79a);
+  const patchC = new THREE.Color(world.patchCol || 0xd8c898);
   const tc = new THREE.Color();
   pos.push(0, height(0, 0), 0); col.push(cA.r, cA.g, cA.b);
   for (let i = 1; i <= rings; i++) {
@@ -47,6 +56,7 @@ export function buildTerrain(world) {
       const p = 0.5 + 0.5 * Math.sin(x * 0.05 + Math.sin(z * 0.07) * 2);
       tc.copy(cA).lerp(cB, p);
       if (Math.sin(x * 0.021 + 3) * Math.cos(z * 0.019 - 1) > 0.5) tc.lerp(cC, 0.45);
+      const pa = patchAmt(x, z); if (pa > 0) tc.lerp(patchC, pa * 0.8);
       if (POND[2] > 1 && Math.hypot(x - POND[0], z - POND[1]) < POND[2] * 1.3) tc.lerp(sand, THREE.MathUtils.clamp((0.6 - y) * 1.4, 0, 1));
       col.push(tc.r, tc.g, tc.b);
     }

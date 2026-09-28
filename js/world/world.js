@@ -2,9 +2,11 @@
 import * as THREE from 'three';
 import { G, skyMat } from '../engine/gfx.js';
 import { rng, hashStr } from '../engine/geo.js';
-import { setTerrain, buildTerrain, buildFar, height, pond } from './terrain.js';
+import { setTerrain, setPatch, patchAmt, buildTerrain, buildFar, height, pond } from './terrain.js';
 import * as N from './nature.js';
+const _c = new THREE.Color(), _v = new THREE.Vector3();
 import { Ambient } from './particles.js';
+import { Life } from './life.js';
 
 export class World {
   constructor(scene) {
@@ -34,12 +36,16 @@ export class World {
     su.uStars.value = w.sky.stars || 0; su.uMoon.value = w.sky.moon || 0;
     if (w.sky.moon) su.uMoonDir.value.copy(G.uSunDir.value);
     G.uWaterY.value = w.terrain.pond ? 0 : -99;
+    // v2.3: Regenbogen, goldene Graslichter, Sternschnuppen
+    su.uRainbow.value = w.sky.rainbow || 0; su.uShootT.value = -1;
+    const gd = w.gold || [0xffffff, 0]; _c.set(gd[0]); G.uGold.value.set(_c.r, _c.g, _c.b, gd[1]);
   }
 
   build(w, quality, seedStr = w.id) {
     this.dispose();
     this.def = w;
     setTerrain(w.terrain);
+    setPatch(w.patch);
     this.applyPalette(w);
     const rnd = rng(hashStr(seedStr));
     const g = this.group = new THREE.Group();
@@ -53,6 +59,10 @@ export class World {
     const avoid = (x, z) => (avoidPond && avoidPond(x, z)) || (sfC && Math.hypot(x - sfC.x, z - sfC.z) < sfC.R + 4) || Math.hypot(x, z) < 10;
     this.flowers = N.buildFlowers(w, rnd, Math.round(w.flowerN * quality.deco)); g.add(this.flowers);
     this.trees = N.buildTrees(w, rnd, avoid); g.add(this.trees);
+    // v2.3: Blütenteppiche + Grasbüschel/Klee (Anzahl skaliert mit der Deko-Stufe)
+    const avoidWater = (x, z) => (avoidPond && avoidPond(x, z)) || patchAmt(x, z) > 0.3;
+    g.add(N.buildCarpet(w, rnd, Math.round(22 * quality.deco), avoidWater));
+    g.add(N.buildTufts(w, rnd, Math.round(460 * quality.deco), avoidWater));
     this.bushes = N.buildBushes(w, rnd, 24, avoid); g.add(this.bushes);
     // Pilze nie in/auf Blumen (sah im Vordergrund wie schwebende Deko aus)
     g.add(N.buildMushrooms(rnd, 40, (x, z) => (avoidPond && avoidPond(x, z)) || this.flowers.userData.near(x, z, 1.8)));
@@ -60,8 +70,28 @@ export class World {
     if (w.sunflowers) { this.sunflowers = N.buildSunflowers(rnd, Math.round(w.sunflowers * quality.deco), sfC.x, sfC.z, sfC.R); g.add(this.sunflowers); }
     else this.sunflowers = null;
     if (w.terrain.pond) { this.pond = N.buildPondStuff(rnd, w.pads || 30); g.add(this.pond); } else this.pond = null;
+    // v2.3: Bank am Teich bzw. Bank mit Laterne am Abend (freier Platz, Blick zur Mitte)
+    this.benchPos = null;
+    if (w.bench) {
+      const trees = Object.values(this.trees.userData).flat();
+      for (let k = 0; k < 40; k++) {
+        const a = rnd() * 6.28, r = P0[2] > 1 ? P0[2] * 1.2 : 32 + rnd() * 16; // abseits der Startlinie (Start liegt nahe der Mitte)
+        const x = (P0[2] > 1 ? P0[0] : 0) + Math.cos(a) * r, z = (P0[2] > 1 ? P0[1] : 0) + Math.sin(a) * r;
+        if (trees.some(t => (t.x - x) ** 2 + (t.z - z) ** 2 < 49) || height(x, z) < 0.3) continue;
+        g.add(N.buildBench(x, z, Math.atan2(-Math.cos(a), -Math.sin(a)), w.bench === 'lantern'));
+        this.benchPos = new THREE.Vector3(x, height(x, z), z);
+        break;
+      }
+    }
     this.clouds = N.buildClouds(w, rnd, w.cloudN); g.add(this.clouds);
+    // v2.3: Wolkenschatten ziehen mit dem Wind über die Wiese (Shader-Flecken, kein Draw-Call)
+    const wl = Math.hypot(w.wind[0], w.wind[1]) || 1;
+    this.shadowWind = [w.wind[0] / wl * 2.2, w.wind[1] / wl * 2.2];
+    this.shadows = G.uCloudSh.value.map((v, i) => { const a = rnd() * 6.28, r = rnd() * 110; return v.set(Math.cos(a) * r, Math.sin(a) * r, 16 + rnd() * 12, (w.cloudShadow ?? 0.3) * (0.8 + rnd() * 0.3)); });
+    this.shootT = 8 + rnd() * 6; this.shoot = -1;
     this.ambient = new Ambient(w.particles, quality.particles); g.add(this.ambient.points);
+    // v2.3: Wiesen-Leben (Vögel, Schwarm, Bienen, Marienkäfer, Häschen, Fisch, fallende Blätter)
+    this.life = new Life(this, w, rnd, this.fx); g.add(this.life.group);
     this.scene.add(g);
     return this;
   }
@@ -76,7 +106,26 @@ export class World {
       c.set(focus.x + dx / l * 9, focus.y, focus.z + dz / l * 9);
     }
     if (this.clouds) this.clouds.userData.update(dt);
+    if (this.pond) this.pond.userData.update(dt, G.uTime.value);
+    if (this.life) this.life.update(dt, G.uTime.value, focus, cam);
     if (this.ambient) this.ambient.update(dt, focus);
+    if (this.shadows) for (const v of this.shadows) {
+      v.x += this.shadowWind[0] * dt; v.y += this.shadowWind[1] * dt;
+      if (v.x > 140) v.x -= 280; if (v.x < -140) v.x += 280; if (v.y > 140) v.y -= 280; if (v.y < -140) v.y += 280;
+    }
+    // Sternschnuppe am Abendhimmel: alle ~20 s, in Blickrichtung, 0,9 s lang
+    if (this.def && this.def.sky.stars) {
+      const su = this.sky.material.uniforms;
+      if (this.shoot >= 0) { this.shoot += dt / 0.9; su.uShootT.value = this.shoot; if (this.shoot >= 1) { this.shoot = -1; su.uShootT.value = -1; } }
+      else if ((this.shootT -= dt) <= 0) {
+        this.shootT = 16 + Math.random() * 8; this.shoot = 0;
+        cam.getWorldDirection(_v);
+        const az = Math.atan2(_v.x, _v.z) + (Math.random() - 0.5) * 1.0, el = 0.4 + Math.random() * 0.3, dz = Math.random() < 0.5 ? -1 : 1;
+        su.uShootA.value.set(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
+        su.uShootB.value.set(Math.sin(az + dz * 0.4) * Math.cos(el - 0.22), Math.sin(el - 0.22), Math.cos(az + dz * 0.4) * Math.cos(el - 0.22));
+        this.onShoot && this.onShoot();
+      }
+    }
   }
 
   setQuality(q) {

@@ -82,10 +82,10 @@ export class Ambient {
     this.points = new THREE.Points(g, this.mat);
     this.points.frustumCulled = false;
     this.geo = g;
-    if (mode === 1) count = Math.round(count * 0.6);
+    this.k = mode === 1 ? 0.85 : 1; // v2.3: Glühwürmchen dichter (alt 0,6)
     this.setCount(count);
   }
-  setCount(n) { this.geo.setDrawRange(0, Math.min(this.max, n)); }
+  setCount(n) { this.geo.setDrawRange(0, Math.min(this.max, Math.round(n * (this.k || 1)))); }
   update(dt, focus) { this.mat.uniforms.uCenter.value.copy(focus); }
 }
 

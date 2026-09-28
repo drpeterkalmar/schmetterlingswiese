@@ -3,7 +3,7 @@ export const WORLDS = [
   {
     id: 'wiese', name: 'Frühlingswiese', emoji: '🌼', tod: 'Morgen',
     sun: { az: 0.9, el: 0.42, col: 0xfff0d8, k: 1.3 },
-    sky: { zenith: 0x5ea9e6, horizon: 0xe4f2ff, glow: 0xffe3b0, sunCol: 0xfff6dc, size: 0.05 },
+    sky: { zenith: 0x5ea9e6, horizon: 0xe4f2ff, glow: 0xffe3b0, sunCol: 0xfff6dc, size: 0.05, rainbow: 1 },
     amb: { sky: 0x9ab6e8, gnd: 0x6d8f4c, k: 0.62 }, rim: 0xfff0c8,
     fog: { col: 0xd4e9fa, sun: 0xfff1d6, near: 50, far: 340, max: 0.7 },
     grass: [0x3a8430, 0x72c046, 0xb6de66], ground: [0x4a9538, 0x6db84b, 0xa1c853],
@@ -13,6 +13,8 @@ export const WORLDS = [
     far: [{ color: 0x7fb49a, h: 40, mist: 0.1 }, { color: 0x9fc3d6, h: 68, mist: 0.2 }, { color: 0xc2d8ee, h: 100, mist: 0.3 }],
     terrain: { t1: [2.4, 0.035, 0.041, 1.7], t2: [1.3, 0.09, 0.075, 2.0], t3: [0.6, 0.15, 0.17, 0.4], edge: [115, 185, 26] },
     cloudN: 14, flowerN: 1100, particles: 'pollen', wind: [0.55, 0.3],
+    // v2.3: Regenbogen, goldene Morgen-Lichter, Sand-/Pfadflecken, Vergissmeinnicht + Gänseblümchen
+    patch: [0.6, 3.0, 0, 0], patchCol: 0xdccf9c, gold: [0xffe9a8, 0.26], carpet: [0x6ec6ff, 0x8fd3ff, 0xffffff],
     music: { root: 65, mode: 'major', bpm: 84 }, amb_sfx: ['birds', 'wind'],
   },
   {
@@ -23,7 +25,8 @@ export const WORLDS = [
     fog: { col: 0xeae6d2, sun: 0xfff6dc, near: 60, far: 380, max: 0.68 },
     grass: [0x6a9630, 0x9cc446, 0xecd862], ground: [0x7aa63a, 0x98bd46, 0xc4c257],
     flowers: [0xffd23f, 0xff9f43, 0xff6b6b, 0xffffff, 0xc58cff],
-    flowerMix: { daisy: 0.4, tulip: 0.1, round: 0.3, spike: 0.2 },
+    flowerMix: { daisy: 0.3, tulip: 0.08, round: 0.2, spike: 0.12, poppy: 0.18, bell: 0.06, heath: 0.06 }, // v2.3 (alt: daisy .4, tulip .1, round .3, spike .2)
+    patch: [0.6, 3.2, 1.2, 0.4], patchCol: 0xe6d49c, gold: [0xfff0a0, 0.12], carpet: [0xffe14a, 0xffffff, 0xfff08a],
     trees: [{ kind: 'round', n: 14, colors: [0x7bb04a, 0x8fbf52] }],
     bush: [0x6a9a3c, 0x7aa84a],
     far: [{ color: 0xa6b877, h: 32, mist: 0.1, round: 2 }, { color: 0xc9c995, h: 55, mist: 0.2 }, { color: 0xe6dcc0, h: 85, mist: 0.3 }],
@@ -44,6 +47,7 @@ export const WORLDS = [
     far: [{ color: 0x6aa996, h: 42, mist: 0.1 }, { color: 0x92c4c0, h: 72, mist: 0.2 }, { color: 0xbde0e2, h: 105, mist: 0.3 }],
     terrain: { t1: [2.0, 0.034, 0.04, 2.9], t2: [1.1, 0.085, 0.07, 0.3], t3: [0.5, 0.15, 0.16, 1.1], edge: [118, 185, 24], pond: [0, 0, 34, 2.4] },
     cloudN: 14, flowerN: 1000, pads: 46, particles: 'pollen', wind: [0.45, 0.35],
+    patch: [0.45, 2.8, 2.1, 1.3], carpet: [0x8fd3ff, 0xffffff, 0xd6a4ff], bench: 'plain',
     music: { root: 62, mode: 'lydian', bpm: 78 }, amb_sfx: ['birds', 'water', 'wind'],
   },
   {
@@ -59,6 +63,8 @@ export const WORLDS = [
     far: [{ color: 0xb48ca8, h: 38, mist: 0.15 }, { color: 0xd3a2b4, h: 64, mist: 0.25 }, { color: 0xefc1c0, h: 92, mist: 0.35 }],
     terrain: { t1: [2.6, 0.032, 0.038, 0.9], t2: [1.2, 0.09, 0.08, 2.4], t3: [0.6, 0.16, 0.14, 0.2], edge: [115, 180, 28] },
     cloudN: 12, flowerN: 1000, particles: 'petals', wind: [0.6, 0.35],
+    patch: [0.5, 3.0, 0.7, 2.2], patchCol: 0xe8cfb0, gold: [0xffc27a, 0.36], carpet: [0xffffff, 0xffc9dc, 0xffe6ef],
+    flowerPal: { poppy: [0xff85b3, 0xff6f9a, 0xffb3cf], bell: [0xd9b3ff, 0xc8a8ff, 0xffffff], heath: [0xffb3cf, 0xe8a0d8] },
     music: { root: 64, mode: 'pentatonic', bpm: 74 }, amb_sfx: ['birds', 'wind'],
   },
   {
@@ -74,6 +80,8 @@ export const WORLDS = [
     far: [{ color: 0x3a3a6c, h: 40, mist: 0.45 }, { color: 0x4e4c82, h: 68, mist: 0.5 }, { color: 0x6e6496, h: 98, mist: 0.55 }],
     terrain: { t1: [2.2, 0.036, 0.04, 4.1], t2: [1.2, 0.088, 0.072, 1.6], t3: [0.6, 0.15, 0.17, 3.0], edge: [115, 185, 25] },
     cloudN: 8, cloud: 0x8a88b8, flowerN: 1000, particles: 'fireflies', wind: [0.35, 0.2],
+    patch: [0.4, 2.9, 3.1, 0.6], patchCol: 0x7c8494, cloudShadow: 0, bench: 'lantern', carpet: [0x9fd8ff, 0xd0a8ff, 0xffffff],
+    flowerPal: { poppy: [0xff9ed2, 0xd0a8ff], bell: [0x9fd8ff, 0xb0c8ff], heath: [0xd0a8ff, 0xb89cff] },
     music: { root: 60, mode: 'dorian', bpm: 66 }, amb_sfx: ['crickets', 'wind'],
   },
 ];

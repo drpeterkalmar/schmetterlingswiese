@@ -32,6 +32,7 @@ class App {
     this.player = new Player(this.scene);
     this.progress = new Progress();
     this.audio = new AudioEngine();
+    this.world.fx = { bursts: this.bursts, audio: this.audio, pan: (p) => this.screenPan(p) }; // Wiesen-Leben: Partikel + Klänge
     this.haptics = new Haptics();
     this.input = new Input(document.getElementById('touch'));
     this.input.zoneEls = Object.fromEntries([...document.querySelectorAll('#zones .z')].map(e => [e.dataset.z, e]));

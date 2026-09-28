@@ -9,6 +9,9 @@ const _o = new THREE.Object3D();
 const _c = new THREE.Color();
 const _v = new THREE.Vector3();
 const _w = new THREE.Vector3();
+const _u = new THREE.Vector3(), _q = new THREE.Vector3();
+// v2.3: ein Options-Objekt für Glitzer/Funken (keine Allokation pro Frame)
+const GO = { n: 1, pos: null, spread: 0.9, colors: [0xffffff, 0xfff3b0, 0xffe07a], shape: 1, size: 0.26, speed: 0.4, up: 0.35, life: 0.8, grav: 0, drag: 1.2, vel: null };
 
 // ---------------------------------------------------------------- gemeinsame Formen
 function heartShape(s = 1) {
@@ -142,7 +145,8 @@ class CollectTask extends Task {
     this.items = [];
     const cols = kind === 'fireflies' ? [0xd8ff6a] : kind === 'blossoms' ? [0xffb3cf, 0xffd0e0, 0xff9fc0, 0xffffff] : [0xffc83a, 0xff8fc8, 0x8fd8ff, 0xb89cff, 0x9cf07a];
     this.pool = new Pool(g.scene, kind === 'fireflies' ? 'firefly' : kind === 'blossoms' ? 'blossom' : 'drop', n + extra,
-      { glow: true, glowI: kind === 'fireflies' ? 1.6 : 0.55, emis: kind === 'drop' ? 0.35 : 0.2, side: kind === 'blossoms' ? THREE.DoubleSide : THREE.FrontSide });
+      { glow: true, glowI: kind === 'fireflies' ? 1.6 : 0.55, emis: kind === 'drop' ? 0.35 : 0.2, side: kind === 'blossoms' ? THREE.DoubleSide : THREE.FrontSide,
+        pulse: kind === 'collect' ? 0.3 : 0.12 }); // v2.3: Tropfen-Leuchten pulsiert kräftiger (Funkeln)
     const others = [];
     const hi = g.diff.id === 'schwer' ? 7 : 4.5;
     const trees = (g.world.trees.userData.cherry || g.world.trees.userData.round || []).filter(t => Math.hypot(t.x, t.z) < 85);
@@ -187,6 +191,8 @@ class CollectTask extends Task {
           if (this.kind === 'collect') it.base.addScaledVector(_v, k); else it.base.addScaledVector(_v, Math.min(1, dt * 3));
         }
         if (d < R && this.cur < this.max) this.take(it);
+        // v2.3: Nektartropfen glitzern (kleine Funkelsterne, sin-moduliert über die Emissionsrate)
+        if (this.kind === 'collect' && !it.taken && Math.random() < dt * (0.9 + 0.8 * Math.sin(t * 2.3 + it.ph))) { GO.pos = it.pos; g.bursts.emit(GO); }
       }
       const spin = this.kind === 'blossoms' ? t * 1.5 + it.ph : t * 1.6 + it.ph;
       const bl = this.kind === 'blossoms';
@@ -268,7 +274,7 @@ class RingTask extends Task {
     this.pts.forEach((p, k) => {
       const state = k < this.cur ? 0 : k === this.cur ? 2 : 1;
       this.anim[k] += ((state === 0 ? 0 : 1) - this.anim[k]) * Math.min(1, dt * 6);
-      const s = this.anim[k] * this.R * (state === 2 ? 1 + 0.06 * Math.sin(t * 5) : 0.92);
+      const s = this.anim[k] * this.R * (state === 2 ? 1 + 0.06 * Math.sin(t * 5) : 0.92 * (1 + 0.025 * Math.sin(t * 2.6 + k))); // v2.3: auch die nächsten Ringe atmen leicht
       const yaw = Math.atan2(this.dirs[k].x, this.dirs[k].z);
       const col = state === 2 ? 0xffd84a : (k === this.cur + 1 ? 0xff9fd0 : 0xbfe6ff);
       const vis = state === 0 ? s : (k <= this.cur + 3 ? s : s * 0.001);
@@ -277,7 +283,17 @@ class RingTask extends Task {
     this.pool.flush();
   }
   pass() {
-    const p = this.pts[this.cur];
+    const p = this.pts[this.cur], n = this.dirs[this.cur];
+    // v2.3: Funkenkante – Glitzer sprüht vom Ringrand nach außen
+    _u.set(n.z, 0, -n.x).normalize();
+    for (let k = 0; k < 20; k++) {
+      const a = k / 20 * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
+      _q.copy(p).addScaledVector(_u, ca * this.R).add(_w.set(0, sa * this.R, 0));
+      _v.copy(_u).multiplyScalar(ca * 3.2).add(_w.set(0, sa * 3.2, 0)).addScaledVector(n, 2);
+      GO.pos = _q; GO.vel = _v; GO.spread = 0.1; GO.speed = 0.3; GO.size = 0.36; GO.life = 0.7; GO.up = 0;
+      this.g.bursts.emit(GO);
+    }
+    GO.vel = null; GO.spread = 0.9; GO.speed = 0.4; GO.size = 0.26; GO.life = 0.8; GO.up = 0.35;
     this.cur++; this.prevSide = null;
     this.g.hit(p, 'ring', 0xffd84a);
   }
