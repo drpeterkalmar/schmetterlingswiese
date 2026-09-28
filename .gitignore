@@ -10,3 +10,5 @@ proto*.html
 !tests/shots/v21/
 !tests/shots/v22/
 tests/shots/v22/*.png
+!tests/shots/v23/
+tests/shots/v23/*.png

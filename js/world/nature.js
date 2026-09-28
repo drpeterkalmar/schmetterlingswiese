@@ -562,27 +562,30 @@ export function buildClouds(world, rnd, n) {
     im.userData.pts = pts;
     grp.add(im); all.push(im);
   });
-  // v2.3: zweite, dünne Hochebene (flache Schleierwolken, halb durchsichtig)
+  // v2.3: zweite, dünne Hochebene (flache Schleierwolken weit oben)
   {
     const b = new Build();
     // flache Schleier-Flecken (rundlich gestreut; eine Reihe wirkte von unten wie ein weißer Balken)
     for (let i = 0; i < 6; i++) { const a = i * 1.05 + rnd(), r = i ? 9 + rnd() * 7 : 0; b.add(P.ico(8 + rnd() * 4, 1), 0xffffff, { p: [Math.cos(a) * r * 1.3, rnd() * 1.5, Math.sin(a) * r], s: [1.25, 0.16, 1.0] }); }
-    const hm = toonMat({ vc: true, rim: 0.4, soft: 1.4, cloud: true, transparent: true, opacity: 0.42 });
+    // deckend: halbtransparent zeigten sich die überlappenden Kugeln als Kreise (Befund Vision, v2.3)
+    const hm = toonMat({ vc: true, rim: 0.4, soft: 1.4, cloud: true });
     hm.uniforms.uColor.value.set(world.cloud || 0xffffff); hm.uniforms.uFog = mat.uniforms.uFog; hm.uniforms.uGndAmb = mat.uniforms.uGndAmb; hm.uniforms.uSkyAmb = mat.uniforms.uSkyAmb;
     const pts = [];
     for (let i = 0; i < Math.max(3, Math.round(n * 0.5)); i++) {
-      const a = rnd() * Math.PI * 2, r = 140 + rnd() * 240;
-      pts.push({ x: Math.cos(a) * r, y: 150 + rnd() * 40, z: Math.sin(a) * r, s: 0.9 + rnd() * 0.8, rot: rnd() * 0.5 - 0.25, k: rnd(), vx: 0.9 + rnd() * 0.6 });
+      // weit draußen und hoch → kleine, dünne Schleier am mittleren Himmel (näher/größer wirkten sie kantig und wuchtig)
+      const a = rnd() * Math.PI * 2, r = 270 + rnd() * 150;
+      pts.push({ x: Math.cos(a) * r, y: 160 + rnd() * 30, z: Math.sin(a) * r, s: 0.7 + rnd() * 0.45, rot: rnd() * 0.5 - 0.25, k: rnd(), vx: 0.9 + rnd() * 0.6, a, r });
     }
     const im = instanced(b.build(), hm, pts);
-    im.frustumCulled = false; im.userData.pts = pts; im.renderOrder = -1;
+    im.frustumCulled = false; im.userData.pts = pts;
     grp.add(im); all.push(im);
   }
   grp.userData.update = (dt) => {
     for (const im of all) {
       const pts = im.userData.pts;
       pts.forEach((p, i) => {
-        p.x += p.vx * dt; if (p.x > 380) p.x = -380;
+        if (p.r) { p.a += p.vx / p.r * dt; p.x = Math.cos(p.a) * p.r; p.z = Math.sin(p.a) * p.r; } // Schleier ziehen im Kreis (nie über Kopf)
+        else { p.x += p.vx * dt; if (p.x > 380) p.x = -380; }
         _o.position.set(p.x, p.y, p.z); _o.rotation.set(0, p.rot, 0); _o.scale.setScalar(p.s); _o.updateMatrix();
         im.setMatrixAt(i, _o.matrix);
       });
