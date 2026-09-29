@@ -36,43 +36,69 @@ export const C = {
 // spin(p, s, out) → Zusatz-Drehungen {x: flip, y: twirl, z: roll}; fx = Effekt-Name (siehe game.js showFx)
 // Alte Werte (Abstimmung A/B) stehen jeweils im Kommentar.
 export const STUNTS = [
-  { id: 'doppel', name: 'Doppel-Looping', emoji: '🎡', dur: 2.4, spd: 1.15, cam: 0.6,
+  { id: 'doppel', hi: 0.33, name: 'Doppel-Looping', emoji: '🎡', dur: 2.4, spd: 1.15, cam: 0.6,
     shape: (p, L, s, o) => { const a = 2 * TAU * ease(p), R = 2.1; return o.set(0, R * (1 - Math.cos(a)), R * Math.sin(a)); } },
-  { id: 'korkenzieher', name: 'Korkenzieher-Spirale', emoji: '🌀', dur: 2.3, spd: 1.15, cam: 0.4,
+  { id: 'korkenzieher', hi: 0.5, name: 'Korkenzieher-Spirale', emoji: '🌀', dur: 2.3, spd: 1.15, cam: 0.4,
     // R 2,0 → 2,2 (bei Schwer lag der Scheitel sonst fast im Stillstand)
     shape: (p, L, s, o) => { const a = TAU * ease(p), R = 2.2; return o.set(s * 1.3 * Math.sin(a), R * (1 - Math.cos(a)) + 1.0 * sstep(0.1, 0.9, p), R * Math.sin(a)); },
     spin: (p, s, o) => o.set(0, 0, s * TAU * ease(p)) },
-  { id: 'salto', name: 'Rückwärts-Salto', emoji: '🤸', dur: 1.7, spd: 1.1, cam: 0.7,
+  { id: 'salto', hi: 0.5, name: 'Rückwärts-Salto', emoji: '🤸', dur: 1.7, spd: 1.1, cam: 0.7,
     shape: (p, L, s, o) => o.set(0, 2.4 * bump(p), -0.2 * L * slow(p)),
     spin: (p, s, o) => o.set(-TAU * ease(sstep(0.08, 0.92, p)), 0, 0) },
-  { id: 'bumerang', name: 'Bumerang-Bogen', emoji: '🪃', dur: 2.6, spd: 1.15,
+  { id: 'bumerang', hi: 0.5, name: 'Bumerang-Bogen', emoji: '🪃', dur: 2.6, spd: 1.15,
     shape: (p, L, s, o) => { const a = TAU * ease(p), R = 3.2; return o.set(s * R * (1 - Math.cos(a)), 0.8 * bump(p), R * Math.sin(a)); },
     spin: (p, s, o) => o.set(0, 0, -s * 0.75 * Math.sin(Math.PI * p)) },
-  { id: 'zickzack', name: 'Blitz-Zickzack', emoji: '⚡', dur: 1.5, spd: 1.2,
+  { id: 'zickzack', hi: 0.5, name: 'Blitz-Zickzack', emoji: '⚡', dur: 1.5, spd: 1.2,
     shape: (p, L, s, o) => o.set(s * 1.7 * Math.sin(3 * Math.PI * p) * Math.sin(Math.PI * p), 0, 0.35 * L * ease(p)),
     spin: (p, s, o) => o.set(0, 0, -s * 0.7 * Math.sin(3 * Math.PI * p) * Math.sin(Math.PI * p)) },
-  { id: 'rakete', name: 'Feuerwerk-Rakete', emoji: '🎆', dur: 2.8, spd: 1.1, cam: 0.35,
+  { id: 'rakete', hi: 0.5, name: 'Feuerwerk-Rakete', emoji: '🎆', dur: 2.8, spd: 1.1, cam: 0.35,
     shape: (p, L, s, o) => o.set(0, 6.0 * bump(p), -0.25 * L * slow(p)),
     spin: (p, s, o) => o.set(0, 0, s * TAU * ease(sstep(0.36, 0.64, p))) },
-  { id: 'sternschnuppe', name: 'Sternschnuppen-Schwung', emoji: '🌠', dur: 1.6, spd: 1.2,
+  { id: 'sternschnuppe', hi: 0.45, name: 'Sternschnuppen-Schwung', emoji: '🌠', dur: 1.6, spd: 1.2,
     shape: (p, L, s, o) => o.set(s * 0.6 * Math.sin(Math.PI * p) * Math.sin(Math.PI * p), -1.3 * bump(p), 0.5 * L * ease(p)) },
-  { id: 'tauchen', name: 'Tauch-Korkenzieher', emoji: '🫧', dur: 2.4, spd: 1.1, cam: 0.45,
+  { id: 'tauchen', hi: 0.62, name: 'Tauch-Korkenzieher', emoji: '🫧', dur: 2.4, spd: 1.1, cam: 0.45,
     shape: (p, L, s, o) => { const q = Math.pow(p, 0.75), k = Math.sin(Math.PI * q); return o.set(0, -2.4 * k * k, 0); },
     spin: (p, s, o) => o.set(0, 0, s * 2 * TAU * ease(sstep(0.4, 0.95, p))) },
-  { id: 'wackeltanz', name: 'Luft-Wackeltanz', emoji: '💃', dur: 2.0, spd: 1.05,
+  { id: 'wackeltanz', hi: 0.5, name: 'Luft-Wackeltanz', emoji: '💃', dur: 2.0, spd: 1.05,
     shape: (p, L, s, o) => { const e = Math.sin(Math.PI * p), w = Math.sin(4 * Math.PI * p); return o.set(s * 0.8 * w * e, 0.8 * w * w * e, -0.3 * L * slow(p)); },
     spin: (p, s, o) => { const e = Math.sin(Math.PI * p); return o.set(0, 0.45 * Math.sin(4 * Math.PI * p) * e, 0.6 * Math.sin(6 * Math.PI * p) * e); } },
-  { id: 'superschraube', name: 'Superschraube', emoji: '💫', dur: 1.9, spd: 1.15,
+  { id: 'superschraube', hi: 0.5, name: 'Superschraube', emoji: '💫', dur: 1.9, spd: 1.15,
     // Wunsch „2½ Umdrehungen“ → 3 (eine halbe endet kopfüber)
     shape: (p, L, s, o) => o.set(0, 1.0 * bump(p), 0.15 * L * ease(p)),
     spin: (p, s, o) => o.set(0, 0, s * 3 * TAU * ease(p)) },
-  { id: 'wirbel', name: 'Blumenwirbel', emoji: '🌼', dur: 2.4, spd: 1.05,
+  { id: 'wirbel', hi: 0.5, name: 'Blumenwirbel', emoji: '🌼', dur: 2.4, spd: 1.05,
     names: { kirsch: 'Blütenwirbel', abend: 'Glühwürmchen-Wirbel' }, emojis: { kirsch: '🌸', abend: '✨' },
     shape: (p, L, s, o) => o.set(0, 1.6 * bump(p), -0.35 * L * slow(p)),
     spin: (p, s, o) => o.set(0, s * 2 * TAU * ease(p), 0) },
 ];
 STUNTS.forEach((d, i) => { d.n = i; });
 export const stuntName = (d, wid) => (d.names && d.names[wid]) || d.name;
+
+// ---------------------------------------------------------------- Sieger-Einlagen (v2.4)
+// Levelsieg → zufällige Einlage aus dem Katalog, eine Stufe größer inszeniert (Bahn ×AMP, Dauer ×DUR, Seitenkamera,
+// Zeitlupe am Höhepunkt `hi`). Der klassische Sieger-Looping bleibt als eigene Einlage (Index 0) dabei.
+export const FINALE_AMP = 1.2, FINALE_DUR = 1.25;
+export const LOOPING = { id: 'looping', hi: 0.5, name: 'Sieger-Looping', emoji: '🏆', dur: 2.2, spd: 1.0, cam: 0.6,
+  shape: (p, L, s, o) => { const a = TAU * ease(p), R = 2.6; return o.set(0, R * (1 - Math.cos(a)), R * Math.sin(a)); } };
+export const FINALES = [LOOPING, ...STUNTS];
+// Effekt-Akzent je Sieger-Einlage: Farben + Partikelform (0 Kugel, 1 Stern, 2 Konfetti, 3 Herz, 6 Blase) für Spur und Höhepunkt
+export const ACCENT = {
+  looping: { c: C.GOLD, sh: 1 }, doppel: { c: C.RAINBOW, sh: 0 }, korkenzieher: { c: C.GOLD, sh: 1 }, salto: { c: C.STAR, sh: 1 },
+  bumerang: { c: C.HEART, sh: 3 }, zickzack: { c: C.BOLT, sh: 1 }, rakete: { c: C.FIRE, sh: 0 }, sternschnuppe: { c: C.STAR, sh: 1 },
+  tauchen: { c: C.BUBBLE, sh: 6 }, wackeltanz: { c: C.CONF, sh: 2 }, superschraube: { c: C.STAR, sh: 1 }, wirbel: { c: C.PETAL, sh: 2 },
+};
+// ?finale=<n|id> bzw. __game.finale(n|id): Index in FINALES oder id
+export function finaleByKey(k) {
+  if (k === null || k === undefined || k === '') return null;
+  if (typeof k === 'object') return k;
+  const n = Number(k);
+  if (Number.isInteger(n) && FINALES[n]) return FINALES[n];
+  return FINALES.find(d => d.id === k) || null;
+}
+export function pickFinale(lastId, rnd = Math.random) {
+  const pool = FINALES.filter(d => d.id !== lastId);
+  return pool[(rnd() * pool.length) | 0];
+}
 
 // URL-Override ?stunt=<n|id> (A/B + Tests): jede Einlage direkt abrufbar
 export function stuntByKey(k) {
@@ -94,6 +120,7 @@ const _q = new THREE.Quaternion(), _qe = new THREE.Quaternion(), _eu = new THREE
 // Lokaler Versatz gegenüber dem Start (inkl. Fluglinie L·p), ohne Sicherheitshöhe
 export function showOffset(S, p, out) {
   S.def.shape(p, S.L, S.side, out);
+  if (S.amp && S.amp !== 1) out.multiplyScalar(S.amp);
   out.z += S.L * p;
   return out;
 }
@@ -132,3 +159,14 @@ export function showLift(S, x0, y0, z0, heightFn) {
   return Math.min(8, Math.max(0, need));
 }
 export const liftAt = (p) => sstep(0, 0.3, p);
+// Ausdehnung der Figur-Bahn ohne Fluglinie (für die Sieger-Kamera): Mitte (lokal) + Radius
+export function showBounds(S, outC) {
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, z0 = 1e9, z1 = -1e9;
+  for (let i = 0; i <= 40; i++) {
+    const p = i / 40;
+    showOffset(S, p, _a); _a.z -= S.L * p;
+    x0 = Math.min(x0, _a.x); x1 = Math.max(x1, _a.x); y0 = Math.min(y0, _a.y); y1 = Math.max(y1, _a.y); z0 = Math.min(z0, _a.z); z1 = Math.max(z1, _a.z);
+  }
+  outC.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+  return Math.max(1.6, (x1 - x0) / 2, (y1 - y0) / 2, (z1 - z0) / 2);
+}

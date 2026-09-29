@@ -6,7 +6,7 @@ import { height, pond } from '../world/terrain.js';
 import { Flyers, Animals, Wasps } from '../actors/npcs.js';
 import { makeTask, GlitterStar } from './objectives.js';
 import { DIFFS, worldOf } from './levels.js';
-import { pickStunt, stuntByKey, stuntName, COOLDOWN, C as SC, ease } from './stunts.js';
+import { pickStunt, stuntByKey, stuntName, COOLDOWN, C as SC, ease, pickFinale, finaleByKey, ACCENT, FINALE_AMP, FINALE_DUR } from './stunts.js';
 
 const _v = new THREE.Vector3(), _w = new THREE.Vector3();
 const RAINBOW = [0xff5a6e, 0xff9a3c, 0xffd84a, 0x7ee06a, 0x4fc8ff, 0x8a7bff, 0xd67cff];
@@ -20,7 +20,7 @@ export class Game {
   constructor(app) {
     this.app = app;
     this.scene = app.scene; this.player = app.player; this.bursts = app.bursts; this.world = app.world;
-    this.animals = new Animals(); this.scene.add(this.animals.group);
+    this.animals = new Animals(this.bursts); this.scene.add(this.animals.group);
     this.wasps = new Wasps(4); this.scene.add(this.wasps.group);
     this.flyers = null;
     this.state = 'idle'; // idle | countdown | play | won | failed | paused
@@ -38,7 +38,7 @@ export class Game {
     this.rainGeo = rb.build();
     this.rainMat = toonMat({ vc: true, color: 0x9aa4c4, rim: 0.8, soft: 0.4 });
     this.rains = [];
-    this.showLast = null; this.showAt = -99; this.showLog = [];
+    this.showLast = null; this.showAt = -99; this.showLog = []; this.finaleLog = [];
   }
 
   get diff() { return this.diffCfg; }
@@ -159,7 +159,7 @@ export class Game {
     this.bursts.clear();
     this.arrow.visible = false;
     this.state = 'idle';
-    this.player.frozen = false; this.player.cheer = false; this.player.hover = false; this.finale = null;
+    this.player.frozen = false; this.player.cheer = false; this.player.hover = false; this.finale = null; this.app.timeScale = 1;
     document.body.classList.remove('won');
   }
 
@@ -221,50 +221,74 @@ export class Game {
       }
     }
   }
-  // Gesamtaufgabe geschafft → Sieger-Looping mit Regenbogen-Schweif, Feuerwerk am Scheitel, Konfetti am Ende
+  // Gesamtaufgabe geschafft → v2.4 zufällige Sieger-Einlage (Katalog inkl. Sieger-Looping, keine direkte Wiederholung
+  // über Levels hinweg). Eine Stufe über den 🎪-Einlagen: Bahn ×1,2, Seitenkamera, Zeitlupe am Höhepunkt, Regenbogen-/
+  // Glitzer-Schweif, 3 Feuerwerke, Sternen-Ring, Effekt-Akzent je Einlage, Konfetti-Regen, Fanfare, Haptik.
   startFinale() {
-    const pl = this.player, c = pl.critter;
+    const pl = this.player, c = pl.critter, app = this.app, prof = app.progress.cur;
     if (c) { const T = Math.PI * 2; c.rollTarget = Math.ceil(c.rollAng / T - 0.05) * T; if (c.rollTarget < c.rollAng) c.rollTarget += T; }
     pl.stunt = null;
-    const ok = pl.tryStunt('loop', { grand: true, dur: 2.3 });
-    this.finale = { t: 0, loop: ok, apex: false, end: ok ? -1 : 0, hue: 0 };
-    this.app.audio.sfx('combo'); this.app.audio.sfx('loop', 0, { gain: 1.2, rate: 0.9 });
-    if (this.app.funOn('hupe')) setTimeout(() => this.app.audio.sfx('hupe', 0, { gain: 1 }), 700);
-    this.app.haptics.buzz('stunt');
+    const def = finaleByKey(app.finaleOverride) || pickFinale(prof && prof.lastFinale);
+    if (prof) { prof.lastFinale = def.id; app.progress.save(); }
+    const ok = pl.tryShow(def, Math.random() < 0.5 ? -1 : 1, { grand: true, amp: FINALE_AMP, durK: FINALE_DUR });
+    this.finale = { t: 0, def, id: def.id, loop: ok, apex: false, end: ok ? -1 : 0, hue: 0, slowT: -1, acc: 0 };
+    this.finaleLog.push(def.id); if (this.finaleLog.length > 40) this.finaleLog.shift();
+    if (ok) { const S = pl.stunt; S.ev = {}; S.acc = 0; }
+    app.audio.sfx('combo'); app.audio.sfx('zauber', 0, { gain: 0.9, rate: 0.9 }); app.audio.sfx('trommel', 0, { gain: 0.9 });
+    if (app.funOn('hupe')) setTimeout(() => app.audio.sfx('hupe', 0, { gain: 1 }), 700);
+    app.haptics.buzz('stunt');
     pl.kick(9, 0.12);
-    this.bursts.emit({ n: 1, pos: pl.pos, colors: [0xffffff], shape: 5, size: 6, speed: 0, up: 0, life: 0.45, grav: 0, drag: 0 });
+    this.em(1, pl.pos, FLASH, 5, 6, 0, 0, 0.45, 0, 0);
+    this.em(24, pl.pos, SC.STAR, 1, 0.4, 5, 1, 0.9, -0.8);
+    const wid = this.world.def.id;
+    app.ui.toast(`🏆 ${(def.emojis && def.emojis[wid]) || def.emoji} ${stuntName(def, wid)}!`);
     if (!ok) this.finaleEnd();
   }
   finaleUpdate(dt) {
     const F = this.finale; if (!F) return;
     F.t += dt;
-    const pl = this.player, S = pl.stunt;
+    const pl = this.player, S = pl.stunt, app = this.app;
     if (S && S.grand) {
-      // Regenbogen-Schweif
+      const A = ACCENT[F.id] || ACCENT.looping, p = S.p;
+      F.acc += dt * 60; const n = Math.min(4, F.acc | 0); F.acc -= n;
+      // Regenbogen-Schweif (lange Lebensdauer → die Bahn bleibt als Band stehen) + Glitzer + Akzent-Spur
       F.hue = (F.hue + dt * 1.6) % 1;
-      const n = 2; // Lebensdauer 2,8 s > Looping-Dauer → Kreis schließt sich sichtbar
       for (let i = 0; i < n; i++) {
         _v.copy(pl.pos).add(_w.set((Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4));
-        this.bursts.emit({ n: 1, pos: _v, colors: [RAINBOW[(((F.hue * RAINBOW.length) | 0) + i) % RAINBOW.length]], shape: 0, size: 0.9, speed: 0.2, up: 0, life: 2.8, grav: 0.05, drag: 1 });
+        this.em(1, _v, RB1[(((F.hue * RAINBOW.length) | 0) + i) % RAINBOW.length], 0, 0.6, 0.2, 0, 2.4, 0.05, 1); // 0,75: nah an der Kamera zu wuchtig
+        if (Math.random() < 0.5) this.em(1, pl.pos, SC.GOLD, 1, 0.42, 1.2, 0, 1.1, -0.5);
+        if (Math.random() < 0.35) this.em(1, pl.pos, A.c, A.sh, A.sh === 2 ? 0.26 : 0.4, 1.4, 0.3, 1.2, A.sh === 6 ? 0.6 : -0.6, 1.2, 0.4, null, 8);
       }
-      if (Math.random() < 0.5) this.bursts.emit({ n: 1, pos: pl.pos, colors: [0xffffff, 0xfff3b0], shape: 1, size: 0.45, speed: 1.2, up: 0, life: 1.1, grav: -0.5 });
-      if (!F.apex && S.t / S.dur > 0.5) {
+      // Zeitlupe: kurz vor dem Höhepunkt ≈0,4 s (Echtzeit), weich rein und raus
+      if (F.slowT < 0 && p >= S.def.hi - 0.05) { F.slowT = 0; app.audio.sfx('zeitlupe', 0, { gain: 0.9 }); }
+      if (!F.apex && p >= S.def.hi) {
         F.apex = true;
-        this.firework(_v.copy(pl.pos).add(_w.set(0, 2.2, 0)), 0xffd84a);
-        this.app.audio.sfx('glitter'); this.app.haptics.buzz('star');
+        _x.copy(pl.pos);
+        this.firework(_v.copy(_x).add(_w.set(0, 2.4, 0)), 0xffd84a);
+        this.ringOut(_x, 28, SC.STAR, 1, 0.55, 7, 0.3, 1.3);
+        this.ringOut(_x, 16, A.c, A.sh, A.sh === 2 ? 0.3 : 0.55, 4.5, 1.2, 1.5, A.sh === 6 ? 0.4 : -1);
+        this.em(30, _x, A.c, A.sh, A.sh === 2 ? 0.28 : 0.5, 6, 1.5, 1.4, A.sh === 6 ? 0.5 : -1.5, 1.2, 0.4, null, 10);
+        this.em(1, _x, FLASH, 5, 4.5, 0, 0, 0.45, 0, 0); // 7 → 4,5: drei große Ringe überlagerten sich
+        app.audio.sfx('knall', 0, { gain: 0.9 }); app.audio.sfx('glitter', 0, { gain: 0.8 }); app.haptics.buzz('star');
+        pl.kick(8, 0.1);
       }
     }
-    // Nachzügler-Feuerwerk nach dem Looping
+    if (F.slowT >= 0 && F.slowT < 0.4) {
+      F.slowT += app.realDt || dt;
+      const k = Math.sin(Math.PI * Math.min(1, F.slowT / 0.4));
+      app.timeScale = F.slowT >= 0.4 ? 1 : 1 - 0.7 * k * k;
+    }
+    // Nachzügler-Feuerwerk nach der Einlage
     if (F.end >= 0) {
       F.end += dt;
-      if (F.end > 0.45 && !F.fw2) { F.fw2 = true; this.firework(_v.copy(pl.pos).add(_w.set(-3.5, 4.5, 2)), 0xff7eb6); }
+      if (F.end > 0.45 && !F.fw2) { F.fw2 = true; this.firework(_v.copy(pl.pos).add(_w.set(-3.5, 4.5, 2)), 0xff7eb6); app.audio.sfx('knall', 0, { gain: 0.6, rate: 1.1 }); }
       if (F.end > 0.8 && !F.fw3) { F.fw3 = true; this.firework(_v.copy(pl.pos).add(_w.set(3.5, 5, -1.5)), 0x7cc4ff); }
     }
-    if (F.loop && !S && F.end < 0) this.finaleEnd(); // Sicherheitsnetz, falls stuntDone nicht kam
+    if (F.loop && !S && F.end < 0) this.finaleEnd(); // Sicherheitsnetz, falls showDone nicht kam
   }
   finaleEnd() {
     const F = this.finale; if (!F || F.end > 0.001) return;
-    F.end = 0.0011;
+    F.end = 0.0011; this.app.timeScale = 1;
     const pl = this.player;
     pl.cheer = true; pl.hover = true;
     this.app.audio.sfx('fanfare');
@@ -456,6 +480,7 @@ export class Game {
   once(E, p, k, at) { if (p >= at && !E[k]) { E[k] = true; return true; } return false; }
   onShowDone() {
     const pl = this.player;
+    if (this.state === 'won') { this.finaleEnd(); return; }
     this.em(10, pl.pos, SC.STAR, 1, 0.3, 2.5, 0.8, 0.7, -0.8);
     pl.critter && pl.critter.bump(3);
   }

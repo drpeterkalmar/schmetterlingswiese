@@ -14,9 +14,9 @@ import { Progress, ALBUM } from './game/progress.js';
 import { AudioEngine, Haptics, renderOffline, renderFlight, wavBase64, FLIGHT_NORM } from './audio/audio.js';
 import { Input } from './input.js';
 import { UI } from './ui/ui.js';
-import { STUNTS } from './game/stunts.js';
+import { STUNTS, FINALES } from './game/stunts.js';
 
-export const VERSION = '2.3.0';
+export const VERSION = '2.4.0';
 
 class App {
   constructor() {
@@ -45,6 +45,8 @@ class App {
     this.showT = 0; this.showcaseView = 'orbit';
     this._fw = new THREE.Vector3(); this._drift = new THREE.Vector3();
     this.stuntOverride = new URLSearchParams(location.search).get('stunt'); // ?stunt=<n|id> (A/B, Tests)
+    this.finaleOverride = new URLSearchParams(location.search).get('finale'); // ?finale=<n|id>: Sieger-Einlage erzwingen
+    this.timeScale = 1; this.realDt = 0; // Zeitlupe der Sieger-Einlage (nur Spielgeschehen, nicht Musik/Wind)
     this.applySettings();
     this.renderer.onTier = (q) => { this.world.setQuality(q); this.ui.onQuality && this.ui.onQuality(q); };
     this.bindGlobal();
@@ -331,14 +333,16 @@ class App {
       G.uTime.value = this.t;
       if (this.autopilot && this.mode === 'game') this.autoSteer();
       this.input.update(dt);
+      this.realDt = dt;
+      const gdt = this.mode === 'game' ? dt * this.timeScale : dt;
       if (this.mode === 'game') {
-        this.game.update(dt, this.t, this.input);
+        this.game.update(gdt, this.t, this.input);
         this._discT += dt;
         if (this._discT > 0.5) { this._discT = 0; this.proximityDiscover(); }
         this.showBtnUpdate();
       } else this.showcaseUpdate(dt, this.t);
-      this.trailUpdate(dt);
-      this.bursts.update(dt);
+      this.trailUpdate(gdt);
+      this.bursts.update(gdt);
       this.focus.copy(this.player.pos);
       G.uWind.value.z = this.world.windBoost || 0;
       this.world.update(dt, this.camera, this.focus);
@@ -398,6 +402,10 @@ window.__game = {
   step: () => app.game.debugStep(),
   stunt: (n = null, force = true) => app.game.showStunt(n, force), // 🎪 Einlage n (Index oder id) direkt; ohne n = Zufall
   stunts: () => STUNTS.map(d => ({ id: d.id, name: d.name, dur: d.dur })),
+  // 🏆 Sieger-Einlage für den nächsten Levelsieg festlegen (Index in finales() oder id; null = wieder Zufall)
+  finale: (k = null) => { app.finaleOverride = k; return k === null ? null : (FINALES[+k] || FINALES.find(d => d.id === k) || {}).id || null; },
+  finales: () => FINALES.map(d => ({ id: d.id, name: d.name, dur: d.dur, hi: d.hi })),
+  timeScale: () => app.timeScale,
   autopilot: (on = true) => { app.autopilot = on; if (!on) app.input.injected = null; },
   levels: () => LEVELS.map(l => l.id),
   daily: () => dailyLevel().id,

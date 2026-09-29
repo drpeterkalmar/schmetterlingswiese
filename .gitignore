@@ -12,3 +12,6 @@ proto*.html
 tests/shots/v22/*.png
 !tests/shots/v23/
 tests/shots/v23/*.png
+!tests/shots/v24/
+tests/shots/v24/**/*.png
+tests/shots/v24/*.png

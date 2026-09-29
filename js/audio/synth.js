@@ -405,6 +405,36 @@ export async function renderSfx(onProgress) {
     const n = noise(c, t, t + 0.35); const bp = filt(c, 'bandpass', 1400, 0.8); const na = g(c, 0); env(na.gain, t, 0.005, 0.45, 0.08, t + 0.35); chain(n, bp, na, o);
     for (let k = 0; k < 4; k++) { const tt = t + 0.12 + k * 0.07; const d = osc(c, 'sine', 900 + k * 180, tt, tt + 0.08); d.frequency.exponentialRampToValueAtTime(1600 + k * 200, tt + 0.05); const da = g(c, 0); env(da.gain, tt, 0.002, 0.25, 0.02, tt + 0.08); chain(d, da, o); }
   }, { wet: 0.25 });
+  // ---- v2.4: Sieger-Einlagen – Trommelwirbel (Anlauf), Feuerwerks-Knall mit Knistern, Zeitlupen-„Wuuum“
+  add('trommel', 1.6, 2, (c, o, t) => {
+    for (let k = 0; k < 22; k++) {
+      const tt = t + k * 0.045, v = 0.25 + 0.75 * (k / 21) * (k / 21);
+      const n = noise(c, tt, tt + 0.05); const bp = filt(c, 'bandpass', 1900, 0.9); const a = g(c, 0); env(a.gain, tt, 0.001, v * 0.55, 0.018, tt + 0.05); chain(n, bp, a, o);
+      const s = osc(c, 'triangle', 190, tt, tt + 0.06); const sa = g(c, 0); env(sa.gain, tt, 0.001, v * 0.25, 0.02, tt + 0.06); chain(s, sa, o);
+    }
+    const te = t + 1.0; const b = osc(c, 'sine', 150, te, te + 0.35); b.frequency.exponentialRampToValueAtTime(70, te + 0.25);
+    const ba = g(c, 0); env(ba.gain, te, 0.002, 0.9, 0.09, te + 0.35); chain(b, ba, o);
+    const cy = noise(c, te, te + 0.5); const hp = filt(c, 'highpass', 6500); const ca = g(c, 0); env(ca.gain, te, 0.002, 0.35, 0.15, te + 0.5); chain(cy, hp, ca, o);
+  }, { wet: 0.25 });
+  for (let v = 0; v < 2; v++) add('knall', 1.8, 2, (c, o, t) => {
+    const b = osc(c, 'sine', 110 - v * 15, t, t + 0.5); b.frequency.exponentialRampToValueAtTime(42, t + 0.4);
+    const ba = g(c, 0); env(ba.gain, t, 0.002, 0.8, 0.12, t + 0.5); chain(b, ba, o);
+    const n = noise(c, t, t + 0.7); const lp = filt(c, 'lowpass', 1400); lp.frequency.setValueAtTime(2400, t); lp.frequency.exponentialRampToValueAtTime(300, t + 0.6);
+    const na = g(c, 0); env(na.gain, t, 0.002, 0.7, 0.14, t + 0.7); chain(n, lp, na, o);
+    for (let k = 0; k < 14; k++) { // Knistern (Sternchen verglühen)
+      const tt = t + 0.25 + k * 0.06 + ((k * 37 + v * 11) % 7) * 0.008;
+      const cn = noise(c, tt, tt + 0.012); const hp = filt(c, 'highpass', 3500 + (k % 3) * 1500); const cg = g(c, 0); env(cg.gain, tt, 0.0005, 0.3 * (1 - k / 16), 0.004, tt + 0.012); chain(cn, hp, cg, o);
+    }
+    [0, 4, 7, 12].forEach((d, i) => bell(c, o, t + 0.08 + i * 0.05, mtof(86 + d + v * 2), 0.14, { tau: 0.4, dur: 1.0 }));
+  }, { wet: 0.4 });
+  add('zeitlupe', 1.4, 2, (c, o, t) => {
+    const s = osc(c, 'sine', 620, t, t + 0.9); s.frequency.exponentialRampToValueAtTime(170, t + 0.75);
+    const s2 = osc(c, 'triangle', 930, t, t + 0.9); s2.frequency.exponentialRampToValueAtTime(255, t + 0.75);
+    const a = g(c, 0); a.gain.setValueAtTime(0, t); a.gain.linearRampToValueAtTime(0.5, t + 0.12); a.gain.linearRampToValueAtTime(0, t + 0.85);
+    const a2 = g(c, 0.12); chain(s, a, o); s2.connect(a2); a2.connect(a);
+    const n = noise(c, t, t + 0.9); const bp = filt(c, 'bandpass', 2400, 1.5); bp.frequency.setValueAtTime(3200, t); bp.frequency.exponentialRampToValueAtTime(500, t + 0.8);
+    const na = g(c, 0); na.gain.setValueAtTime(0, t); na.gain.linearRampToValueAtTime(0.35, t + 0.15); na.gain.linearRampToValueAtTime(0, t + 0.85); chain(n, bp, na, o);
+  }, { wet: 0.45 });
   let done = 0; jobs.forEach(j => j.then(() => onProgress && onProgress(++done / jobs.length)));
   await Promise.all(jobs);
   return S;

@@ -3,11 +3,11 @@ import * as THREE from 'three';
 import { Critter } from './characters.js';
 import { height } from '../world/terrain.js';
 import { blobTex } from '../engine/textures.js';
-import { showOffset, showOrient, showLift, liftAt } from '../game/stunts.js';
+import { showOffset, showOrient, showLift, liftAt, showBounds } from '../game/stunts.js';
 
 const TAU = Math.PI * 2;
 const ease = (p) => 0.5 - 0.5 * Math.cos(Math.PI * p);
-const _v = new THREE.Vector3(), _w = new THREE.Vector3(), _f = new THREE.Vector3(), _q = new THREE.Quaternion();
+const _v = new THREE.Vector3(), _w = new THREE.Vector3(), _f = new THREE.Vector3(), _q = new THREE.Quaternion(), _gc = new THREE.Vector3();
 
 export class Player {
   constructor(scene) {
@@ -70,15 +70,31 @@ export class Player {
   }
   // 🎪 Zufalls-Einlage (v2.3): gleiche Muster wie der Sieger-Looping (abheben am Boden, Sicherheitshöhe, harter
   // Winkel-Reset am Ende), Bahn aus stunts.js. Feuert bewusst weder 'stunt' noch 'stuntDone' → zählt nicht als Aufgabe.
-  tryShow(def, side = 1) {
+  // v2.4 o.grand = Sieger-Einlage: Bahn ×o.amp, Dauer ×o.durK, Seitenkamera um die mitwandernde Bahnmitte (wie der Looping)
+  tryShow(def, side = 1, o = {}) {
     if (this.frozen || this.stunt || !def) return false;
     if (this.landed) this.takeoff();
-    const sp = this.baseSpeed * (def.spd || 1.15);
-    const S = { type: 'show', def, id: def.id, t: 0, dur: def.dur, L: sp * def.dur, side: side < 0 ? -1 : 1, yaw: this.yaw,
+    const sp = this.baseSpeed * (def.spd || 1.15), dur = def.dur * (o.durK || 1);
+    const S = { type: 'show', def, id: def.id, t: 0, dur, L: sp * dur, side: side < 0 ? -1 : 1, yaw: this.yaw, amp: o.amp || 1,
       prev: new THREE.Vector3(), anchor: this.pos.clone(), qt: new THREE.Quaternion(), q: new THREE.Quaternion(), p: 0 };
     S.lift = showLift(S, this.pos.x, this.pos.y, this.pos.z, height);
+    if (o.grand) {
+      S.grand = true; S.start = this.pos.clone(); S.mid = new THREE.Vector3(); S.c = new THREE.Vector3();
+      S.R = showBounds(S, S.mid);
+      // Kamera-Seite schräg von hinten (Hochformat 55°, quer 75°), gegenüber dem seitlichen Ausschlag der Bahn
+      const fx = Math.sin(this.yaw), fz = Math.cos(this.yaw), port = (this.camAspect || 1) < 1, th = port ? 0.8 : 1.3;
+      const k = S.mid.x * S.side > 0.3 ? -S.side : S.side;
+      S.camSide = new THREE.Vector3(k * (fz * Math.sin(th)) - fx * Math.cos(th), 0, k * (-fx * Math.sin(th)) - fz * Math.cos(th));
+      this.showCenter(S, 0);
+    }
     this.stunt = S; this.yawRate = 0; this.pitch = 0; this.landing = null;
     return true;
+  }
+  // Mitte der Sieger-Bahn in Weltkoordinaten: Start + Fluglinie + Bahnmitte + Hub
+  showCenter(S, p) {
+    const fx = Math.sin(S.yaw), fz = Math.cos(S.yaw), rx = Math.cos(S.yaw), rz = -Math.sin(S.yaw);
+    const z = S.mid.z + S.L * p, x = S.mid.x;
+    S.c.set(S.start.x + rx * x + fx * z, S.start.y + S.mid.y + S.lift * liftAt(p), S.start.z + rz * x + fz * z);
   }
   forward(out = _f) { const cp = Math.cos(this.pitch); return out.set(Math.sin(this.yaw) * cp, Math.sin(this.pitch), Math.cos(this.yaw) * cp); }
   push(v) { this.ext.add(v); }
@@ -118,6 +134,7 @@ export class Player {
       const ox = _v.x, oy = _v.y - S.lift * liftAt(p), oz = _v.z - S.L * p;
       S.anchor.set(this.pos.x - (rx * ox + fx * oz) * 0.7, this.pos.y - oy * 0.7, this.pos.z - (rz * ox + fz * oz) * 0.7);
       showOrient(S, p, S.q);
+      if (S.grand) this.showCenter(S, p);
       this.speed = this.baseSpeed;
       this.pos.y = Math.max(this.pos.y, gh + 0.6);
       if (p >= 1) { const id = S.id; this.stunt = null; this.showReset = true; this.emit('showDone', id); } // Winkel hart nullen (unten)
@@ -277,17 +294,20 @@ export class Player {
       // Sehne schneiden und die Kamera mitten durch die Figur schicken.
       // Abstand so, dass der ganze Kreis (+20 % Rand) ins Bild passt; Blick fast fest auf die Kreismitte
       const portrait = cam.aspect < 1, D = Math.max(7, grand.R * (portrait ? 2.4 : 2.1));
-      if (!this.camInit) { this.camPos.copy(grand.c).addScaledVector(grand.side, D); this.camLook.copy(grand.c); this.camInit = true; }
+      const side = grand.camSide || grand.side;
+      // Sieger-Einlagen (v2.4): Kreismitte wandert zu 50 % mit der Figur – seitliche Bahnen bleiben im schmalen Hochformat drin
+      const C = grand.camSide ? _gc.copy(grand.c).lerp(this.pos, 0.5) : grand.c;
+      if (!this.camInit) { this.camPos.copy(C).addScaledVector(side, D); this.camLook.copy(C); this.camInit = true; }
       if (!grand.cam) {
-        const dx = this.camPos.x - grand.c.x, dz = this.camPos.z - grand.c.z;
-        grand.cam = { a: Math.atan2(dx, dz), r: Math.max(3, Math.hypot(dx, dz)), y: this.camPos.y - grand.c.y };
+        const dx = this.camPos.x - C.x, dz = this.camPos.z - C.z;
+        grand.cam = { a: Math.atan2(dx, dz), r: Math.max(3, Math.hypot(dx, dz)), y: this.camPos.y - C.y };
       }
       const K = grand.cam, k = 1 - Math.exp(-dt * 3.4);
-      let da = Math.atan2(grand.side.x, grand.side.z) - K.a; da = Math.atan2(Math.sin(da), Math.cos(da));
+      let da = Math.atan2(side.x, side.z) - K.a; da = Math.atan2(Math.sin(da), Math.cos(da));
       K.a += da * k; K.r += (D - K.r) * k; K.y += (0.9 - K.y) * k;
-      this.camPos.set(grand.c.x + Math.sin(K.a) * K.r, grand.c.y + K.y, grand.c.z + Math.cos(K.a) * K.r);
+      this.camPos.set(C.x + Math.sin(K.a) * K.r, C.y + K.y, C.z + Math.cos(K.a) * K.r);
       const g2 = height(this.camPos.x, this.camPos.z) + 0.8; if (this.camPos.y < g2) this.camPos.y = g2;
-      _w.copy(grand.c).lerp(this.pos, 0.2);
+      _w.copy(C).lerp(this.pos, grand.camSide ? 0.4 : 0.2);
       this.camLook.lerp(_w, 1 - Math.exp(-dt * 6));
       cam.position.copy(this.camPos);
       cam.lookAt(this.camLook);

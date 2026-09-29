@@ -37,6 +37,8 @@ const MIX = {
   tap: 0.32, back: 0.3, combo: 0.4, sip: 0.35, pups: 0.42, hupe: 0.5,
   // v2.3: Zufalls-Einlagen + Wiesen-Leben (Summen/Platscher bewusst leise)
   zauber: 0.42, swoosh: 0.4, rakete: 0.42, pop: 0.42, blubb: 0.38, wackel: 0.45, funkel: 0.4, summ: 0.14, platsch: 0.34,
+  // v2.4: Sieger-Einlagen
+  trommel: 0.4, knall: 0.4, zeitlupe: 0.36,
 };
 const DUCK = { fanfare: [0.3, 3.0], unlock: [0.45, 1.8], glitter: [0.55, 1.4], star0: [0.6, 0.8], star1: [0.6, 0.8], star2: [0.55, 1.0], combo: [0.75, 0.6], fail: [0.6, 1.0] };
 const PITCHED = new Set(['fanfare', 'unlock', 'glitter', 'star0', 'star1', 'star2', 'combo', 'go', 'fail', 'zauber', 'funkel']);
@@ -256,11 +258,15 @@ export class AudioEngine {
 }
 
 // ------------------------------------------------------------------ Haptik
+// v2.4: dezent – nur Sieg, Stern und Kunststück vibrieren; jeder Puls ≥ 25 ms (kürzere spüren viele Android-Motoren nicht).
+// iPhone: kein navigator.vibrate. Der Ersatz (verstecktes <input type=checkbox switch> + label.click(), Safari ≥ 17.4)
+// wirkt nur bis iOS 26.4 – Apple hat das programmatische click() mit iOS 26.5 abgestellt (ios-haptics README, Stand
+// f5272ef943; seitdem gibt es Haptik nur noch, wenn der echte Finger-Tipp selbst auf dem Schalter-Label landet).
+// Ab iOS 26.5 bleibt es deshalb still – kein Fehler, nur keine Vibration.
 export class Haptics {
   constructor() {
     this.on = true; this.last = 0;
     this.canVibrate = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
-    // iPhone-Ersatz: verstecktes <input type=checkbox switch> + Label-Klick (Safari ≥ 17.4 gibt System-Haptik)
     if (!this.canVibrate && typeof document !== 'undefined') {
       const l = document.createElement('label'); l.style.cssText = 'position:fixed;left:-99px;top:-99px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none';
       const i = document.createElement('input'); i.type = 'checkbox'; i.setAttribute('switch', ''); l.appendChild(i);
@@ -268,13 +274,14 @@ export class Haptics {
     }
     this.log = [];
   }
-  static P = { collect: [12], ring: [10, 30, 14], stunt: [22], land: [16], bump: [30, 40, 30], gust: [12, 50, 12, 50, 12], star: [20, 60, 20], win: [30, 60, 30, 60, 90], ui: [8], unlock: [15, 40, 15, 40, 40] };
+  // alle übrigen Anlässe (Sammeln, Ring, Landen, Schubs, Böe, Tippen, Freischalten) bleiben still
+  static P = { stunt: [28], star: [25, 60, 25], win: [30, 60, 30, 60, 90] };
   buzz(kind) {
     if (!this.on) return;
+    const p = Haptics.P[kind]; if (!p) return;
     const now = performance.now();
     if (now - this.last < 45 && kind !== 'win') return;
     this.last = now;
-    const p = Haptics.P[kind] || [10];
     this.log.push(kind); if (this.log.length > 50) this.log.shift();
     try {
       if (this.canVibrate) navigator.vibrate(p);
