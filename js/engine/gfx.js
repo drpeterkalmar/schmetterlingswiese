@@ -101,6 +101,16 @@ uniform float uSway; uniform vec3 uFlap;
 #ifdef USE_TINT
 attribute float tint;
 #endif
+#ifdef RIG
+// v2.4 Tier-Rig: je Vertex Gelenkpunkt + Teil-Code, je Instanz die Bewegung (keine Knochen, kein eigenes Material pro Tier)
+attribute vec4 rig;    // xyz Gelenk (lokal), w Teil: 0 Rumpf, 1 Kopf, 2 Auge, 3 Ohr, 4 Bein, 5 Schwanz, 6 Flügel, 7 Freuden-Auge; Nachkomma = Seite/Phase
+attribute vec4 aAnim;  // Gang-Phase, Gang-Weite (rad), Kopf-Gier, Kopf-Nicken
+attribute vec4 aAnim2; // Blinzeln 0..1, Ohrenzucken (rad), Schwanz/Flügel (rad), Freude 0..1
+attribute vec3 aNeck;  // Nacken-Gelenk (lokal)
+mat3 rX(float a){ float c = cos(a), s = sin(a); return mat3(1.0, 0.0, 0.0, 0.0, c, s, 0.0, -s, c); }
+mat3 rY(float a){ float c = cos(a), s = sin(a); return mat3(c, 0.0, -s, 0.0, 1.0, 0.0, s, 0.0, c); }
+mat3 rZ(float a){ float c = cos(a), s = sin(a); return mat3(c, s, 0.0, -s, c, 0.0, 0.0, 0.0, 1.0); }
+#endif
 varying vec3 vN; varying vec3 vWP; varying vec4 vCol; varying vec2 vUv;
 void main(){
   vec3 pos = position; vec3 nrm = normal;
@@ -113,6 +123,35 @@ void main(){
   mat4 m = modelMatrix;
 #ifdef USE_INSTANCING
   m = modelMatrix * instanceMatrix;
+#endif
+#ifdef RIG
+  {
+    float part = floor(rig.w + 0.01), sub = rig.w - part;
+    vec3 pv = rig.xyz;
+    float sd = sub > 0.25 ? 1.0 : -1.0;
+    if (part > 1.5 && part < 2.5) { // Auge: Blinzeln (senkrecht stauchen), bei Freude ganz zu
+      float k = max(1.0 - aAnim2.x, 0.08) * (1.0 - aAnim2.w);
+      pos.y = pv.y + (pos.y - pv.y) * k;
+    } else if (part > 6.5) { // Freuden-Augen ^ ^
+      pos = pv + (pos - pv) * aAnim2.w;
+    } else if (part > 2.5 && part < 3.5) { // Ohr: zuckt nach außen
+      mat3 R = rZ(-sd * aAnim2.y) * rX(-0.35 * aAnim2.y);
+      pos = pv + R * (pos - pv); nrm = R * nrm;
+    } else if (part > 3.5 && part < 4.5) { // Bein: schwingt im Gang-Zyklus (Nachkomma = Phasenversatz)
+      mat3 R = rX(aAnim.y * sin(aAnim.x + sub * 6.2831));
+      pos = pv + R * (pos - pv); nrm = R * nrm;
+    } else if (part > 4.5 && part < 5.5) { // Schwanz: wedeln
+      mat3 R = rY(aAnim2.z) * rZ(aAnim2.z * 0.5);
+      pos = pv + R * (pos - pv); nrm = R * nrm;
+    } else if (part > 5.5 && part < 6.5) { // Flügel: heben
+      mat3 R = rZ(sd * aAnim2.z);
+      pos = pv + R * (pos - pv); nrm = R * nrm;
+    }
+    if ((part > 0.5 && part < 3.5) || part > 6.5) { // alles am Kopf: zum Spieler drehen / nicken
+      mat3 H = rY(aAnim.z) * rX(-aAnim.w);
+      pos = aNeck + H * (pos - aNeck); nrm = H * nrm;
+    }
+  }
 #endif
 #ifdef USE_INSTANCING_COLOR
   #ifdef USE_TINT
@@ -202,6 +241,7 @@ export function toonMat(o = {}) {
   if (o.flap) defines.WINGFLAP = '';
   if (o.tint) defines.USE_TINT = '';
   if (o.cloud) defines.CLOUD = '';
+  if (o.rig) defines.RIG = '';
   if (o.alphaTest) defines.ALPHATEST = o.alphaTest.toFixed(3);
   const u = {
     ...G,
@@ -225,6 +265,34 @@ export function toonMat(o = {}) {
   });
   if (o.blending) m.blending = o.blending;
   return m;
+}
+
+// ---------------------------------------------------------------- Kontaktschatten (v2.4, instanziert, mit Weltkrümmung)
+const BLOB_V = /* glsl */`
+${V_COMMON}
+varying vec2 vUv;
+void main(){
+  mat4 m = modelMatrix;
+#ifdef USE_INSTANCING
+  m = modelMatrix * instanceMatrix;
+#endif
+  vUv = uv;
+  gl_Position = projectionMatrix * viewMatrix * bendW(m * vec4(position, 1.0));
+}`;
+const BLOB_F = /* glsl */`
+uniform vec3 uColor; uniform float uOpacity;
+varying vec2 vUv;
+void main(){
+  float d = length(vUv - 0.5) * 2.0;
+  float a = (1.0 - smoothstep(0.15, 1.0, d)); a *= a;
+  gl_FragColor = vec4(uColor, a * uOpacity);
+}`;
+export function blobShadowMat(color = 0x1a2a10, opacity = 0.34) {
+  return new THREE.ShaderMaterial({
+    uniforms: { ...G, uColor: { value: new THREE.Color(color) }, uOpacity: { value: opacity } },
+    vertexShader: BLOB_V, fragmentShader: BLOB_F, transparent: true, depthWrite: false,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+  });
 }
 
 // ---------------------------------------------------------------- Gelände

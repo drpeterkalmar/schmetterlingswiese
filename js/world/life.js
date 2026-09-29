@@ -2,9 +2,10 @@
 // Alles instanziert (je Art 1–2 Draw-Calls), keine Allokationen pro Frame; Effekte über den Burst-Pool, Klänge vorgerendert.
 // Die Tiere halten sich in der Nähe des Spielers auf (weit weg → leise umziehen), damit man sie auch wirklich sieht.
 import * as THREE from 'three';
-import { toonMat } from '../engine/gfx.js';
+import { toonMat, blobShadowMat } from '../engine/gfx.js';
 import { Build, P, petalGeo } from '../engine/geo.js';
 import { face } from '../actors/characters.js';
+import { animalGeo } from '../actors/npcs.js';
 import { height, pond } from './terrain.js';
 
 const _o = new THREE.Object3D(), _v = new THREE.Vector3(), _w = new THREE.Vector3(), _c = new THREE.Color();
@@ -18,23 +19,6 @@ function wingPair(w, h, col, offZ = 0) {
   const g1 = new THREE.PlaneGeometry(w, h); g1.rotateX(Math.PI / 2); g1.translate(w / 2, 0, offZ);
   const g2 = g1.clone(); g2.rotateZ(Math.PI);
   b.add(g1, col, { tint: 1 }); b.add(g2, col, { tint: 1 });
-  return b.build();
-}
-
-// Wildhäschen in sparsam (≈ 1/3 der Dreiecke des Aufgaben-Häschens, gleiche Form)
-function bunnyGeo() {
-  const b = new Build(), fur = 0xf1e6dc, pink = 0xffb6c8;
-  b.add(P.sphere(0.36, 9, 7), fur, { p: [0, 0.38, -0.05], s: [1, 1, 1.1] });
-  const hc = [0, 0.82, 0.14];
-  b.add(P.sphere(0.32, 10, 8), fur, { p: hc });
-  for (const s of [-1, 1]) {
-    b.add(P.sphere(0.1, 6, 5), fur, { p: [s * 0.12, 1.28, 0.05], s: [0.8, 2.6, 0.5], r: [0, 0, -s * 0.18] });
-    b.add(P.sphere(0.06, 5, 4), pink, { p: [s * 0.12, 1.28, 0.1], s: [0.7, 2.6, 0.3], r: [0, 0, -s * 0.18] });
-    b.add(P.sphere(0.11, 6, 4), fur, { p: [s * 0.2, 0.08, 0.25], s: [1, 0.7, 1.5] });
-  }
-  b.add(P.sphere(0.04, 5, 4), pink, { p: [0, 0.8, 0.46] });
-  b.add(P.sphere(0.12, 6, 5), 0xffffff, { p: [0, 0.35, -0.45] });
-  face(b, b, new Build(), hc, 0.32, { eye: 0.3, sep: 0.42, up: 0.18, iris: 0x3a2030, cheek: 0xff9ab8, lod: 1 });
   return b.build();
 }
 
@@ -130,9 +114,17 @@ export class Life {
     // ---------------- Wildhäschen: hoppelt weg, wenn man ganz nah kommt
     this.bunnies = [];
     {
-      this.bunMesh = mkMesh(bunnyGeo(), toonMat({ vc: true, rim: 0.55, soft: 0.12 }), 2);
-      for (let i = 0; i < 2; i++) this.bunnies.push({ pos: new THREE.Vector3(9999, 0, 0), yaw: rnd() * 6.28, hop: 0, hopV: 0, run: 0, dir: 0, idleT: 1 + rnd() * 3 });
-      this.group.add(this.bunMesh);
+      // v2.4: gleiches Rig-Modell wie das Aufgaben-Häschen, sparsame Fassung (lod) + Kontaktschatten
+      const A = animalGeo('hase', false, true), g = A.geo;
+      g.setAttribute('aAnim', new THREE.InstancedBufferAttribute(new Float32Array(8), 4).setUsage(THREE.DynamicDrawUsage));
+      g.setAttribute('aAnim2', new THREE.InstancedBufferAttribute(new Float32Array(8), 4).setUsage(THREE.DynamicDrawUsage));
+      g.setAttribute('aNeck', new THREE.InstancedBufferAttribute(new Float32Array([...A.neck, ...A.neck]), 3));
+      this.bunMesh = mkMesh(g, toonMat({ vc: true, rim: 0.55, soft: 0.12, rig: true }), 2);
+      const sg = new THREE.PlaneGeometry(2, 2); sg.rotateX(-Math.PI / 2);
+      this.bunShadow = mkMesh(sg, blobShadowMat(0x1a2a10, night ? 0.24 : 0.32), 2); this.bunShadow.renderOrder = 1; this.bunShadowR = A.shadow;
+      for (let i = 0; i < 2; i++) this.bunnies.push({ pos: new THREE.Vector3(9999, 0, 0), yaw: rnd() * 6.28, hop: 0, hopV: 0, run: 0, dir: 0, idleT: 1 + rnd() * 3,
+        hy: 0, hp: 0, blinkT: 1 + rnd() * 3, blink: 0, earT: 2 + rnd() * 3, earU: 1 });
+      this.group.add(this.bunMesh, this.bunShadow);
     }
     // ---------------- Fisch im Teich (hüpft ab und zu: Platscher + Wasserring)
     this.fish = null;
@@ -330,12 +322,28 @@ export class Life {
       } else if ((B.idleT -= dt) <= 0) { B.idleT = 1.5 + Math.random() * 3; B.yaw += (Math.random() - 0.5) * 1.6; if (B.hop <= 0.001) B.hopV = 2.2; }
       B.hopV -= 14 * dt; B.hop = Math.max(0, B.hop + B.hopV * dt); if (B.hop <= 0 && B.hopV < 0) B.hopV = 0;
       B.pos.y = height(B.pos.x, B.pos.z);
+      // v2.4: Kopf schaut zum Spieler (bevor es flieht), Hinterläufe strecken beim Hoppeln, Blinzeln, Ohrenzucken
+      const look = B.run <= 0 && dh < 14 && focus.y - gy < 8;
+      const hyT = look ? THREE.MathUtils.clamp(angDiff(Math.atan2(-dx, -dz) - B.yaw), -1.05, 1.05) : 0;
+      const hpT = look ? THREE.MathUtils.clamp(Math.atan2(focus.y - gy - 0.6, Math.max(0.5, dh)), -0.2, 0.55) : 0;
+      B.hy += (hyT - B.hy) * Math.min(1, dt * 6); B.hp += (hpT - B.hp) * Math.min(1, dt * 5);
+      if ((B.blinkT -= dt) <= 0) { B.blinkT = 2 + Math.random() * 3.5; B.blink = 0.14; }
+      B.blink = Math.max(0, B.blink - dt);
+      if ((B.earT -= dt) <= 0) { B.earT = 1.5 + Math.random() * 3; B.earU = 0; }
+      B.earU = Math.min(1, B.earU + dt / 0.3);
+      const a1 = this.bunMesh.geometry.attributes.aAnim.array, a2 = this.bunMesh.geometry.attributes.aAnim2.array, i4 = i * 4;
+      a1[i4] = B.hop > 0.001 ? Math.PI * 0.5 + Math.min(1.4, B.hop * 6) : 0; a1[i4 + 1] = B.hop > 0.001 ? 0.7 : 0; a1[i4 + 2] = B.hy; a1[i4 + 3] = B.hp;
+      a2[i4] = B.blink > 0 ? Math.sin(Math.PI * B.blink / 0.14) : 0; a2[i4 + 1] = Math.sin(Math.PI * B.earU) * 0.55 + (B.run > 0 ? -0.3 : 0); a2[i4 + 2] = Math.sin(t * 5 + i) * 0.2; a2[i4 + 3] = 0;
       const sq = B.hopV > 0 ? 0.1 : 0;
       _o.position.set(B.pos.x, B.pos.y + B.hop, B.pos.z); _o.rotation.set(B.hopV > 0 ? -0.2 : 0, B.yaw, 0, 'YXZ');
       _o.scale.set(0.75 * (1 - sq * 0.5), 0.75 * (1 + sq + Math.sin(t * 2 + i) * 0.015), 0.75 * (1 - sq * 0.5)); _o.updateMatrix();
       this.bunMesh.setMatrixAt(i, _o.matrix);
+      const r = this.bunShadowR * 0.75 * (1 - Math.min(0.45, B.hop * 0.8));
+      _o.position.set(B.pos.x, B.pos.y + 0.04, B.pos.z); _o.rotation.set(0, B.yaw, 0); _o.scale.set(r, 1, r * 1.15); _o.updateMatrix();
+      this.bunShadow.setMatrixAt(i, _o.matrix);
     });
-    this.bunMesh.instanceMatrix.needsUpdate = true;
+    this.bunMesh.instanceMatrix.needsUpdate = true; this.bunShadow.instanceMatrix.needsUpdate = true;
+    this.bunMesh.geometry.attributes.aAnim.needsUpdate = true; this.bunMesh.geometry.attributes.aAnim2.needsUpdate = true;
   }
   updFish(dt, t, focus) {
     const F = this.fish; if (!F) return;

@@ -16,7 +16,8 @@ const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Eule
 const _c = new THREE.Color();
 
 export class Build {
-  constructor() { this.parts = []; }
+  // rig (v2.4): [px, py, pz, teil] – Gelenkpunkt + Teil-Code für den Tier-Shader (RIG); gilt für alle folgenden add()
+  constructor() { this.parts = []; this.rig = null; }
   // color: hex/Color; o: {p:[x,y,z], r:[x,y,z], s:n|[x,y,z], unlit:0..1, tint:0..1}
   add(geo, color, o = {}) {
     const g = geo.index ? geo.clone() : geo.clone();
@@ -24,7 +25,7 @@ export class Build {
     const r = o.r || [0, 0, 0], p = o.p || [0, 0, 0];
     _e.set(r[0], r[1], r[2], o.order || 'XYZ'); _q.setFromEuler(_e);
     _m.compose(_p.set(p[0], p[1], p[2]), _q, _s.set(s[0], s[1], s[2]));
-    const local = o.cf ? g.attributes.position.array.slice() : null;
+    const local = o.cf || o.mix ? g.attributes.position.array.slice() : null;
     if (o.pre) g.applyMatrix4(o.pre);
     g.applyMatrix4(_m);
     if (o.post) g.applyMatrix4(o.post);
@@ -49,13 +50,25 @@ export class Build {
         col[i * 4] += (c2.r - col[i * 4]) * t; col[i * 4 + 1] += (c2.g - col[i * 4 + 1]) * t; col[i * 4 + 2] += (c2.b - col[i * 4 + 2]) * t;
       }
     }
+    if (o.mix) { // weicher Farbverlauf über lokale Position: mix(lx, ly, lz) → [hex, t] (Bauchfell, Fell-Verlauf)
+      const loc = local || g.attributes.position.array, c2 = new THREE.Color();
+      const fns = Array.isArray(o.mix) ? o.mix : [o.mix];
+      for (let i = 0; i < n; i++) for (const f of fns) {
+        const m = f(loc[i * 3], loc[i * 3 + 1], loc[i * 3 + 2]); if (!m || m[1] <= 0) continue;
+        c2.set(m[0]); const t = Math.min(1, m[1]);
+        col[i * 4] += (c2.r - col[i * 4]) * t; col[i * 4 + 1] += (c2.g - col[i * 4 + 1]) * t; col[i * 4 + 2] += (c2.b - col[i * 4 + 2]) * t;
+      }
+    }
     g.setAttribute('color', new THREE.BufferAttribute(col, 4));
     g.setAttribute('tint', new THREE.BufferAttribute(tint, 1));
+    const rg = o.rig || this.rig;
+    if (rg) { const ra = new Float32Array(n * 4); for (let i = 0; i < n; i++) ra.set(rg, i * 4); g.setAttribute('rig', new THREE.BufferAttribute(ra, 4)); }
     if (!g.attributes.uv) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(n * 2), 2));
     this.parts.push(g);
     return this;
   }
   build() { return mergeGeos(this.parts); }
+  take(b) { this.parts.push(...b.parts); return this; }
 }
 
 export function mergeGeos(geos) {
