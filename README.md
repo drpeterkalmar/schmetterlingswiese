@@ -28,6 +28,9 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
 - **Lebendige Wiese (v2.3):** Singvögel fliegen von Baum zu Baum, Bienen besuchen Blüten, ein Schmetterlings-Schwarm
   tanzt über den Blumen, Marienkäfer krabbeln auf Büschen, ein Häschen hoppelt davon, im Teich springt ein Fisch;
   Glockenblumen, Mohn, Heide, Blütenteppiche, Wolkenschatten, Regenbogen, Sternschnuppen am Abend
+- **Tierbabys (v2.4):** Bärenbaby, Capybara, Häschen und Entchen mit Schnauze, Pfoten mit Ballen, Bauchfell und
+  Schwänzchen; sie laufen mit echten Beinbewegungen, blinzeln, zucken mit den Ohren, schauen dich an, wenn du nah
+  bist, und freuen sich über Besuch mit Hüpfer, ^ ^-Augen und Herzchen
 
 ## Steuerung
 
@@ -35,7 +38,7 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
 |---|---|
 | 📱 Tippen & Halten (Standard) | links/rechts halten = drehen · Mitte oben = steigen · Mitte unten = sinken/landen · Finger liegen lassen und hoch/runter schieben = steigen/sinken (auch beim Drehen, ohne loszulassen) |
 | 🕹️ Joystick (Einstellungen) | Daumen-Stick links |
-| 🌀 🤸 Kunststücke | automatisch: jedes geschaffte Teilziel = Freuden-Schraube, ganze Aufgabe = Sieger-Looping mit Regenbogen-Schweif und Feuerwerk |
+| 🌀 🤸 Kunststücke | automatisch: jedes geschaffte Teilziel = Freuden-Schraube; ganze Aufgabe = 🏆 **Sieger-Einlage (v2.4)**: jedes Mal eine andere von 12 (Sieger-Looping, Doppel-Looping, Rakete, Bumerang …), groß inszeniert mit Zeitlupe am Höhepunkt, Regenbogen-Schweif, Feuerwerk und Konfetti |
 | 🎪 Stunt-Knopf (v2.3) | unten rechts tippen (Computer: Taste C) = eine von 11 zufälligen Flugeinlagen mit Effekten (Doppel-Looping, Feuerwerk-Rakete, Bumerang, Blitz-Zickzack …); nur Spaß, zählt nicht als Aufgabe, kurze Pause (Ring) bis zum nächsten Mal |
 | ⌨️ Tastatur | Pfeile/WASD · P/Esc = Pause |
 
@@ -43,6 +46,7 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
 
 - Statisch, **kein Build nötig**: ES-Module + [three.js](https://threejs.org) r180 lokal in `lib/`
 - **100 % prozedural:** Modelle, Texturen, Musik und Klänge entstehen im Code – keine fremden Assets
+  (v2.4 geprüft: kein CC0-Tierpaket passt im Stil zu ≥ 3 der 4 Tierbabys, siehe `V24_BERICHT.md`)
 - Eigene Toon-Shader mit Rim-Light, Weltkrümmung, Wind-Gras (instanziert, folgt dem Spieler),
   Himmel mit Tageszeit, weiches Bloom + Tiefenunschärfe + Farbkorrektur als Post-Processing
 - **Audio:** generative, adaptive Musik (Look-ahead-Scheduler, 5 Schichten), alle Klänge per
@@ -62,6 +66,8 @@ tests/run_all.sh                     # Headless-Tests (Python-Playwright, Pixel-
 Debug-Hilfe im Browser: `window.__game` (Zustand, Level starten, Autopilot, Einfrieren, Audio-Messung).
 Stunt-Einlagen: `__game.stunts()` listet alle, `__game.stunt(n | 'id')` startet eine direkt; `?stunt=rakete` in der URL
 legt den Knopf auf eine feste Einlage (A/B-Vergleich).
+Sieger-Einlagen: `__game.finales()` listet alle 12, `__game.finale(n | 'id')` legt die nächste fest (`null` = Zufall);
+`?finale=bumerang` in der URL erzwingt sie für jeden Sieg.
 
 *Gebaut mit viel Liebe für die Familie. 🌸*
 
