@@ -130,7 +130,7 @@ void main(){
     vec3 pv = rig.xyz;
     float sd = sub > 0.25 ? 1.0 : -1.0;
     if (part > 1.5 && part < 2.5) { // Auge: Blinzeln (senkrecht stauchen), bei Freude ganz zu
-      float k = max(1.0 - aAnim2.x, 0.08) * (1.0 - aAnim2.w);
+      float k = max(1.0 - aAnim2.x, 0.08) * (1.0 - smoothstep(0.3, 0.7, aAnim2.w)); // bei Freude ganz weg (sonst bleibt ein Strich)
       pos.y = pv.y + (pos.y - pv.y) * k;
     } else if (part > 6.5) { // Freuden-Augen ^ ^
       pos = pv + (pos - pv) * aAnim2.w;

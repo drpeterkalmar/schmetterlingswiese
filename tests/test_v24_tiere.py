@@ -69,7 +69,7 @@ def run(dev, tag):
                 sim_wait(s, 6); s.ev("window.__blOn = false")
                 res['blink'][f'{wid}_{kind}'] = s.ev("__bl"); s.ev("window.__blOn = true")
                 # Freude: Herzchen + ^ ^
-                s.ev(f"""(() => {{ const a = __app.game.animals.list[{idx}], p = __app.player; p.pos.y -= 14; __app.game.animals.cheer(a); }})()""")
+                s.ev(f"""(() => {{ const a = __app.game.animals.list[{idx}], p = __app.player; const yaw = a.yaw + Math.PI + 0.3; p.pos.set(a.pos.x + Math.sin(yaw) * 4.5, a.pos.y + 2.2, a.pos.z + Math.cos(yaw) * 4.5); __app.game.animals.cheer(a); }})()""")
                 sim_wait(s, 0.35)
                 s.ev("__game.freeze(true)")
                 res['joy'][f'{wid}_{kind}'] = {'joy': round(s.ev(f"__app.game.animals.list[{idx}].joy"), 2), 'hearts': s.ev("(() => { const B = __app.bursts; let n = 0; for (let i = 0; i < B.n; i++) if (B.p[i * 4 + 3] === 3) n++; return n; })()")}
