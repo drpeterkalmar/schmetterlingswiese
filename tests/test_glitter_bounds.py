@@ -14,11 +14,16 @@ with sync_playwright() as pw:
     s.pg.on('requestfailed', lambda r: failed.append(f"{r.url} {r.failure}"))
     s.open(); s.tap('#title'); s.pg.fill('input.name', 'G'); s.tap('[data-a=create]')
     s.ev("__game.setQuality(0)")
+    RACES = s.ev("import('./js/game/levels.js').then(m => m.LEVELS.filter(m.isRace).map(l => l.id))")
     for lid in s.ev("__game.levels()"):
         for diff in ('leicht', 'mittel'):
             # alte Instanz merken: start() baut asynchron auf, sonst misst man den Stern des Vorgänger-Levels
             s.ev("window.__oldG = __app.game.glitter")
             s.ev(f"__game.start('{lid}', '{diff}')")
+            if lid in RACES:  # v2.5: Wettflüge haben keinen Glitzerstern (Sterne nur über Zeiten)
+                s.pg.wait_for_function(f"__app.game.level && __app.game.level.id === '{lid}' && __app.game.state !== 'idle'", timeout=60000)
+                if s.ev("!!__app.game.glitter"): res.setdefault('race_with_glitter', []).append(f"{lid}/{diff}")
+                continue
             s.pg.wait_for_function("__app.game && __app.game.glitter && __app.game.glitter !== window.__oldG"
                                    " && __app.game.state === 'play'", timeout=60000)
             r = s.ev("(() => { const p = __app.game.glitter.pos; return Math.hypot(p.x, p.z); })()")
@@ -40,7 +45,7 @@ with sync_playwright() as pw:
     s.close()
 res['max_r'] = max(res['r']); res['min_r'] = min(res['r']); del res['r']
 res['requestfailed'] = failed[:8]
-res['ok'] = res['levels'] > 0 and not res['outside'] and not res['not_collected'] and not res['errors']
+res['ok'] = res['levels'] > 0 and not res['outside'] and not res['not_collected'] and not res['errors'] and not res.get('race_with_glitter')
 print(json.dumps(res, indent=1))
 print('RESULT', 'PASS' if res['ok'] else 'FAIL')
 sys.exit(0 if res['ok'] else 1)

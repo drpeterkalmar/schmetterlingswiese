@@ -1,6 +1,6 @@
 // Oberfläche: Titel, Profile, Weltkarte, Level-Karte, HUD, Pause, Ergebnis, Garderobe, Album, Abzeichen, Einstellungen
 import { WORLDS } from '../game/worlds.js';
-import { LEVELS, DIFFS, levelById, levelsOfWorld, dailyLevel, todayStr } from '../game/levels.js';
+import { LEVELS, DIFFS, levelById, levelsOfWorld, dailyLevel, todayStr, isRace, timeGoals } from '../game/levels.js';
 import { AVATAR_COLORS, ALBUM, BADGES } from '../game/progress.js';
 import { CHARACTERS, COLORS, HATS, EXTRAS, PATTERNS, SKINS, TRAILS, SIZES, WINGFORMS, ANTENNAE, EYESTYLES, FUN, PALETTE, SLOT_NAMES, DEFAULT_LOOK, randomLook } from '../actors/characters.js';
 import { wingMask, glassWing, skinWing, tintMask, wingIcon } from '../engine/textures.js';
@@ -10,6 +10,7 @@ const WGRAD = { wiese: 'linear-gradient(160deg,#8ee39a,#5db4ea)', sonne: 'linear
 const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const starsHtml = (n, max = 3) => `<span class="stars">${Array.from({ length: max }, (_, i) => `<span class="${i < n ? '' : 'off'}">⭐</span>`).join('')}</span>`;
 const hexCss = (h) => '#' + h.toString(16).padStart(6, '0');
+const fmt = (t) => t.toFixed(1).replace('.', ',');
 const TASKTXT = {
   collect: (c) => `💧 Sammle ${c.n} Nektartropfen${c.overWater ? ' über dem Teich' : ''}`,
   fireflies: (c) => `✨ Fange ${c.n} Glühwürmchen`,
@@ -216,14 +217,16 @@ export class UI {
   }
   s_levelcard(d) {
     const app = this.app, lvl = levelById(d.id), w = WORLDS.find(x => x.id === lvl.world), D = DIFFS[app.diff];
-    const par = Math.round(lvl.par * D.par);
-    const third = D.id === 'schwer' ? '🔥 Schaffe eine große Kombo' : '⭐ Finde den versteckten Glitzerstern';
+    const TG = timeGoals(lvl, D.id), race = isRace(lvl), par = TG.par;
+    // v2.5 Wettflug: Sterne nur über Zeiten – Blitzzeit statt Glitzerstern/Kombo
+    const first = race ? '⭐ Rennen gewinnen' : '⭐ Aufgabe schaffen';
+    const third = race ? `⚡ Blitzzeit: schneller als ${TG.blitz} Sekunden` : D.id === 'schwer' ? '🔥 Schaffe eine große Kombo' : '⭐ Finde den versteckten Glitzerstern';
     const got = app.progress.levelStars(lvl.id, D.id);
     app.menuWorld(lvl.world);
     return `<div class="screen dim"><div class="card wide"><div class="lvgrid"><div>
       <div class="lvhead"><div class="big">${lvl.daily ? '📅' : w.emoji}</div><h2>${lvl.name}</h2><div class="small">${w.name} · ${D.emoji} ${D.name}${lvl.daily ? ' · ' + todayStr() : ''}</div></div>
       <div class="tasklist">${lvl.tasks.map(t => `<div>${TASKTXT[t.type](t)}</div>`).join('')}</div></div><div>
-      <div class="goals"><div>⭐ Aufgabe schaffen</div><div>⭐ Schneller als ${par} Sekunden</div><div>${third}</div>${D.timeLimit ? `<div>⏱️ Zeitlimit: ${Math.round(lvl.par * 1.5)} Sekunden</div>` : '<div>🌱 Kein Zeitdruck – lass dir Zeit!</div>'}</div>
+      <div class="goals"><div>${first}</div><div>⭐ Schneller als ${par} Sekunden</div><div>${third}</div>${TG.limit ? `<div>⏱️ Zeitlimit: ${TG.limit} Sekunden</div>` : race ? '' : '<div>🌱 Kein Zeitdruck – lass dir Zeit!</div>'}</div>
       ${got ? `<p class="small">Bisher: ${starsHtml(got)}</p>` : ''}</div></div>
       <div class="row cta"><button class="btn soft" data-a="map">Zurück</button><button class="btn big" data-a="go" data-v="${lvl.id}">Los! 🦋</button></div>
     </div></div>`;
@@ -249,7 +252,9 @@ export class UI {
     return `<div class="screen dim"><div class="card wide" style="text-align:center"><div class="lvgrid"><div>
       <h2>${lvl.daily ? '📅 Tagesaufgabe geschafft!' : cheer} 🎉</h2>
       <div class="bigstars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
-      <div class="facts"><div>⏱️ ${r.time.toFixed(1).replace('.', ',')} s ${r.time <= r.par ? '✅' : `(Ziel ${r.par} s)`}</div><div>🔥 Kombo ${r.maxCombo}${r.diff === 'schwer' ? ` / ${r.comboReq}` : ''}</div>${r.diff !== 'schwer' ? `<div>⭐ Glitzerstern ${r.bonus ? '✅' : '❌'}</div>` : ''}</div>
+      <div class="facts">${r.race ? `<div>🏁 Rennen gewonnen ✅</div>` : ''}<div>⏱️ ${fmt(r.time)} s ${r.time <= r.par ? '✅' : `(Ziel ${r.par} s)`}</div>${r.race
+        ? `<div>⚡ Blitzzeit ${r.blitz} s ${r.time <= r.blitz ? '✅' : '❌'}</div>`
+        : `<div>🔥 Kombo ${r.maxCombo}${r.diff === 'schwer' ? ` / ${r.comboReq}` : ''}</div>${r.diff !== 'schwer' ? `<div>⭐ Glitzerstern ${r.bonus ? '✅' : '❌'}</div>` : ''}`}</div>
       </div><div>${r.unlocks.map((u, k) => `<div class="unl" style="animation-delay:${1.6 + k * 0.2}s"><span class="e">${this.unlIcon(u)}</span><span>Neu freigeschaltet:<br>${esc(u.name)}</span></div>`).join('')}
       ${r.badges.map((b, k) => `<div class="unl" style="animation-delay:${1.8 + k * 0.2}s"><span class="e">${b.emoji}</span><span>Abzeichen: ${b.name}</span></div>`).join('')}
       </div></div><div class="row cta"><button class="btn soft" data-a="map">🗺️ Karte</button><button class="btn alt" data-a="again">🔄 Nochmal</button>${r.unlocks.length ? `<button class="btn big surprise" data-a="surprise"><i class="gift">🎁</i> Überraschung!</button>` : hasNext ? `<button class="btn big" data-a="next">Weiter ➜</button>` : ''}</div>

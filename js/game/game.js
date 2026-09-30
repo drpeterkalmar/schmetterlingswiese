@@ -5,7 +5,7 @@ import { Build, P, rng, hashStr } from '../engine/geo.js';
 import { height, pond } from '../world/terrain.js';
 import { Flyers, Animals, Wasps } from '../actors/npcs.js';
 import { makeTask, GlitterStar } from './objectives.js';
-import { DIFFS, worldOf } from './levels.js';
+import { DIFFS, worldOf, isRace, timeGoals } from './levels.js';
 import { pickStunt, stuntByKey, stuntName, COOLDOWN, C as SC, ease, pickFinale, finaleByKey, ACCENT, FINALE_AMP, FINALE_DUR } from './stunts.js';
 
 const _v = new THREE.Vector3(), _w = new THREE.Vector3();
@@ -16,6 +16,47 @@ const _x = new THREE.Vector3(), _y = new THREE.Vector3();
 const RB1 = RAINBOW.map(c => [c]), PUFF = [0xffffff, 0xfff4e8], DUST = [0xfff3b0, 0xcfe8ff], FLASH = [0xfff3b0];
 const ZZ = [['a', 1 / 6], ['b', 0.5], ['c', 5 / 6]], WK = [['a', 0.125], ['b', 0.375], ['c', 0.625], ['d', 0.875]];
 
+// Zielpfeil: Ausblenden in Zielnähe (weich zwischen near und far, m), Abstand zur Kamera (hoch/quer, m)
+const ARROW = { near: 6, far: 9 };
+const AR_D = { port: 9.5, land: 7 };
+const G_BEND = 0.0009; // = uBend (gfx.js)
+const uBendAt = (p, c) => G_BEND * ((p.x - c.x) ** 2 + (p.z - c.z) ** 2);
+const SEAT_TMP = { pos: new THREE.Vector3(), n: new THREE.Vector3(), yaw: null };
+const _pv = new THREE.Vector3(), _pr = new THREE.Vector3(), _pu = new THREE.Vector3(), _sz = new THREE.Vector2();
+// Weltpunkt → Bildschirm-Pixel (inkl. Weltkrümmung wie im Shader); z > 1 = hinter der Kamera
+function proj(p, cam, W, H) {
+  _pv.copy(p); _pv.y -= uBendAt(p, cam.position); _pv.project(cam);
+  return [(_pv.x + 1) / 2 * W, (1 - _pv.y) / 2 * H, _pv.z];
+}
+// Bildschirm-Rechteck eines Meshes (8 Ecken der Hülle) in Pixeln [x0, y0, x1, y1]
+function screenRect(mesh, cam, W, H, out) {
+  if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+  const b = mesh.geometry.boundingBox; out[0] = out[1] = 1e9; out[2] = out[3] = -1e9;
+  for (let i = 0; i < 8; i++) {
+    _pv.set(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, i & 4 ? b.max.z : b.min.z).applyMatrix4(mesh.matrixWorld);
+    const [x, y] = proj(_pv, cam, W, H);
+    out[0] = Math.min(out[0], x); out[1] = Math.min(out[1], y); out[2] = Math.max(out[2], x); out[3] = Math.max(out[3], y);
+  }
+  return out;
+}
+// Index-Teile in neuer Reihenfolge (gleiche Länge wie das Original)
+function concatIdx(src, ...parts) {
+  const out = new src.constructor(src.length); let o = 0;
+  for (const p of parts) { out.set(p, o); o += p.length; }
+  return out;
+}
+// Kontur-Hülle: Kopie der Geometrie, Punkte entlang der gemittelten Normalen nach außen (geschlossen, ohne Risse)
+function hullGeo(g, w) {
+  const h = g.clone(), p = h.attributes.position, n = h.attributes.normal, acc = new Map();
+  const key = (i) => `${p.getX(i).toFixed(4)},${p.getY(i).toFixed(4)},${p.getZ(i).toFixed(4)}`;
+  for (let i = 0; i < p.count; i++) { const k = key(i), a = acc.get(k) || [0, 0, 0]; a[0] += n.getX(i); a[1] += n.getY(i); a[2] += n.getZ(i); acc.set(k, a); }
+  const off = [];
+  for (let i = 0; i < p.count; i++) { const a = acc.get(key(i)), l = Math.hypot(a[0], a[1], a[2]) || 1; off.push(a[0] / l * w, a[1] / l * w, a[2] / l * w); }
+  for (let i = 0; i < p.count; i++) p.setXYZ(i, p.getX(i) + off[i * 3], p.getY(i) + off[i * 3 + 1], p.getZ(i) + off[i * 3 + 2]);
+  h.computeBoundingBox();
+  return h;
+}
+
 export class Game {
   constructor(app) {
     this.app = app;
@@ -25,13 +66,7 @@ export class Game {
     this.flyers = null;
     this.state = 'idle'; // idle | countdown | play | won | failed | paused
     this.tasks = [];
-    // Zielpfeil
-    const ab = new Build();
-    ab.add(P.cone(0.2, 0.42, 12), 0xffffff, { p: [0, 0, 0.3], r: [Math.PI / 2, 0, 0], unlit: 0.5 });
-    ab.add(P.cyl(0.07, 0.07, 0.35, 8), 0xffffff, { p: [0, 0, -0.05], r: [Math.PI / 2, 0, 0], unlit: 0.5 });
-    this.arrow = new THREE.Mesh(ab.build(), toonMat({ vc: true, color: 0xffe07a, rim: 1.2, emis: 0.5, transparent: true, opacity: 0.9 }));
-    this.arrow.visible = false; this.arrow.renderOrder = 5;
-    this.scene.add(this.arrow);
+    this.buildArrow();
     // Regenwolken
     const rb = new Build();
     [[0, 0, 0, 2.6], [2.3, -0.3, 0.4, 1.9], [-2.2, -0.2, -0.3, 2.0], [0.6, 0.9, -0.2, 1.8], [-0.8, -0.4, 1.4, 1.6]].forEach(([x, y, z, r]) => rb.add(P.ico(r, 2), 0xffffff, { p: [x, y, z], s: [1, 0.75, 1] }));
@@ -43,6 +78,29 @@ export class Game {
 
   get diff() { return this.diffCfg; }
 
+  // Zielpfeil (v2.5): schwebt hoch am Himmel über und vor der Figur (oberes Bilddrittel, unter der HUD-Leiste), dunkle
+  // Kontur (hilft vor hellem Himmel; vor dem Abendhimmel leuchtet das Gelb von selbst). Ohne Tiefentest → nie hinter Bäumen.
+  // Ein Mesh, ein Draw-Call: Kontur (umgedrehte, aufgeblähte Hülle) + Schaft + Spitze. Ohne Tiefentest zählt die
+  // Zeichenfolge; Schaft und Spitze sind je konvex → wer näher an der Kamera ist, kommt zuletzt (Index-Reihenfolge
+  // wird nur beim Umklappen der Blickrichtung getauscht).
+  buildArrow() {
+    const cone = P.cone(0.22, 0.46, 18); cone.rotateX(Math.PI / 2); cone.translate(0, 0, 0.3);
+    const shaft = P.cyl(0.085, 0.085, 0.42, 12); shaft.rotateX(Math.PI / 2); shaft.translate(0, 0, -0.1);
+    const hb = new Build(); hb.add(cone, 0xffffff); hb.add(shaft, 0xffffff);
+    const hull = hullGeo(hb.build(), 0.045), hi = hull.index.array;
+    for (let i = 0; i < hi.length; i += 3) { const t = hi[i + 1]; hi[i + 1] = hi[i + 2]; hi[i + 2] = t; } // Innenseite zeigen
+    const b = new Build();
+    b.add(hull, 0x3a1e08, { unlit: 1 }); b.add(shaft, 0xffd84a, { unlit: 0.5 }); b.add(cone, 0xffd84a, { unlit: 0.5 });
+    const g = b.build(), nH = hull.index.count, nS = shaft.index.count, ia = g.index.array;
+    const H = ia.slice(0, nH), S = ia.slice(nH, nH + nS), C = ia.slice(nH + nS);
+    // Spitze weg von der Kamera: Schaft ist vorn → zuletzt; Spitze zur Kamera: Spitze zuletzt (= Bau-Reihenfolge)
+    this.arrowOrder = { away: concatIdx(ia, H, C, S), toward: concatIdx(ia, H, S, C), cur: 'toward' };
+    const A = this.arrow = new THREE.Mesh(g, toonMat({ vc: true, rim: 1.1, emis: 0.55, transparent: true, depthTest: false, depthWrite: false }));
+    A.renderOrder = 30; A.frustumCulled = false;
+    A.geometry.computeBoundingBox();
+    A.visible = false; this.arrowA = 0; this.arrowRect = [0, 0, 0, 0];
+    this.scene.add(A);
+  }
   load(level, diffId, look) {
     this.clear();
     this.level = level; this.diffId = diffId; this.diffCfg = DIFFS[diffId];
@@ -100,7 +158,9 @@ export class Game {
     this.scene.add(this.flyers.group);
     // Aufgaben
     this.tasks = level.tasks.map(cfg => makeTask(this, cfg));
-    this.glitter = D.id !== 'schwer' ? new GlitterStar(this) : null;
+    // v2.5: Wettflüge ohne Glitzerstern (Sterne nur über Zeiten), sonst wie bisher (Schwer: Kombo statt Glitzerstern)
+    this.isRace = isRace(level);
+    this.glitter = D.id !== 'schwer' && !this.isRace ? new GlitterStar(this) : null;
     // Hindernisse
     const waspN = Math.min(4, D.wasps + (level.id >= '3' && D.wasps ? 1 : 0));
     const wspots = [];
@@ -124,8 +184,8 @@ export class Game {
     this.gustT = 8 + this.rnd() * 6; this.gust = null;
     // Zustand
     this.time = 0; this.combo = 0; this.maxCombo = 0; this.lastHit = -99; this.hits = 0; this.bumps = 0;
-    this.limit = D.timeLimit ? Math.round(level.par * D.par * 1.5) : 0;
-    this.par = Math.round(level.par * D.par);
+    const TG = timeGoals(level, D.id);
+    this.limit = TG.limit; this.par = TG.par; this.blitz = TG.blitz;
     this.comboReq = Math.max(4, Math.ceil(this.tasks.reduce((a, t) => a + t.max, 0) * 0.45));
     this.bonusFound = false; this.wonT = 0;
     this.shownHints = {};
@@ -143,6 +203,9 @@ export class Game {
     this.app.player.critter.happyT = 0;
     this.app.audio.setWorld(w);
     this.app.audio.setIntensity(0.35);
+    // v2.5 Landeblumen: Figurform und feste Sitzhöhen schon beim Laden rechnen (sonst kurzer Ruckler beim ersten Anflug)
+    const land = this.tasks.find(t => t.spots), c = this.player.critter;
+    if (land && c) for (const sp of land.spots) sp.seatPose(this.app.t || 0, c, this.player.yaw, SEAT_TMP);
   }
 
   nearTree(x, z, gap) {
@@ -157,9 +220,9 @@ export class Game {
     this.animals.clear();
     this.wasps.setup([]);
     this.bursts.clear();
-    this.arrow.visible = false;
+    this.arrow.visible = false; this.arrowA = 0;
     this.state = 'idle';
-    this.player.frozen = false; this.player.cheer = false; this.player.hover = false; this.finale = null; this.app.timeScale = 1;
+    this.player.frozen = false; this.player.cheer = false; this.player.hover = false; this.finale = null; this.app.timeScale = 1; this.rollQ = null;
     document.body.classList.remove('won');
   }
 
@@ -192,18 +255,25 @@ export class Game {
   // big = eine ganze Teilaufgabe fertig (z. B. alle Ringe) → Doppel-Schraube + Sternenring.
   celebrateRoll(col = 0xffe07a, big = false) {
     const pl = this.player, c = pl.critter; if (!c) return;
-    const pending = Math.abs(c.rollTarget - c.rollAng) / (Math.PI * 2);
-    const add = big ? 2 : 1;
-    if (pending + add <= 2.6) { c.roll(add, (this.hits & 1) ? -1 : 1); this.app.stat('rolls'); }
-    this.app.audio.sfx('roll', 0, { gain: big ? 0.85 : 0.45, rate: big ? 0.92 : 1.12 });
-    if (this.app.funOn('hupe')) this.app.audio.sfx('hupe', 0, { gain: 0.9 });
-    this.rollCol = col; this.rollBig = big; // Doppel-Helix aus den Flügelspitzen → rollTrail()
+    // v2.5: sitzt die Figur noch auf der Blüte (Nektar geschlürft), kommt die Schraube erst kurz nach dem Abheben –
+    // sonst streifen die Flügel beim Drehen durch die Blütenblätter
+    if (pl.landed || pl.airT < 0.3) this.rollQ = { col, big: big || (this.rollQ && this.rollQ.big) };
+    else this.doRoll(col, big);
     if (big) {
       this.bursts.emit({ n: 1, pos: pl.pos, colors: [0xfff3b0], shape: 5, size: 5, speed: 0, up: 0, life: 0.5, grav: 0, drag: 0 });
       this.bursts.emit({ n: 24, pos: pl.pos, colors: [col, 0xffffff, 0xffe07a], shape: 1, size: 0.45, speed: 6, up: 1, life: 1.1, grav: -1 });
       this.app.audio.sfx('combo'); this.app.haptics.buzz('star');
       this.app.ui.toast('🌀 Teilaufgabe geschafft!');
     }
+  }
+  doRoll(col, big) {
+    const c = this.player.critter;
+    const pending = Math.abs(c.rollTarget - c.rollAng) / (Math.PI * 2);
+    const add = big ? 2 : 1;
+    if (pending + add <= 2.6) { c.roll(add, (this.hits & 1) ? -1 : 1); this.app.stat('rolls'); }
+    this.app.audio.sfx('roll', 0, { gain: big ? 0.85 : 0.45, rate: big ? 0.92 : 1.12 });
+    if (this.app.funOn('hupe')) this.app.audio.sfx('hupe', 0, { gain: 0.9 });
+    this.rollCol = col; this.rollBig = big; // Doppel-Helix aus den Flügelspitzen → rollTrail()
   }
   // Während der Schraube: Glitzer an beiden Flügelspitzen → beim Vorwärtsflug entsteht eine Doppel-Helix
   rollTrail(dt) {
@@ -520,6 +590,7 @@ export class Game {
     this.flyers.update(dt, t);
     for (const task of this.tasks) task.update(dt, t);
     if (this.glitter) this.glitter.update(dt, t);
+    if (this.rollQ && !pl.landed && pl.airT >= 0.3 && this.state === 'play') { const q = this.rollQ; this.rollQ = null; this.doRoll(q.col, q.big); }
     this.rollTrail(dt);
     if (playing) this.hazards(dt, t);
     else this.wasps.update(dt, t, null);
@@ -605,22 +676,102 @@ export class Game {
     return null;
   }
   updateArrow(dt, t) {
-    const A = this.arrow, pl = this.player;
+    const A = this.arrow, pl = this.player, cam = this.app.camera, AR = ARROW;
     const tg = this.state === 'play' && this.diffCfg.arrow ? this.guideTarget() : null;
-    if (!tg) { A.visible = false; return; }
-    _v.subVectors(tg, pl.pos);
-    const d = _v.length();
-    const show = d > 7;
-    A.visible = show;
-    if (!show) return;
-    _v.normalize();
-    const fx = Math.sin(pl.yaw), fz = Math.cos(pl.yaw);
-    A.position.set(pl.pos.x + fx * 2.4, pl.pos.y + 1.25 + Math.sin(t * 4) * 0.08, pl.pos.z + fz * 2.4);
-    _w.copy(A.position).add(_v);
-    A.lookAt(_w);
-    const facing = _v.x * fx + _v.z * fz;
-    A.material.uniforms.uOpacity.value = THREE.MathUtils.clamp(0.95 - facing * 0.5, 0.35, 0.95);
-    A.scale.setScalar(0.9 + 0.1 * Math.sin(t * 6));
+    let want = 0;
+    if (tg) {
+      _v.subVectors(tg, pl.pos);
+      // Zielnähe: weich ausblenden (Ziel ist dann nah an der Figur im Bild, der Pfeil hoch oben hilft nicht mehr)
+      want = THREE.MathUtils.smoothstep(_v.length(), AR.near, AR.far);
+    }
+    if (want > 0) {
+      // Lage im Bild: Mitte waagrecht, senkrecht knapp unter der HUD-Leiste (hoch: auch unter dem Hinweis-Toast)
+      const L = this.arrowLayout(cam);
+      cam.updateMatrixWorld();
+      _w.set(L.ndcX, L.ndcY, 0.5).unproject(cam).sub(cam.position).normalize();
+      _x.set(0, 0, -1).applyQuaternion(cam.quaternion);
+      A.position.copy(cam.position).addScaledVector(_w, L.D / Math.max(0.3, _w.dot(_x)));
+      A.position.y += uBendAt(A.position, cam.position); // Weltkrümmung im Shader ausgleichen → sitzt genau dort
+      // Richtung Figur → Ziel; senkrechter Anteil verstärkt, damit „tief unten“ sichtbar nach unten zeigt
+      _v.normalize(); _v.y = THREE.MathUtils.clamp(_v.y * 1.4, -0.9, 0.9); _v.normalize();
+      // nie genau auf die Kamera zu/von ihr weg (sonst nur ein runder Fleck wie ein Mond): mind. 60° quer zur Blickachse
+      const a = _v.dot(_x), qMin = 0.87; // sin 60° (flacher wirkt die Spitze verkürzt wie ein Klecks)
+      _y.copy(_v).addScaledVector(_x, -a);
+      if (a < 0) {
+        // Ziel hinter der Blickrichtung: deutlich zur Seite zeigen (umdrehen – links oder rechts), Höhe nur halb
+        _pr.set(1, 0, 0).applyQuaternion(cam.quaternion); _pu.set(0, 1, 0).applyQuaternion(cam.quaternion);
+        let lat = _y.dot(_pr); const up = _y.dot(_pu) * 0.5;
+        if (Math.abs(lat) < qMin) lat = (lat < 0 ? -1 : 1) * qMin;
+        _y.copy(_pr).multiplyScalar(lat).addScaledVector(_pu, up);
+      } else if (_y.length() < qMin) {
+        if (_y.length() < 1e-3) _y.set(0, 1, 0).addScaledVector(_x, -_x.y); // genau voraus: leicht nach oben
+        _y.normalize().multiplyScalar(qMin);
+      }
+      const q = Math.min(0.999, _y.length());
+      _v.copy(_y).addScaledVector(_x, Math.sign(a || 1) * Math.sqrt(1 - q * q)).normalize();
+      _y.copy(A.position).add(_v); A.lookAt(_y);
+      A.scale.setScalar(L.k * (0.95 + 0.05 * Math.sin(t * 6)));
+      A.position.y += Math.sin(t * 4) * 0.05 * L.k;
+      // Konvexe Teile ohne Tiefentest: was näher an der Kamera ist, zuletzt zeichnen (nur beim Umklappen neu hochladen)
+      const ord = _v.dot(_x) > 0 ? 'away' : 'toward', O = this.arrowOrder;
+      if (O.cur !== ord) { O.cur = ord; A.geometry.index.array.set(O[ord]); A.geometry.index.needsUpdate = true; }
+      // nie über Figur, Ringen, Tropfen, Landeplätzen oder dem Toast/der Kombo-Anzeige: dann ausblenden
+      A.updateMatrixWorld(true);
+      this.arrowRect = screenRect(A, cam, L.W, L.H, this.arrowRect);
+      if (this.arrowBlocked(cam, L)) want = 0;
+    }
+    this.arrowA += (want - this.arrowA) * Math.min(1, dt * 6);
+    const facing = tg ? _v.x * Math.sin(pl.yaw) + _v.z * Math.cos(pl.yaw) : 0;
+    const op = this.arrowA * THREE.MathUtils.clamp(1 - facing * 0.35, 0.6, 1);
+    A.visible = op > 0.02;
+    A.material.uniforms.uOpacity.value = op;
+  }
+  // Bildschirm-Lage des Pfeils, aus dem echten HUD gemessen (zweimal pro Sekunde, sonst zwischengespeichert)
+  arrowLayout(cam) {
+    const sz = this.app.renderer.r.getSize(_sz), H = sz.y || innerHeight, W = sz.x || innerWidth; // (kein DOM-Lesen je Bild → kein Zwangs-Layout)
+    const now = performance.now(), C = this._arrowL || (this._arrowL = { t: -1e9 });
+    if (now - C.t > 500 || C.W !== W || C.H !== H || C.fov !== cam.fov) {
+      C.t = now; C.W = W; C.H = H; C.fov = cam.fov;
+      const q = (sel) => { const e = document.querySelector(sel); return e ? e.getBoundingClientRect() : null; };
+      const top = q('.hudtop'), toast = q('#toast'), combo = q('#combo'), up = q('#zones .zu i'); // ▲-Steuerhilfe (nur Tipp-Modus)
+      const port = W < H, hudB = top && top.height ? top.bottom : 62;
+      C.port = port;
+      C.D = port ? AR_D.port : AR_D.land;                    // Abstand zur Kamera (weiter als die Figur)
+      // Pfeil-Länge im Bild (v2.4: ≈ 43 / 31 px). Quer passt er zwischen Kopfleiste und Toast (dort kaum Platz)
+      const lenPx = port ? Math.min(84, H * 0.092) : Math.max(30, Math.min(48, H * 0.12, toast ? toast.top + 3 - hudB - 16 : 48));
+      const pxU = H / 2 / Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2) / C.D; // Pixel je Meter in diesem Abstand
+      C.k = lenPx / (0.98 * pxU);                             // Geometrie ist 0,98 m lang
+      const half = lenPx * 0.5;                               // senkrechte halbe Höhe, auch steil geneigt
+      const under = port && toast ? Math.max(hudB, toast.top + 54) : hudB; // Toast-Höhe fest (leer ist er flacher)
+      const cy = Math.min(under + (port ? 10 : 7) + half, H / 3 - half * 0.2);
+      // waagrecht mittig über der Figur; liegt dort die ▲-Steuerhilfe (quer), rechts daneben
+      let cx = W / 2;
+      if (up && up.width && cy + half > up.top - 4 && cy - half < up.bottom + 4) cx = up.right + 10 + half;
+      C.ndcX = 2 * cx / W - 1; C.ndcY = 1 - 2 * cy / H; C.cx = cx; C.cy = cy; C.half = half;
+      C.toast = toast; C.combo = combo;
+    }
+    return C;
+  }
+  arrowBlocked(cam, L) {
+    const R = this.arrowRect, W = L.W, H = L.H, pad = 6, f = H / 2 / Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2);
+    const hit = (x, y, rad) => x + rad > R[0] - pad && x - rad < R[2] + pad && y + rad > R[1] - pad && y - rad < R[3] + pad;
+    const ui = this.app.ui.el;
+    for (const [el, rc] of [[ui.toast, L.toast]]) { // (Kombo-Text liegt ohnehin darüber und ist gleich wieder weg)
+      if (rc && el.classList.contains('show') && rc.right > R[0] && rc.left < R[2] && rc.bottom > R[1] && rc.top < R[3]) return true;
+    }
+    // Figur
+    const c = this.player.critter, pp = proj(this.player.pos, cam, W, H);
+    if (c && pp[2] < 1 && hit(pp[0], pp[1], 0.9 * (c.size || 1) * f / Math.max(0.5, this.player.pos.distanceTo(cam.position)))) return true;
+    // Aufgaben-Ziele (nächste Ringe, Tropfen, Landeplätze, Herzen …) und Glitzerstern
+    const pts = this._arrowPts || (this._arrowPts = []); pts.length = 0;
+    for (const tk of this.tasks) tk.marks && tk.marks(pts);
+    if (this.glitter && !this.glitter.found) pts.push(this.glitter.pos, 1);
+    for (let i = 0; i < pts.length; i += 2) {
+      const p = pts[i], d = p.distanceTo(cam.position); if (d < 0.5) continue;
+      const [x, y, z] = proj(p, cam, W, H); if (z > 1) continue;
+      if (hit(x, y, pts[i + 1] * f / d)) return true;
+    }
+    return false;
   }
   hints() {
     const H = this.shownHints, T = this.time, ui = this.app.ui;
@@ -634,14 +785,16 @@ export class Game {
   }
   win() {
     this.state = 'won'; this.wonT = 0; this.resultShown = false;
-    const stars = 1 + (this.time <= this.par ? 1 : 0) + ((this.diffCfg.id === 'schwer' ? this.maxCombo >= this.comboReq : this.bonusFound) ? 1 : 0);
+    // Wettflug: gewonnen · schneller als par · Blitzzeit (auf allen Stufen, auch Schwer statt Kombo)
+    const third = this.isRace ? this.time <= this.blitz : this.diffCfg.id === 'schwer' ? this.maxCombo >= this.comboReq : this.bonusFound;
+    const stars = 1 + (this.time <= this.par ? 1 : 0) + (third ? 1 : 0);
     this.stars = stars;
     this.player.frozen = false;
     this.arrow.visible = false;
     document.body.classList.add('won'); // Steuer-Pfeile ausblenden – Bühne frei fürs Finale
     this.app.audio.setIntensity(0.9);
     this.startFinale();
-    this.app.onWon({ stars, time: this.time, par: this.par, maxCombo: this.maxCombo, comboReq: this.comboReq, bonus: this.bonusFound, hits: this.hits });
+    this.app.onWon({ stars, time: this.time, par: this.par, blitz: this.blitz, race: this.isRace, maxCombo: this.maxCombo, comboReq: this.comboReq, bonus: this.bonusFound, hits: this.hits });
   }
   sfx(name, pos) { this.app.audio.sfx(name, pos ? this.app.screenPan(pos) : 0); }
   toast(txt) { this.app.ui.toast(txt); }

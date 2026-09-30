@@ -478,6 +478,7 @@ export class Critter {
 
   build(look) {
     const k = this.kind;
+    this._seatPts = null; this.footY = -0.25;
     const L = fullLook(k, look);
     this.look = L;
     const b = new Build(), bO = new Build(), bH = new Build();
@@ -673,6 +674,7 @@ export class Critter {
     this.size = sz.k; this.tilt.scale.setScalar(sz.k);
   }
   setHat(id) {
+    this._seatPts = null;
     if (this.hat) { this.hat.parent && this.hat.parent.remove(this.hat); this.hat.traverse(o => o.geometry && o.geometry.dispose()); this.hat = null; }
     this.spinner = null;
     if (id === 'helm') return this.buildHelmet();
@@ -706,6 +708,7 @@ export class Critter {
     this.body.add(grp); this.hat = grp;
   }
   setExtra(id) {
+    this._seatPts = null;
     if (this.extra) { this.extra.parent && this.extra.parent.remove(this.extra); this.extra.geometry.dispose(); this.extra = null; }
     this.cape = null;
     if (id === 'none' || !id) return;
@@ -779,11 +782,53 @@ export class Critter {
     this.dispose(true);
     this.build(look);
   }
+  // v2.5 Sitzen auf Blüten: Punkte der ganzen Figur (Körper, Flügel, Hut, Schmuck, Umhang) in Ruhepose „gelandet“
+  // (Flügel angelegt, tiefste Flatter-Stellung; Deckflügel zu; ohne Squash/Schraube), im Figuren-Rahmen inkl. Größe.
+  // Große Dreiecke (Flügelflächen) werden innen abgetastet (≤ 3 cm). footY = tiefster Punkt (Körper-Rahmen, unskaliert).
+  seatPoints() {
+    if (this._seatPts) return this._seatPts;
+    const T = this.tilt, B = this.body, sheet = this.kind === 'schmetterling' || this.kind === 'mondfalter' || this.kind === 'einhorn';
+    const save = { q: T.quaternion.clone(), p: B.position.clone(), s: B.scale.clone(), r: B.rotation.clone(), rp: this.root.position.clone(), rr: this.root.rotation.clone(),
+      w: this.wings.map(w => w.piv.rotation.z), sh: this.shells ? this.shells.map(x => [x.piv.rotation.x, x.piv.rotation.z]) : null };
+    T.quaternion.identity(); B.position.set(0, 0, 0); B.scale.set(1, 1, 1); B.rotation.set(0, 0, 0);
+    this.root.position.set(0, 0, 0); this.root.rotation.set(0, 0, 0);
+    for (const w of this.wings) w.piv.rotation.z = (sheet ? 1.12 : 0.1) * w.s;
+    if (this.shells) for (const x of this.shells) { x.piv.rotation.x = 0; x.piv.rotation.z = 0; }
+    this.root.updateMatrixWorld(true);
+    const out = [], a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+    B.traverse(o => {
+      if (!o.isMesh || !o.geometry) return;
+      const g = o.geometry, pos = g.attributes.position, idx = g.index, M = o.matrixWorld;
+      for (let i = 0; i < pos.count; i++) { a.fromBufferAttribute(pos, i).applyMatrix4(M); out.push(a.x, a.y, a.z); }
+      const n = idx ? idx.count / 3 : pos.count / 3;
+      for (let t = 0; t < n; t++) {
+        a.fromBufferAttribute(pos, idx ? idx.getX(t * 3) : t * 3).applyMatrix4(M);
+        b.fromBufferAttribute(pos, idx ? idx.getX(t * 3 + 1) : t * 3 + 1).applyMatrix4(M);
+        c.fromBufferAttribute(pos, idx ? idx.getX(t * 3 + 2) : t * 3 + 2).applyMatrix4(M);
+        const L = Math.max(a.distanceTo(b), b.distanceTo(c), c.distanceTo(a));
+        if (L < 0.06) continue;
+        const m = Math.ceil(L / 0.03);
+        for (let i = 0; i <= m; i++) for (let j = 0; j <= m - i; j++) {
+          const u = i / m, w = j / m, r = 1 - u - w;
+          out.push(a.x * r + b.x * u + c.x * w, a.y * r + b.y * u + c.y * w, a.z * r + b.z * u + c.z * w);
+        }
+      }
+    });
+    T.quaternion.copy(save.q); B.position.copy(save.p); B.scale.copy(save.s); B.rotation.copy(save.r);
+    this.root.position.copy(save.rp); this.root.rotation.copy(save.rr);
+    this.wings.forEach((w, i) => { w.piv.rotation.z = save.w[i]; });
+    if (save.sh) this.shells.forEach((x, i) => { x.piv.rotation.x = save.sh[i][0]; x.piv.rotation.z = save.sh[i][1]; });
+    this.root.updateMatrixWorld(true);
+    let minY = 0; for (let i = 1; i < out.length; i += 3) if (out[i] < minY) minY = out[i];
+    this.footY = minY / (this.size || 1);
+    return (this._seatPts = new Float32Array(out));
+  }
   happy(dur = 0.9) { this.happyT = dur; this.squashV += 5; this.roll(1); }
   // Schraube um die Längsachse als Belohnung: dreht nur den Körper, Flugbahn/Steuerung bleiben unberührt.
   // Mehrere Aufrufe stapeln sich (Kombo = mehr Umdrehungen).
   roll(turns = 1, dir = 1) { this.rollTarget += turns * Math.PI * 2 * dir; this.happyT = Math.max(this.happyT, 0.6); }
   get rolling() { return Math.abs(this.rollVel) > 2.5; }
+  get rollBusy() { return this.rollTarget !== 0 || this.rollAng !== 0; } // Schraube noch nicht ganz ausgeschwungen
   bump(v = 3) { this.squashV += v; }
   // st: {speed01, landed, climb, flapBoost, frozen}
   update(dt, t, st = {}) {
@@ -822,10 +867,11 @@ export class Critter {
     const target = (st.climb || 0) * 0.08;
     this.squashV += ((target - this.squash) * 90 - this.squashV * 9) * dt;
     this.squash += this.squashV * dt;
-    const sq = THREE.MathUtils.clamp(this.squash, -0.3, 0.3);
+    const sq = landed ? THREE.MathUtils.clamp(this.squash, -0.12, 0.12) : THREE.MathUtils.clamp(this.squash, -0.3, 0.3);
     const wobble = Math.sin(this.flapT) * 0.02 * (landed ? 0.3 : 1);
     this.body.scale.set(1 - sq * 0.5, 1 + sq + wobble, 1 - sq * 0.5);
-    this.body.position.y = Math.sin(this.flapT) * (landed ? 0.01 : 0.05);
+    // v2.5 gelandet: Squash & Stretch am Fuß verankert (die Füße bleiben auf der Blüte), Wippen nur nach oben
+    this.body.position.y = landed ? this.footY * (1 - this.body.scale.y) + Math.abs(Math.sin(this.flapT)) * 0.008 : Math.sin(this.flapT) * 0.05;
     // Freude: ^^-Augen + Schraube (kritisch gedämpfte Feder, ~0,7 s pro Umdrehung inkl. Ausschwingen)
     if (this.happyT > 0) this.happyT -= dt;
     if (this.rollTarget !== 0 || this.rollAng !== 0) {

@@ -337,13 +337,15 @@ export function buildRocks(world, rnd, n) {
 }
 
 // ---------------------------------------------------------------- Sonnenblumen (schauen zur Sonne)
-export function sunflowerGeo() {
+// tilt = Neigung des Kopfes nach oben (rad). Welt-Sonnenblumen 0,25 (+0,1 je Instanz); v2.5 Honig-Sonnenblume (Landeplatz)
+// 1,13: das Gesicht schaut schräg in den Himmel (≈25° Hang), die Figur sitzt darauf statt im Blütenkranz.
+export function sunflowerGeo(tilt = 0.25) {
   const b = new Build();
   b.add(P.cyl(0.05, 0.08, 2.2, 5), 0x4f8f33, { p: [0, 1.1, 0] });
   b.add(petalGeo(0.5, 0.3, 0.06, 3), 0x5c9e3c, { p: [0, 0.8, 0], r: [0, 0.4, 0.5], order: 'YXZ' });
   b.add(petalGeo(0.45, 0.28, 0.06, 3), 0x5c9e3c, { p: [0, 1.35, 0], r: [0, 3.4, 0.5], order: 'YXZ' });
   // Kopf: Scheibe senkrecht, Gesicht zeigt in +Z
-  const head = new THREE.Matrix4().makeRotationX(-0.25).premultiply(new THREE.Matrix4().makeTranslation(0, 2.25, 0.1));
+  const head = new THREE.Matrix4().makeRotationX(-tilt).premultiply(new THREE.Matrix4().makeTranslation(0, 2.25, 0.1));
   const disc = P.cyl(0.36, 0.3, 0.16, 16); disc.rotateX(Math.PI / 2);
   b.add(disc, 0x4f8a30, { post: head });
   b.add(P.sphere(0.34, 12, 5), 0x5a3214, { post: head, p: [0, 0, 0.07], s: [1, 1, 0.3] });
@@ -372,6 +374,7 @@ export function buildSunflowers(rnd, n, cx = 0, cz = 0, R = 60, avoid) {
   pts.forEach(p => { p.rot = sy + (p.k - 0.5) * 0.7; p.rx = -0.1; });
   const im = instanced(sunflowerGeo(), toonMat({ vc: true, rim: 0.6, soft: 0.2, sway: 0.03, side: THREE.DoubleSide }), pts);
   im.userData.pts = pts;
+  pts.forEach((p, i) => { p.i = i; }); // Index in der Instanz-Liste (Landeplätze blenden „ihre“ Blume aus)
   return im;
 }
 
@@ -390,7 +393,9 @@ export function buildPondStuff(rnd, nPads) {
   b.add(disc, 0x4f9c45, { p: [0, 0.03, 0] });
   const pads = scatter(nPads, rnd, { cx: P0[0], cz: P0[1], rMin: 0, rMax: P0[2] * 0.62, sMin: 1.0, sMax: 2.1, minY: -99, minDist: 3.2 });
   pads.forEach(p => { p.y = 0; });
-  grp.add(instanced(b.build(), toonMat({ vc: true, rim: 0.4, gloss: 0.25, soft: 0.1 }), pads));
+  const padGeo = b.build();
+  grp.add(instanced(padGeo, toonMat({ vc: true, rim: 0.4, gloss: 0.25, soft: 0.1 }), pads));
+  grp.userData.padGeo = padGeo;
   // Lotusblüten auf einigen Blättern
   const lb = new Build();
   for (let ring = 0; ring < 2; ring++) for (let i = 0; i < 8; i++) {
@@ -398,6 +403,7 @@ export function buildPondStuff(rnd, nPads) {
   }
   lb.add(P.sphere(0.08, 8, 6), 0xffd23a, { p: [0, 0.14, 0], s: [1, 0.6, 1], unlit: 0.2 });
   const lotus = pads.filter((p, i) => i % 3 === 0);
+  lotus.forEach(p => { p.lotus = true; }); // v2.5: auf Blättern mit Lotusblüte wird nicht gelandet (Blüte stünde im Weg)
   const lotusM = instanced(lb.build(), toonMat({ vc: true, tint: true, rim: 0.6, soft: 0.1 }), lotus, (p) => [0xff9ec4, 0xffc0dc, 0xf7a8ff][(p.k * 5 | 0) % 3]);
   grp.add(lotusM);
   // Schilf/Rohrkolben am Ufer

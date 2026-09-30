@@ -1,6 +1,8 @@
 # 🎪 Zufalls-Stunt-Knopf (v2.3): jede Einlage einzeln (Bahn, Bodenabstand, Rückkehr auf die Fluglinie, Winkel-Reset,
 # keine Aufgaben-Zählung, Figur im Bild) + Knopf-Verhalten (Zufall ohne Wiederholung, Abklingzeit, laufende Einlage,
 # am Boden, Taste C, Sieg/Finale gesperrt, URL-Override, Knopfgröße/Lage hoch + quer) + Burst-Aufnahmen je Einlage.
+# v2.5: jede Einlage zusätzlich mit Start beim Lenken (und mit gehaltener Taste), knapp über dem Boden, direkt nach dem
+# Abheben und im Riesen-Modus → Flugrichtung danach unverändert (< 0,02 rad), Seitenversatz < 0,6 m.
 import time, json, sys, os, math
 sys.path.insert(0, 'tests')
 from util import *
@@ -86,6 +88,47 @@ def run_stunt(s, i, sid, dur, name=None):
                and r['wobble_after'] < 0.12 and r['in_view'] and r['stats_unchanged'] and r['time_runs'] > dur * 0.9)
     return r
 
+# v2.5: Richtung bleibt auch in Sonderfällen (Start beim Lenken, knapp über dem Boden, direkt nach dem Abheben, Riese)
+def run_case(s, i, sid, dur, case):
+    hold = case == 'lenkt_halten'
+    if case == 'riese': s.ev("__app.player.setCharacter('schmetterling', {size: 'xl'})")
+    place(s, 1.0 if case == 'boden' else 3.2)
+    if case in ('lenkt', 'lenkt_halten'):
+        s.ev("__app.input.injected = {turn: 1, climb: 0}"); sim_wait(s, 0.8)
+    if case == 'abheben':
+        s.ev("__app.player.land(null)"); sim_wait(s, 0.5)
+        s.ev("__app.input.injected = {turn: 0, climb: 1}")
+        t1 = time.time()
+        while s.ev("__app.player.landed") and time.time() - t1 < 5: time.sleep(0.01)
+    s.ev(REC)
+    r0 = s.ev(f"""(() => {{ const p = __app.player, y = p.yaw, yr = p.yawRate, pos = p.pos.toArray(), air = p.airT, ok = __game.stunt({i});
+      __app.input.injected = {{turn: {1 if hold else 0}, climb: 0}};
+      return {{ yaw: y, yawRate: yr, pos, air, ok, gh: __H(pos[0], pos[2]) }}; }})()""")
+    t1 = time.time()
+    while s.ev("!!__app.player.stunt") and time.time() - t1 < 20: time.sleep(0.01)
+    yaw_end = s.ev("__app.player.yaw")
+    s.ev("__app.input.injected = {turn: 0, climb: 0}")
+    sim_wait(s, 0.5)
+    s.ev("window.__recOn = false")
+    rec = s.ev("__rec")
+    e = s.ev("(() => { const p = __app.player, c = p.critter.tilt.rotation; return [p.pos.x, p.pos.y, p.pos.z, p.yaw, c.x, c.y, c.z]; })()")
+    during = [r for r in rec if r[5] >= 0]
+    yaw = r0['yaw']; rx, rz = math.cos(yaw), -math.sin(yaw)
+    if hold and during: yaw_end = during[-1][12]; e[:3] = during[-1][1:4]  # Taste gehalten: bildgenau am letzten Einlagen-Bild
+    lat = (e[0] - r0['pos'][0]) * rx + (e[2] - r0['pos'][2]) * rz
+    r = {'start_ok': bool(r0['ok']), 'yawRate_start': round(r0['yawRate'], 2), 'alt_start': round(r0['pos'][1] - r0['gh'], 2),
+         'air_start': round(r0['air'], 2) if case == 'abheben' else None,
+         'yaw_change_show': round(math.atan2(math.sin(yaw_end - yaw), math.cos(yaw_end - yaw)), 4),
+         'yaw_change': round(math.atan2(math.sin(e[3] - yaw), math.cos(e[3] - yaw)), 4) if not hold else None,
+         'lateral': round(lat, 2), 'end_rot': round(max(abs(e[4]), abs(e[5]), abs(e[6])), 3),
+         'min_clear': round(min(r[2] - r[4] for r in during), 2) if during else None}
+    r['ok'] = (r['start_ok'] and abs(r['yaw_change_show']) < 0.02 and (hold or abs(r['yaw_change']) < 0.02) and abs(r['lateral']) < 0.6
+               and (r['min_clear'] or 0) > 0.5 and (hold or r['end_rot'] < 0.12))
+    if case == 'lenkt': r['ok'] = r['ok'] and abs(r['yawRate_start']) > 0.5
+    if case == 'abheben': r['ok'] = r['ok'] and r['air_start'] is not None and r['air_start'] < 0.2
+    if case == 'riese': s.ev("__app.player.setCharacter('schmetterling', {size: 'm'})")
+    return r
+
 def grid(sid):
     try:
         from PIL import Image
@@ -123,6 +166,17 @@ with sync_playwright() as pw:
         res['stunts'][d['id']] = r
         grid(d['id'])
         print(d['id'], 'ok' if r['ok'] else 'FEHLER', json.dumps({k: r[k] for k in ['min_clear', 'min_clear_main', 'end_lateral', 'end_forward', 'end_up', 'yaw_change', 'wobble_after', 'in_view', 'stats_unchanged', 'min_speed']}), flush=True)
+    # --- v2.5 Sonderfälle: Flugrichtung bleibt (Start beim Lenken / Taste gehalten, knapp über dem Boden, nach dem Abheben, Riese)
+    res['cases'] = {}
+    for case in ['lenkt', 'lenkt_halten', 'boden', 'abheben', 'riese']:
+        for i, d in enumerate(stunts):
+            r = run_case(s, i, d['id'], d['dur'], case)
+            res['cases'][f"{case}_{d['id']}"] = r
+            if not r['ok']: print('fall', case, d['id'], 'FEHLER', json.dumps(r), flush=True)
+        cs = [v for k, v in res['cases'].items() if k.startswith(case + '_')]
+        print('fall', case, 'ok' if all(c['ok'] for c in cs) else 'FEHLER', json.dumps({
+            'max_yaw_change': max(abs(c['yaw_change'] or c['yaw_change_show']) for c in cs), 'max_lateral': max(abs(c['lateral']) for c in cs),
+            'min_clear': min(c['min_clear'] for c in cs), 'yawRate_start': max(abs(c['yawRate_start']) for c in cs)}), flush=True)
     # --- Welt-Varianten des Wirbels (Kirschhain: Blütenwirbel, Abend: Glühwürmchen-Wirbel) + Doppel-Looping am Abend
     res['variants'] = {}
     for lid, wid in [('4-1', 'kirsch'), ('5-1', 'abend')]:
@@ -139,6 +193,7 @@ with sync_playwright() as pw:
     # --- Knopf: 10 × echt tippen (Zufall ohne direkte Wiederholung)
     B = res['button']
     B['geom_P'] = btn_geom(s)
+    s.ev("__app.game.showLog = []")  # Liste hält max. 60 Einträge – nach den Sonderfällen voll
     log0 = s.ev("__app.game.showLog.length")
     for k in range(10):
         place(s); wait_ready(s)
@@ -224,6 +279,7 @@ with sync_playwright() as pw:
 B = res['button']
 geo_ok = all(g['w'] >= 48 and g['h'] >= 48 and g['inView'] and not g['overlaps'] and g['display'] != 'none' for g in [B['geom_P'], B['geom_L']])
 res['ok'] = (res['n_stunts'] >= 8 and all(r['ok'] for r in res['stunts'].values()) and B['no_repeat'] and B['distinct'] >= 5
+             and len(res['cases']) == 5 * res['n_stunts'] and all(r['ok'] for r in res['cases'].values())
              and all(v for k, v in res['variants'].items() if not k.endswith('_name'))
              and B['ignored_while_running'] and B['cooldown_blocks'] and B['after_cooldown'] and B['key_c'] and B['from_ground']
              and (B['from_ground_min_clear'] or 0) > 0.3 and B['won_blocked'] and B['won_blocked_after_finale'] and B['cd_ring_visible']

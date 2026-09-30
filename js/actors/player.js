@@ -6,8 +6,11 @@ import { blobTex } from '../engine/textures.js';
 import { showOffset, showOrient, showLift, liftAt, showBounds } from '../game/stunts.js';
 
 const TAU = Math.PI * 2;
+const _UPV = new THREE.Vector3(0, 1, 0);
 const ease = (p) => 0.5 - 0.5 * Math.cos(Math.PI * p);
 const _v = new THREE.Vector3(), _w = new THREE.Vector3(), _f = new THREE.Vector3(), _q = new THREE.Quaternion(), _gc = new THREE.Vector3();
+const _seat = { pos: new THREE.Vector3(), n: new THREE.Vector3(), yaw: null }, _n = new THREE.Vector3();
+const lerpAng = (a, b, k) => a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * k;
 
 export class Player {
   constructor(scene) {
@@ -44,6 +47,7 @@ export class Player {
   reset(pos, yaw) {
     this.pos.copy(pos); this.yaw = yaw; this.pitch = 0; this.yawRate = 0; this.ext.set(0, 0, 0);
     this.landed = false; this.landSpot = null; this.landing = null; this.stunt = null; this.wetT = 0; this.dizzyT = 0; this.carry = null; this.showReset = true;
+    this.airT = 9; this.seatTilt = null; this.seatOrbit = null;
     this.camInit = false; this.orbit = 0; this.hover = false; this.cheer = false; this.grandBlend = 0;
   }
   emit(ev, a) { const f = this.on[ev]; if (f) f(a); }
@@ -106,10 +110,31 @@ export class Player {
     const gh = height(this.pos.x, this.pos.z);
     let visPitch = 0, visRoll = 0;
     this.wetT = Math.max(0, this.wetT - dt); this.dizzyT = Math.max(0, this.dizzyT - dt);
+    if (!this.landed) this.airT += dt;
 
     if (this.hover) {
       this.pitch *= Math.max(0, 1 - dt * 4); this.yawRate *= Math.max(0, 1 - dt * 4);
       this.pos.y += (Math.max(this.pos.y, gh + 1.6) - this.pos.y) * Math.min(1, dt * 3);
+    } else if (this.landed && this.landSpot && this.landSpot.seatPose && c) {
+      // v2.5 Sitzplatz auf der Blüte: weich vom Landepunkt auf den Sitz, danach exakt mitgeführt
+      // (wiegt die Blume, wiegt die Figur mit). Ausgerichtet an der Blüten-Normalen; Sonnenblume: Blick fest nach vorn.
+      this.landT += dt;
+      const S = this.landSpot.seatPose(t, c, this.yaw, _seat);
+      if (S.yaw !== null) { this.yawRate = 0; }
+      else { this.yawRate += (-turn * 1.2 - this.yawRate) * Math.min(1, dt * 5); this.yaw += this.yawRate * dt; }
+      // Aufsetzen in 0,5 s: erst über dem Sitz ausrichten (drehen/neigen, mind. 30 cm darüber), dann entlang der Normalen absenken
+      this.seatK = Math.min(1, this.seatK + dt / 0.5);
+      const k = this.seatK, e = ease(Math.min(1, k / 0.55)), kT = ease(Math.min(1, k / 0.6)), kN = ease(THREE.MathUtils.clamp((k - 0.35) / 0.65, 0, 1));
+      if (S.yaw !== null) this.yaw = lerpAng(this.seatYaw0, S.yaw, e);
+      _w.subVectors(this.seatFrom, S.pos); const dn = _w.dot(S.n); _w.addScaledVector(S.n, -dn);
+      this.pos.copy(S.pos).addScaledVector(_w, 1 - kT).addScaledVector(S.n, Math.max(dn, this.seatHover()) * (1 - kN));
+      // Neigung aus der Normalen (im Gier-Rahmen): x = vorn runter, z = seitlich
+      _n.copy(S.n).applyAxisAngle(_UPV, -this.yaw);
+      const tx = Math.atan2(_n.z, _n.y), tz = -Math.asin(THREE.MathUtils.clamp(_n.x, -1, 1));
+      this.seatTilt = this.seatTilt || [0, 0];
+      this.seatTilt[0] = this.tiltFrom[0] + (tx - this.tiltFrom[0]) * e; this.seatTilt[1] = this.tiltFrom[1] + (tz - this.tiltFrom[1]) * e;
+      this.pitch = 0; this.speed = 0;
+      if (climb > 0.35 && this.landT > 0.25) this.takeoff();
     } else if (this.landed) {
       const L = this.landSpot;
       const ly = L ? L.pos.y : gh + 0.35;
@@ -183,14 +208,21 @@ export class Player {
         }
         if (best) {
           this.landing = best;
+          // v2.5 Blüten-Sitz: Ziel ist ein Schwebepunkt über dem figur-genauen Sitz (Riesen höher); von oben anfliegen
+          // (Höhe wächst mit dem Abstand) – nie flach seitlich durch den Blütenkranz, beim Aufsetzen kein Sprung
+          const T = _gc.copy(best.pos);
+          if (best.seatPose && c) { const S = best.seatPose(t, c, this.yaw, _seat, true); T.copy(S.pos).addScaledVector(S.n, this.seatHover()); }
+          const bt = Math.hypot(T.x - this.pos.x, T.z - this.pos.z);
           // sanft in den Landeplatz gleiten (fast schweben)
-          this.pos.x += (best.pos.x - this.pos.x) * Math.min(1, dt * 4.5);
-          this.pos.z += (best.pos.z - this.pos.z) * Math.min(1, dt * 4.5);
-          this.pos.y += (best.pos.y - this.pos.y) * Math.min(1, dt * 3.4);
-          const want = Math.atan2(best.pos.x - this.pos.x, best.pos.z - this.pos.z);
-          if (bd > 0.4) { let dd = want - this.yaw; dd = Math.atan2(Math.sin(dd), Math.cos(dd)); this.yaw += dd * Math.min(1, dt * 3); }
+          this.pos.x += (T.x - this.pos.x) * Math.min(1, dt * 4.5);
+          this.pos.z += (T.z - this.pos.z) * Math.min(1, dt * 4.5);
+          const hy = T.y + (best.seatPose ? Math.max(0, bt - 0.3) * 0.8 : 0);
+          this.pos.y += (hy - this.pos.y) * Math.min(1, dt * 3.4);
+          const want = Math.atan2(T.x - this.pos.x, T.z - this.pos.z);
+          if (bt > 0.4) { let dd = want - this.yaw; dd = Math.atan2(Math.sin(dd), Math.cos(dd)); this.yaw += dd * Math.min(1, dt * 3); }
           tp = -0.15;
-          if (Math.abs(this.pos.y - best.pos.y) < 0.4 && bd < 1.4) this.land(best);
+          // v2.5: erst aufsetzen, wenn eine laufende Freuden-Schraube fertig ist (sonst dreht sich die Figur auf der Blüte)
+          if (Math.abs(this.pos.y - hy) < 0.4 && bt < 1.4 && !(c && c.rollBusy)) this.land(best);
         } else if (alt < 1.3) {
           this.pos.y += (gh + 0.35 - this.pos.y) * Math.min(1, dt * 4);
           if (this.pos.y - gh < 0.5) this.land(null);
@@ -230,7 +262,7 @@ export class Player {
       if (r > this.bounds + 22) { this.pos.x *= (this.bounds + 22) / r; this.pos.z *= (this.bounds + 22) / r; }
     }
     // Hindernisse (Baumkronen/Stämme) weich umfliegen
-    for (const C of this.colliders) {
+    if (!(this.landed && this.seatTilt)) for (const C of this.colliders) { // (sitzend auf der Blüte nicht schubsen)
       _w.subVectors(this.pos, C.c);
       if (C.cyl) _w.y = 0;
       const d = _w.length();
@@ -245,6 +277,7 @@ export class Player {
       R.position.copy(this.pos);
       R.rotation.y = this.yaw;
       if (this.stunt && this.stunt.type === 'show') c.tilt.quaternion.copy(this.stunt.q);
+      else if (this.landed && this.seatTilt) c.tilt.rotation.set(this.seatTilt[0], 0, this.seatTilt[1]);
       else {
       if (this.showReset || Math.abs(c.tilt.rotation.y) > 1e-6) { c.tilt.rotation.set(0, 0, 0); this.showReset = false; } // Einlage vorbei/abgebrochen: hart nullen
       c.tilt.rotation.x += (-visPitch - c.tilt.rotation.x) * (this.stunt ? 1 : Math.min(1, dt * 10));
@@ -265,13 +298,41 @@ export class Player {
   land(spot) {
     this.landed = true; this.landSpot = spot; this.landing = null; this.landT = 0;
     this.pitch = 0; this.yawRate = 0; this.ext.set(0, 0, 0);
+    // Sitz-Übergang (Blüte): Start = jetzige Lage/Blickrichtung/Neigung
+    this.seatK = 0; this.seatFrom = (this.seatFrom || new THREE.Vector3()).copy(this.pos); this.seatYaw0 = this.yaw; this.seatOrbit = null;
+    const tr = this.critter ? this.critter.tilt.rotation : null;
+    this.tiltFrom = tr ? [Math.abs(tr.x) < Math.PI ? tr.x : 0, Math.abs(tr.z) < Math.PI ? tr.z : 0] : [0, 0];
+    this.seatTilt = spot && spot.seatPose ? [this.tiltFrom[0], this.tiltFrom[1]] : null;
     this.critter && this.critter.bump(-4);
     this.emit('land', spot);
   }
   takeoff() {
     this.landed = false; const s = this.landSpot; this.landSpot = null; this.pitch = 0.4; this.pos.y += 0.35; this.speed = this.baseSpeed * 0.7;
+    this.airT = 0; this.seatTilt = null; this.seatOrbit = null;
     this.critter && this.critter.bump(5);
     this.emit('takeoff', s);
+  }
+  seatHover() { return 0.25 + 0.35 * ((this.critter && this.critter.size) || 1); } // Schwebe-Abstand über dem Sitz (m)
+  // Kamera-Winkel beim Sitzen: erst der gewohnte (2,2 rad, Gesicht zeigen), sonst der nächste freie
+  pickSeatOrbit(obs, portrait) {
+    const d = (portrait ? 6.4 : 4.7) * 0.72, hy = (portrait ? 2.3 : 1.6) - 0.7, fx = Math.sin(this.yaw), fz = Math.cos(this.yaw);
+    const T = _gc.copy(this.pos); T.y += 0.15;
+    let best = 2.2, bs = -1e9;
+    for (const o of [2.2, 1.8, 2.6, -2.2, 1.4, 3.0, -1.8, 1.0, -2.6, 0.6, -1.2, 0.2]) {
+      const ca = Math.cos(o), sa = Math.sin(o), bx = -fx * ca + fz * sa, bz = -fz * ca - fx * sa;
+      _v.set(this.pos.x + bx * d, this.pos.y + hy, this.pos.z + bz * d);
+      let clr = 1e9;
+      for (const q of obs) {
+        clr = Math.min(clr, _v.distanceTo(q.c) - q.r);
+        if (!q.own) { // Sichtlinie Kamera → Figur
+          _w.subVectors(T, _v); const L2 = _w.lengthSq(), k = THREE.MathUtils.clamp(_f.subVectors(q.c, _v).dot(_w) / L2, 0, 1);
+          clr = Math.min(clr, _f.copy(_v).addScaledVector(_w, k).distanceTo(q.c) - q.r);
+        }
+      }
+      const sc = clr >= 0.45 ? 100 - Math.abs(o - 2.2) : clr;
+      if (sc > bs) { bs = sc; best = o; }
+    }
+    return best;
   }
   kick(fov = 4, shake = 0.15) { this.fovKick = Math.max(this.fovKick, fov); this.shakeT = Math.max(this.shakeT, shake); }
 
@@ -285,7 +346,10 @@ export class Player {
     const grand = this.stunt && this.stunt.grand ? this.stunt : null;
     // 🎪 Einlagen mit Loopings: Kamera etwas seitlich (Kreis als Ellipse sichtbar), vor dem Ende zurück
     const show = this.stunt && this.stunt.type === 'show' ? this.stunt : null;
-    const orbitT = this.hover ? 2.75 : this.landed ? 2.2 : grand ? Math.PI / 2 : show && show.p < 0.8 ? (show.def.cam || 0) : 0;
+    // v2.5 Sitzen auf Blüten: Orbit-Winkel so wählen, dass Kamera und Blick frei von Nachbar-Blumen/Baumkronen sind
+    const obs = this.landed && this.landSpot && this.landSpot.camObs;
+    if (obs && this.seatOrbit === null && this.seatK >= 1) this.seatOrbit = this.pickSeatOrbit(obs, portrait);
+    const orbitT = this.hover ? 2.75 : this.landed ? (obs && this.seatOrbit !== null ? this.seatOrbit : 2.2) : grand ? Math.PI / 2 : show && show.p < 0.8 ? (show.def.cam || 0) : 0;
     if (grand) this.grandBlend = 0.7; else this.grandBlend = Math.max(0, (this.grandBlend || 0) - dt);
     this.orbit += (orbitT - this.orbit) * Math.min(1, dt * (this.landed || this.hover ? 0.9 : 3));
     if (grand) {
@@ -329,6 +393,10 @@ export class Player {
     // im Orbit (gelandet/Jubel) direkt auf dem Kreis bleiben – nie durch die Figur schneiden
     const orbiting = this.orbit > 0.05;
     this.camPos.lerp(_v, 1 - Math.exp(-dt * (this.grandBlend > 0 ? 3.5 : orbiting ? 14 : this.stunt ? (show ? 5 : 3.2) : 5.5)));
+    if (obs) for (const o of obs) { // nie in Blütenblätter/Kronen: aus der Hülle schieben
+      _w.subVectors(this.camPos, o.c); const d = _w.length(), R = o.r + 0.4;
+      if (d < R) this.camPos.copy(o.c).addScaledVector(d > 1e-4 ? _w.multiplyScalar(1 / d) : _w.set(0, 1, 0), R);
+    }
     _w.copy(this.pos).addScaledVector(_f, this.landed || this.hover ? 0 : 2.4); _w.y += this.landed || this.hover ? 0.15 : 0.45;
     this.camLook.lerp(_w, 1 - Math.exp(-dt * 9));
     cam.position.copy(this.camPos);

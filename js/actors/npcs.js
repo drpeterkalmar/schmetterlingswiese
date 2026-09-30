@@ -309,6 +309,8 @@ export class Animals {
         // Körper dreht nur, wenn der Spieler weit seitlich ist – den Rest macht der Kopf
         const d = angDiff(Math.atan2(dp.x, dp.z) - a.yaw);
         if (Math.abs(d) > 0.8) a.yaw += d * Math.min(1, dt * 1.8);
+        // v2.5: ganz nah (z. B. die Figur landet neben dem Entchen) → sanft Platz machen, nie durch die Figur
+        if (dh < 2.2 && dp.y < 2.5) { const k = (2.2 - dh) * Math.min(1, dt * 2.5) / Math.max(dh, 0.05); a.pos.x -= dp.x * k; a.pos.z -= dp.z * k; moving = true; }
       } else if (!a.sleepy) {
         if (!a.tgt || a.wait > 0) {
           a.wait -= dt;

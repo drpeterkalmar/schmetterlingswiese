@@ -261,7 +261,7 @@ export function toonMat(o = {}) {
   const m = new THREE.ShaderMaterial({
     uniforms: u, defines, vertexShader: TOON_V, fragmentShader: TOON_F,
     vertexColors: !!o.vc, side: o.side ?? THREE.FrontSide,
-    transparent: !!o.transparent, depthWrite: o.depthWrite ?? !o.transparent,
+    transparent: !!o.transparent, depthWrite: o.depthWrite ?? !o.transparent, depthTest: o.depthTest ?? true,
   });
   if (o.blending) m.blending = o.blending;
   return m;

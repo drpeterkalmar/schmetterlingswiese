@@ -15,8 +15,9 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
 - **Aufgaben:** Nektartropfen sammeln, Flugring-Parcours, auf Blüten/Seerosen landen und
   Nektar naschen, Tierbabys besuchen, Beeren zu Capybaras bringen, Freuden-Schrauben & Sieger-Loopings,
   Wettfliegen gegen Flora Falter und Lilli Libelle, Glühwürmchen und fallende Kirschblüten fangen
-- **1–3 Sterne pro Level:** Aufgabe geschafft · schnell genug · Glitzerstern gefunden (Schwer: große Kombo)
-- **Schwierigkeit:** 🌱 Leicht (kein Zeitdruck, Zielpfeil, Magnet, man kann nicht verlieren) ·
+- **1–3 Sterne pro Level:** Aufgabe geschafft · schnell genug · Glitzerstern gefunden (Schwer: große Kombo);
+  **Wettflüge (v2.5):** nur Zeiten zählen – Rennen gewonnen · schneller als par · ⚡ Blitzzeit (0,8 · par), kein Glitzerstern
+- **Schwierigkeit:** 🌱 Leicht (kein Zeitdruck, Zielpfeil hoch am Himmel, Magnet, man kann nicht verlieren) ·
   🌼 Mittel · 🔥 Schwer (Zeitlimit, Windböen, freche Wespen, kleinere Ringe)
 - **Werkstatt (v2.2):** alle 6 Grundfiguren ab Start, freie Farbwahl je Figur (24er-Palette + 🎲 Zufall),
   Größe, Flügelform, Fühler, Augenstil, Flügelmuster, Hüte – jede Figur merkt sich ihr eigenes Outfit
@@ -28,6 +29,8 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
 - **Lebendige Wiese (v2.3):** Singvögel fliegen von Baum zu Baum, Bienen besuchen Blüten, ein Schmetterlings-Schwarm
   tanzt über den Blumen, Marienkäfer krabbeln auf Büschen, ein Häschen hoppelt davon, im Teich springt ein Fisch;
   Glockenblumen, Mohn, Heide, Blütenteppiche, Wolkenschatten, Regenbogen, Sternschnuppen am Abend
+- **Nektar naschen (v2.5):** Die Figur sitzt sichtbar auf der Blüte – Honig-Sonnenblumen schauen dafür in den Himmel,
+  Seerosenblätter und Mondblumen tragen jede Figur, Größe, jeden Hut und Schmuck, ohne dass etwas durchschneidet
 - **Tierbabys (v2.4):** Bärenbaby, Capybara, Häschen und Entchen mit Schnauze, Pfoten mit Ballen, Bauchfell und
   Schwänzchen; sie laufen mit echten Beinbewegungen, blinzeln, zucken mit den Ohren, schauen dich an, wenn du nah
   bist, und freuen sich über Besuch mit Hüpfer, ^ ^-Augen und Herzchen

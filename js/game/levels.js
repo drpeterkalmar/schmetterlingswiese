@@ -21,11 +21,13 @@ export const LEVELS = [
   // --- Welt 2: Sonnenblumenfeld
   { id: '2-1', world: 'sonne', name: 'Honigsammler', par: 90, tasks: [{ type: 'land', n: 5, on: 'sunflower' }, { type: 'collect', n: 6 }], animals: [['capy', 2], ['hase', 2]] },
   { id: '2-2', world: 'sonne', name: 'Sonnenblumen-Slalom', par: 90, tasks: [{ type: 'rings', n: 10, low: true }], animals: [['baer', 2], ['hase', 2]] },
-  { id: '2-3', world: 'sonne', name: 'Wettflug mit Flora', par: 80, tasks: [{ type: 'race', n: 9, rival: 'schmetterling' }], animals: [['baer', 2], ['capy', 2]] },
+  { id: '2-3', world: 'sonne', name: 'Wettflug mit Flora', par: 80, tasks: [{ type: 'race', n: 9, rival: 'schmetterling' }], animals: [['baer', 2], ['capy', 2]],
+    raceTimes: { leicht: [41, 33], mittel: [41, 33], schwer: [36, 29] } }, // Test-Flieger 27,1 / 27,4 / 23,5 s
   // --- Welt 3: Seerosenteich
   { id: '3-1', world: 'teich', name: 'Seerosen-Hüpfer', par: 100, tasks: [{ type: 'land', n: 5, on: 'lily' }, { type: 'collect', n: 6, overWater: true }], animals: [['ente', 4], ['capy', 3]] },
   { id: '3-2', world: 'teich', name: 'Capybara-Picknick', par: 120, tasks: [{ type: 'deliver', n: 4 }], animals: [['capy', 5], ['ente', 3]] },
-  { id: '3-3', world: 'teich', name: 'Libellen-Rennen', par: 85, tasks: [{ type: 'race', n: 10, rival: 'libelle' }], animals: [['ente', 4], ['capy', 2]] },
+  { id: '3-3', world: 'teich', name: 'Libellen-Rennen', par: 85, tasks: [{ type: 'race', n: 10, rival: 'libelle' }], animals: [['ente', 4], ['capy', 2]],
+    raceTimes: { leicht: [50, 40], mittel: [43, 35], schwer: [40, 32] } }, // Test-Flieger 32,8 / 28,7 / 26,5 s
   // --- Welt 4: Kirschblütenhain
   { id: '4-1', world: 'kirsch', name: 'Blütenregen', par: 90, tasks: [{ type: 'blossoms', n: 14 }], animals: [['hase', 3], ['baer', 2]] },
   { id: '4-2', world: 'kirsch', name: 'Kunstflug', par: 110, tasks: [{ type: 'rings', n: 9, wild: true }, { type: 'visit', n: 3 }], animals: [['hase', 3], ['capy', 2]] },
@@ -35,6 +37,17 @@ export const LEVELS = [
   { id: '5-2', world: 'abend', name: 'Gute-Nacht-Besuch', par: 120, tasks: [{ type: 'visit', n: 5 }, { type: 'land', n: 3, on: 'moonflower' }], animals: [['baer', 3], ['hase', 3], ['capy', 2]], sleepy: true },
   { id: '5-3', world: 'abend', name: 'Sternschnuppen-Finale', par: 130, tasks: [{ type: 'rings', n: 10, wild: true }, { type: 'fireflies', n: 8 }], animals: [['baer', 2], ['hase', 2]], sleepy: true },
 ];
+// v2.5 Wettflüge: kein Glitzerstern, die Sterne gibt es nur über Zeiten (gewonnen · schneller als par · Blitzzeit)
+// Das Level-par (96–164 s) ist für ein Rennen von 25–35 s viel zu großzügig → eigene Zeitziele je Stufe:
+// raceTimes[stufe] = [par, blitz], Blitzzeit = 0,8 · par. Geeicht mit dem Level-Test-Flieger (Autopilot, Rivalin geparkt,
+// Qualität 0 und 1, v2.5): Blitzzeit ≈ 1,2 × seine Zeit (gute Flieger schaffen sie), par ≈ 1,5 × seine Zeit.
+// Das Zeitlimit auf Schwer bleibt wie bisher am Level-par (1,5 · par · 1,2).
+export const isRace = (lvl) => !!lvl && lvl.tasks.some(t => t.type === 'race');
+// Zeitziele eines Levels auf einer Stufe (Level-Karte, Spiel und Ergebnis rechnen gleich)
+export function timeGoals(lvl, diffId) {
+  const D = DIFFS[diffId], rt = isRace(lvl) && lvl.raceTimes && lvl.raceTimes[diffId];
+  return { par: rt ? rt[0] : Math.round(lvl.par * D.par), blitz: rt ? rt[1] : 0, limit: D.timeLimit ? Math.round(lvl.par * D.par * 1.5) : 0 };
+}
 export const levelById = (id) => LEVELS.find(l => l.id === id) || dailyLevel(id);
 export const worldOf = (lvl) => WORLDS.find(w => w.id === lvl.world);
 export const levelsOfWorld = (wid) => LEVELS.filter(l => l.world === wid);

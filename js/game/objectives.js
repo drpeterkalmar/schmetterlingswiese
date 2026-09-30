@@ -1,9 +1,11 @@
 // Aufgaben: Sammeln, Glühwürmchen, Blütenregen, Ringe, Landen, Besuchen, Füttern, Stunts, Wettflug
 import * as THREE from 'three';
-import { toonMat, glowMat } from '../engine/gfx.js';
+import { G, toonMat, glowMat } from '../engine/gfx.js';
 import { Build, P, petalGeo } from '../engine/geo.js';
 import { height, pond } from '../world/terrain.js';
 import { Critter } from '../actors/characters.js';
+import { sunflowerGeo } from '../world/nature.js';
+import { HeightField, seatWorld } from './seat.js';
 
 const _o = new THREE.Object3D();
 const _c = new THREE.Color();
@@ -211,6 +213,8 @@ class CollectTask extends Task {
     return this.done ? null : best;
   }
   debugNext() { const it = this.items.find(i => !i.taken); if (it) { this.g.player.pos.copy(it.pos); } }
+  // v2.5: Punkte + Radius (m), die der Zielpfeil nie verdecken darf
+  marks(o) { for (const it of this.items) if (!it.taken) o.push(it.pos, 0.7); }
   dispose() { this.pool.dispose(); }
 }
 
@@ -298,32 +302,63 @@ class RingTask extends Task {
     this.g.hit(p, 'ring', 0xffd84a);
   }
   target() { return this.done ? null : this.pts[this.cur]; }
+  marks(o) { for (let k = this.cur; k < Math.min(this.max, this.cur + 4); k++) o.push(this.pts[k], this.R * 1.1); }
   debugNext() { if (!this.done) { this.g.player.pos.copy(this.pts[this.cur]); this.pass(); } }
   dispose() { this.pool.dispose(); }
 }
 
 // --- Landen (Sonnenblumen, Seerosen, Nektar-/Mondblumen)
+// v2.5 Sitzplätze: Die Figur sitzt AUF der Blüte statt im Blütenkranz.
+//  • Sonnenblume: die gewählten Blumen des Feldes werden gegen eine „Honig-Sonnenblume“ getauscht, deren Kopf in den
+//    Himmel schaut (Hang ≈ 25°). Die Figur sitzt auf dem Kerngesicht, schaut nach vorn/unten, wiegt mit der Blume mit.
+//  • Seerose: nur Blätter ohne Lotusblüte; Figur sitzt auf dem Blatt, darf sich drehen.
+//  • Nektar-/Mondblume: Figur sitzt auf der gelben Mitte, darf sich drehen.
+// Die Sitzhöhe wird je Figur/Größe/Hut/Schmuck aus einem Höhenfeld der Blüte berechnet (seat.js) → nichts schneidet durch.
+const HONEY_TILT = 1.13;
+const _M = new THREE.Matrix4(), _Q = new THREE.Quaternion(), _S3 = new THREE.Vector3(), _UP = new THREE.Vector3(0, 1, 0), _X = new THREE.Vector3(1, 0, 0);
+const ZERO_M = new THREE.Matrix4().makeScale(0, 0, 0);
+let HONEY = null;
+const honeyGeo = () => HONEY || (HONEY = sunflowerGeo(HONEY_TILT));
+const SEATS = {};
+function seatKind(kind, g) {
+  if (SEATS[kind]) return SEATS[kind];
+  let gm, c, R = new THREE.Quaternion();
+  if (kind === 'sun') { gm = honeyGeo(); c = new THREE.Vector3(0, 2.25, 0.1); R.setFromAxisAngle(_X, Math.PI / 2 - HONEY_TILT); }
+  else if (kind === 'lily') { gm = g.world.pond.userData.padGeo; c = new THREE.Vector3(0, 0, 0); }
+  else { gm = geo('bigflower'); c = new THREE.Vector3(0, 1.6, 0); }
+  return (SEATS[kind] = { kind, hf: new HeightField(gm, 1.2), c, R, geo: gm });
+}
+const hash1 = (x, z) => { const v = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453; return v - Math.floor(v); };
+const angDiff = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
+
 class LandTask extends Task {
   constructor(g, cfg) {
     super(g, cfg);
     this.icon = '🛬'; this.label = cfg.on === 'lily' ? 'Auf Seerosen landen' : cfg.on === 'sunflower' ? 'Auf Sonnenblumen landen' : 'Auf Mondblumen landen';
     this.spots = [];
     const others = [];
-    if (cfg.on === 'sunflower' && g.world.sunflowers) {
-      const pts = g.world.sunflowers.userData.pts.slice().sort(() => g.rnd() - 0.5);
-      for (const p of pts) {
+    this.hidden = [];
+    const W = g.world;
+    if (cfg.on === 'sunflower' && W.sunflowers) {
+      const all = W.sunflowers.userData.pts, head = (p) => [p.x + Math.sin(p.rot) * 0.1 * p.s, p.z + Math.cos(p.rot) * 0.1 * p.s];
+      // Nachbar-Abstand (Köpfe): Riesen-Figuren reichen ≈1,3 m weit, Nachbar-Blütenkränze bis ≈1 m → lieber freistehende Blumen
+      const near = (p) => { const [x, z] = head(p); let m = 1e9; for (const q of all) if (q !== p) { const [a, b] = head(q); const d = (a - x) ** 2 + (b - z) ** 2; if (d < m) m = d; } return Math.sqrt(m); };
+      const pts = all.slice().sort(() => g.rnd() - 0.5);
+      for (const need of [3.0, 2.5, 0]) for (const p of pts) {
         if (this.spots.length >= cfg.n) break;
-        if (others.some(o => (o.x - p.x) ** 2 + (o.z - p.z) ** 2 < 144)) continue;
-        others.push(p);
-        this.spots.push({ pos: new THREE.Vector3(p.x + Math.sin(p.rot) * 0.1 * p.s, p.y + 2.25 * p.s + 0.42 * p.s, p.z + Math.cos(p.rot) * 0.1 * p.s), r: 2.8, done: false, task: this });
+        if (p.used || others.some(o => (o.x - p.x) ** 2 + (o.z - p.z) ** 2 < 144) || near(p) < need) continue;
+        p.used = true; others.push(p);
+        this.addSeat('sun', p, p.rot, p.s);
       }
-    } else if (cfg.on === 'lily' && g.world.pond) {
-      const pads = g.world.pond.userData.pads.slice().sort(() => g.rnd() - 0.5);
-      for (const p of pads) {
+      pts.forEach(p => { delete p.used; });
+    } else if (cfg.on === 'lily' && W.pond) {
+      const pads = W.pond.userData.pads.slice().sort(() => g.rnd() - 0.5);
+      // nie auf Blättern mit Lotusblüte (die stünde im Weg); reicht es nicht, erst den Abstand lockern, dann Nektarblumen
+      for (const gap of [8, 6]) for (const p of pads) {
         if (this.spots.length >= cfg.n) break;
-        if (p.s < 1.2 || others.some(o => (o.x - p.x) ** 2 + (o.z - p.z) ** 2 < 64)) continue;
+        if (p.s < 1.2 || p.lotus || others.includes(p) || others.some(o => (o.x - p.x) ** 2 + (o.z - p.z) ** 2 < gap * gap)) continue;
         others.push(p);
-        this.spots.push({ pos: new THREE.Vector3(p.x, 0.32, p.z), r: 2.6, done: false, task: this });
+        this.addSeat('lily', p, p.rot, p.s);
       }
     }
     // Rest: eigene große Blüten (Nektar-/Mondblumen)
@@ -333,7 +368,7 @@ class LandTask extends Task {
       others.push(p);
       const s = 1.3;
       this.flowers.push({ p, s });
-      this.spots.push({ pos: new THREE.Vector3(p.x, p.y + 1.66 * s + 0.35, p.z), r: 2.8, done: false, task: this });
+      this.addSeat('big', p, 0, s);
     }
     if (this.flowers.length) {
       const moon = cfg.on === 'moonflower';
@@ -341,10 +376,74 @@ class LandTask extends Task {
       this.flowers.forEach((f, i) => this.fpool.set(i, f.p, 0, 0, 0, f.s, moon ? 0xe8f0ff : [0xff7eb6, 0xb38cff, 0xffa84a, 0x6ec6ff][i % 4], moon ? 5 : 0.001));
       this.fpool.flush();
     }
+    // Honig-Sonnenblumen: eigene Instanzen (ohne Shader-Wiegen, dafür hier mit gleichem Wind → Figur wiegt exakt mit)
+    const suns = this.spots.filter(s => s.seat.kind === 'sun');
+    if (suns.length) {
+      this.honey = new THREE.InstancedMesh(honeyGeo(), toonMat({ vc: true, rim: 0.6, soft: 0.2, side: THREE.DoubleSide }), suns.length);
+      this.honey.frustumCulled = false; g.scene.add(this.honey);
+      suns.forEach((s, i) => { s.seat.hi = i; });
+    }
     this.mpool = new Pool(g.scene, 'marker', this.spots.length, { glow: true, glowI: 0.5, emis: 0.5 });
     this.spots.forEach(s => g.player.landables.push(s));
+    this.camObstacles(g);
     this.sip = null;
     this.max = this.spots.length;
+    this.update(0, G.uTime.value);
+  }
+  addSeat(kind, p, rot, s) {
+    const g = this.g, K = seatKind(kind, g);
+    const base = new THREE.Vector3(p.x, kind === 'lily' ? 0 : p.y, p.z);
+    const seat = { kind, K, base, rot, s, M: new THREE.Matrix4(), yawFix: kind === 'sun', ih: hash1(p.x, p.z), cache: null, src: p };
+    if (kind === 'sun') { // Welt-Sonnenblume ausblenden (beim Aufräumen zurück)
+      const W = g.world.sunflowers, m = new THREE.Matrix4(); W.getMatrixAt(p.i, m);
+      this.hidden.push([p.i, m]); W.setMatrixAt(p.i, ZERO_M); W.instanceMatrix.needsUpdate = true;
+    }
+    this.flowerMatrix(seat, 0, seat.M, true);
+    // Landemarke: über der Sitz-Mitte entlang der Normalen
+    const pos = new THREE.Vector3(), n = new THREE.Vector3();
+    seatWorld(seat.M, K.c, K.R, kind === 'sun' ? 0.45 * s : kind === 'lily' ? 0.32 : 0.35 + 0.056 * s, pos, n);
+    const sp = { pos, r: kind === 'lily' ? 2.6 : 2.8, done: false, task: this, seat };
+    sp.seatPose = (t, critter, yaw, out, approx) => this.seatPose(sp, t, critter, yaw, out, approx);
+    this.spots.push(sp);
+    return sp;
+  }
+  // Blumen-Matrix (Welt ← lokal). Sonnenblume: Wind-Wiegen wie im Feld (Shader), aber hier gerechnet → exakt nachvollziehbar
+  flowerMatrix(S, t, out, rest = false) {
+    if (S.kind === 'sun' && !rest) {
+      const Wd = G.uWind.value, ih = S.ih, hh = 2.25 * 0.03 * (0.7 + 0.6 * ih), ph = S.base.x * 0.21 + S.base.z * 0.17 + ih * 6.2831;
+      const gg = 0.55 + 0.45 * Math.sin(t * (1.6 + 0.6 * ih) + ph) + Wd.z * 0.8;
+      const ox = Wd.x * gg * hh + Math.sin(t * 2.7 + ph * 1.3) * 0.12 * hh, oz = Wd.y * gg * hh + Math.cos(t * 2.3 + ph) * 0.12 * hh;
+      _Q.setFromUnitVectors(_UP, _S3.set(ox, 2.25 * S.s, oz).normalize());
+    } else _Q.identity();
+    _M.makeRotationY(S.rot); out.makeRotationFromQuaternion(_Q).multiply(_M);
+    out.scale(_S3.set(S.s, S.s, S.s)); out.setPosition(S.base);
+    return out;
+  }
+  // Sitz der Figur zur Zeit t: Position (Figuren-Ursprung), Normale, feste Blickrichtung (Sonnenblume) oder null
+  // approx: im Anflug die letzte Sitzhöhe weiterverwenden (keine Neuberechnung bei jeder kleinen Drehung)
+  seatPose(sp, t, critter, yaw, out, approx = false) {
+    const S = sp.seat;
+    this.flowerMatrix(S, t, S.M);
+    const fy = S.yawFix ? S.rot : yaw, rotY = S.yawFix ? 0 : fy - S.rot;
+    const pts = critter.seatPoints(), C = S.cache;
+    if (!C || C.pts !== pts || (!approx && Math.abs(angDiff(C.rotY, rotY)) > 0.04)) S.cache = { pts, rotY, off: S.K.hf.drop(pts, rotY, S.s, S.K.c, S.K.R, 0.025) };
+    seatWorld(S.M, S.K.c, S.K.R, S.cache.off, out.pos, out.n);
+    out.yaw = S.yawFix ? S.rot : null;
+    return out;
+  }
+  // Kamera-Hindernisse je Landeplatz: Nachbar-Sonnenblumenköpfe, andere Honig-Blumen, Baumkronen (im Sitzen nie hinein)
+  camObstacles(g) {
+    const W = g.world, sf = W.sunflowers ? W.sunflowers.userData.pts : [];
+    for (const sp of this.spots) {
+      const b = sp.seat.base, obs = [];
+      for (const q of sf) {
+        if (sp.seat.src === q || (q.x - b.x) ** 2 + (q.z - b.z) ** 2 > 144) continue;
+        obs.push({ c: new THREE.Vector3(q.x + Math.sin(q.rot) * 0.1 * q.s, q.y + 2.25 * q.s, q.z + Math.cos(q.rot) * 0.1 * q.s), r: 0.85 * q.s });
+      }
+      if (sp.seat.kind === 'sun') obs.push({ c: sp.seat.K.c.clone().applyMatrix4(sp.seat.M), r: 0.85 * sp.seat.s, own: true });
+      for (const C of g.player.colliders) if (!C.cyl && (C.c.x - b.x) ** 2 + (C.c.z - b.z) ** 2 < 400) obs.push({ c: C.c, r: C.r + 0.3 });
+      sp.camObs = obs;
+    }
   }
   onLand(spot) {
     if (!spot || spot.task !== this || spot.done) return false;
@@ -363,10 +462,15 @@ class LandTask extends Task {
     }
     // nach dem Naschen hüpft die Figur fröhlich wieder los
     if (this.autoOff > 0) { this.autoOff -= dt; if (this.autoOff <= 0 && g.player.landed) g.player.takeoff(); }
+    if (this.honey) {
+      for (const s of this.spots) if (s.seat.kind === 'sun') this.honey.setMatrixAt(s.seat.hi, this.flowerMatrix(s.seat, t, s.seat.M));
+      this.honey.instanceMatrix.needsUpdate = true;
+    }
+    const occ = g.player.landed ? g.player.landSpot : null;
     this.spots.forEach((s, i) => {
-      const sc = s.done ? 0.0001 : 1 + 0.08 * Math.sin(t * 4 + i);
+      const sc = s.done || occ === s ? 0.0001 : 1 + 0.08 * Math.sin(t * 4 + i); // besetzt: Marke weg (schnitt sonst durch die Flügel)
       _v.copy(s.pos); _v.y += 0.05 + Math.sin(t * 3 + i) * 0.08;
-      this.mpool.set(i, _v, 0, t, 0, sc, 0x9ff0ff, s.done ? 0.001 : 2.2);
+      this.mpool.set(i, _v, 0, t, 0, sc, 0x9ff0ff, s.done || occ === s ? 0.001 : 2.2);
     });
     this.mpool.flush();
   }
@@ -375,6 +479,7 @@ class LandTask extends Task {
     for (const s of this.spots) if (!s.done) { const d = s.pos.distanceToSquared(pl); if (d < bd) { bd = d; best = s.pos; } }
     return best;
   }
+  marks(o) { for (const s of this.spots) if (!s.done) o.push(s.pos, 1.4); }
   debugNext() {
     const s = this.spots.find(q => !q.done); if (!s) return;
     const p = this.g.player; p.pos.copy(s.pos); p.land(s);
@@ -382,6 +487,9 @@ class LandTask extends Task {
   }
   dispose() {
     this.mpool.dispose(); this.fpool && this.fpool.dispose();
+    if (this.honey) { this.g.scene.remove(this.honey); this.honey.material.dispose(); this.honey.dispose(); }
+    const W = this.g.world.sunflowers;
+    if (W && this.hidden.length) { for (const [i, m] of this.hidden) W.setMatrixAt(i, m); W.instanceMatrix.needsUpdate = true; }
     const L = this.g.player.landables; for (const s of this.spots) { const k = L.indexOf(s); if (k >= 0) L.splice(k, 1); }
   }
 }
@@ -418,6 +526,7 @@ class VisitTask extends Task {
     return best;
   }
   debugNext() { const a = this.who.find(q => !q.visited); if (a) this.g.player.pos.set(a.pos.x, a.pos.y + 2, a.pos.z); }
+  marks(o) { for (const a of this.who) if (!a.visited) o.push(a.pos, 2.4); }
   dispose() { this.pool.dispose(); }
 }
 
@@ -476,6 +585,10 @@ class DeliverTask extends Task {
     if (this.carry) { for (const a of this.who) if (!a.fed) { const d = a.pos.distanceToSquared(pl); if (d < bd) { bd = d; best = a.pos; } } }
     else for (const b of this.bushes) if (b.has) { const d = b.berry.distanceToSquared(pl); if (d < bd) { bd = d; best = b.berry; } }
     return this.done ? null : best;
+  }
+  marks(o) {
+    for (const b of this.bushes) if (b.has) o.push(b.berry, 0.9);
+    for (const a of this.who) if (!a.fed) o.push(a.pos, 2.4);
   }
   debugNext() {
     const pl = this.g.player.pos;
@@ -544,6 +657,7 @@ class RaceTask extends RingTask {
     this.rival.update(dt, t, { speed01: 0.8, cheer: this.rivalDone });
   }
   rivalProgress() { return this.u; }
+  marks(o) { super.marks(o); o.push(this.rival.root.position, 1); }
   dispose() { super.dispose(); this.g.scene.remove(this.rival.root); this.rival.dispose(); }
 }
 
