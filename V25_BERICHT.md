@@ -224,7 +224,14 @@ Bilder: `tests/shots/v25/wettflug_karte_<hoch|quer>.jpg`, `wettflug_ergebnis_<ho
     - CPU-Update v2.4 0,67–0,78 ms, v2.5 0,70–0,85 ms, also gleichwertig.
   - Keine Lecks: Geometrien, Texturen und Programme in Runde 1 und 2 gleich (65/9/34, wie v2.4).
   - Sitzhöhe beim Drehen im Sitzen: 0,05–0,3 ms; einmalig bis 3 ms pro Landeplatz beim Laden.
-- **Deployment:** DEPLOY_ERGEBNISSE
+- **Deployment:**
+  - Gepusht als Commit `5b5efe0`. GitHub Pages liefert Build `6ec1c7eb18`, gleich wie lokal.
+  - `test_live.py` gegen github.io: Ton erst nach dem Tipp, Level gewonnen, Freischaltung, offline neu laden, **0 Fehler**.
+  - Zusätzlich live:
+    - Version 2.5.0.
+    - 2-1 hat 5 Honig-Sonnenblumen, die Figur landet auf dem Sitz.
+    - 2-3 hat keinen Glitzerstern, Blitzzeit 33 s.
+    - 0 Fehler.
 
 ## Grenzen
 
