@@ -300,6 +300,12 @@ Bilder:
 - `tests/shots/v25/fang_leuchtkreis_sonne.jpg`, `fang_leuchtkreis_teich.jpg` (der Fangbereich).
 - `fang_eingerastet_sonne.jpg`, `fang_gelandet_teich.jpg` (nach kurzem Tippen eingefangen und gelandet).
 
+**Deployment v2.5.1:**
+- Commit `5b3f489`, GitHub Pages liefert Build `cd56cd3885`.
+- `test_live.py` gegen github.io: **0 Fehler**.
+- Live geprüft: Version 2.5.1, Fangfaktor 1,9. ▼ nur 0,3 s getippt, 3,5 m daneben und 4 m höher, und die Figur landet auf
+  der Honig-Sonnenblume.
+
 **Für Peter:**
 - App einmal ganz schließen und neu öffnen (Version 2.5.1).
 - In 2-1, 3-1 oder 5-2 in die Nähe einer Landeblume fliegen: Der hellblaue Kreis zeigt, wo ein kurzes ▼ reicht.
