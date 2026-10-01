@@ -30,7 +30,9 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
   tanzt über den Blumen, Marienkäfer krabbeln auf Büschen, ein Häschen hoppelt davon, im Teich springt ein Fisch;
   Glockenblumen, Mohn, Heide, Blütenteppiche, Wolkenschatten, Regenbogen, Sternschnuppen am Abend
 - **Nektar naschen (v2.5):** Die Figur sitzt sichtbar auf der Blüte – Honig-Sonnenblumen schauen dafür in den Himmel,
-  Seerosenblätter und Mondblumen tragen jede Figur, Größe, jeden Hut und Schmuck, ohne dass etwas durchschneidet
+  Seerosenblätter und Mondblumen tragen jede Figur, Größe, jeden Hut und Schmuck, ohne dass etwas durchschneidet;
+  **v2.5.1:** Landen ist leichter – ▼ kurz tippen reicht im großen Leuchtkreis, die Blume „fängt“ die Figur und holt sie
+  herein (▲ bricht ab); `?landen=<Faktor>` in der URL stellt den Fangbereich ein (1 = wie v2.5.0)
 - **Tierbabys (v2.4):** Bärenbaby, Capybara, Häschen und Entchen mit Schnauze, Pfoten mit Ballen, Bauchfell und
   Schwänzchen; sie laufen mit echten Beinbewegungen, blinzeln, zucken mit den Ohren, schauen dich an, wenn du nah
   bist, und freuen sich über Besuch mit Hüpfer, ^ ^-Augen und Herzchen

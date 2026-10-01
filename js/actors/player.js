@@ -1,11 +1,13 @@
 // Spieler: Flugmodell (echte Loopings), Landen, Kamera mit Kicks
 import * as THREE from 'three';
 import { Critter } from './characters.js';
-import { height } from '../world/terrain.js';
+import { height, pond } from '../world/terrain.js';
 import { blobTex } from '../engine/textures.js';
 import { showOffset, showOrient, showLift, liftAt, showBounds } from '../game/stunts.js';
 
 const TAU = Math.PI * 2;
+// v2.5.1 Landen leichter: Fangbereich-Faktor gegenüber v2.5.0 (URL ?landen=<Faktor>, 1 = altes Verhalten ohne Einrasten)
+export const LAND_K = 1.9;
 const _UPV = new THREE.Vector3(0, 1, 0);
 const ease = (p) => 0.5 - 0.5 * Math.cos(Math.PI * p);
 const _v = new THREE.Vector3(), _w = new THREE.Vector3(), _f = new THREE.Vector3(), _q = new THREE.Quaternion(), _gc = new THREE.Vector3();
@@ -197,15 +199,29 @@ export class Player {
       this.yaw += this.yawRate * dt;
       let tp = climb * 0.58;
       const alt = this.pos.y - gh;
-      // Landeanflug: runter halten nahe Landeplatz/Boden
-      this.landing = null;
-      if (climb < -0.3) {
-        let best = null, bd = 1e9;
+      // Landeanflug: runter halten nahe Landeplatz/Boden.
+      // v2.5.1: großer Fangbereich; einmal gefangen rastet der Platz ein und die Figur landet von selbst, auch wenn ▼
+      // losgelassen wird. Abbrechen nur aktiv: ▲ (steigen) oder deutlich wegsteuern. (landK = 1: wie v2.5.0)
+      const K = this.landK || 1, easy = K > 1.001;
+      let best = null;
+      if (easy && this.landing && !this.landing.done) {
+        const L = this.landing, dh = Math.hypot(L.pos.x - this.pos.x, L.pos.z - this.pos.z);
+        this.steerAway = Math.abs(turn) > 0.5 ? (this.steerAway || 0) + dt : 0;
+        if (climb > 0.35 || this.steerAway > 0.45 || dh > this.catchR(L) * 1.6) { this.landing = null; this.emit('unlock', L); }
+        else best = L;
+      } else this.landing = null;
+      if (!best && climb < -0.3) {
+        let bd = 1e9;
         for (const L of this.landables) {
           if (L.done) continue;
-          const dx = L.pos.x - this.pos.x, dz = L.pos.z - this.pos.z, dh = Math.hypot(dx, dz);
-          if (dh < (L.r || 2.6) && this.pos.y - L.pos.y < 6 && dh < bd) { bd = dh; best = L; }
+          const dx = L.pos.x - this.pos.x, dz = L.pos.z - this.pos.z, dh = Math.hypot(dx, dz), dy = this.pos.y - L.pos.y;
+          // von unten nur außerhalb der Blüte (dann erst steigen, dann hinübergleiten – nie von unten hinein)
+          const inY = easy ? dy < 8 && dy > -2.5 && (dy > -0.3 || dh > this.footR(L)) : dy < 6;
+          if (dh < (easy ? this.catchR(L) : (L.r || 2.6)) && inY && dh < bd) { bd = dh; best = L; }
         }
+        if (best && easy) { this.steerAway = 0; this.emit('lock', best); }
+      }
+      {
         if (best) {
           this.landing = best;
           // v2.5 Blüten-Sitz: Ziel ist ein Schwebepunkt über dem figur-genauen Sitz (Riesen höher); von oben anfliegen
@@ -213,17 +229,18 @@ export class Player {
           const T = _gc.copy(best.pos);
           if (best.seatPose && c) { const S = best.seatPose(t, c, this.yaw, _seat, true); T.copy(S.pos).addScaledVector(S.n, this.seatHover()); }
           const bt = Math.hypot(T.x - this.pos.x, T.z - this.pos.z);
-          // sanft in den Landeplatz gleiten (fast schweben)
-          this.pos.x += (T.x - this.pos.x) * Math.min(1, dt * 4.5);
-          this.pos.z += (T.z - this.pos.z) * Math.min(1, dt * 4.5);
           const hy = T.y + (best.seatPose ? Math.max(0, bt - 0.3) * 0.8 : 0);
+          // sanft in den Landeplatz gleiten (fast schweben); liegt die Figur unter dem Anflug-Kegel: erst steigen
+          const gx = !easy || this.pos.y >= hy - 0.35 ? 1 : 0;
+          this.pos.x += (T.x - this.pos.x) * Math.min(1, dt * 4.5) * gx;
+          this.pos.z += (T.z - this.pos.z) * Math.min(1, dt * 4.5) * gx;
           this.pos.y += (hy - this.pos.y) * Math.min(1, dt * 3.4);
           const want = Math.atan2(T.x - this.pos.x, T.z - this.pos.z);
           if (bt > 0.4) { let dd = want - this.yaw; dd = Math.atan2(Math.sin(dd), Math.cos(dd)); this.yaw += dd * Math.min(1, dt * 3); }
           tp = -0.15;
           // v2.5: erst aufsetzen, wenn eine laufende Freuden-Schraube fertig ist (sonst dreht sich die Figur auf der Blüte)
           if (Math.abs(this.pos.y - hy) < 0.4 && bt < 1.4 && !(c && c.rollBusy)) this.land(best);
-        } else if (alt < 1.3) {
+        } else if (climb < -0.3 && alt < 1.3 && !(easy && this.overWater())) { // (v2.5.1: nie aufs Wasser)
           this.pos.y += (gh + 0.35 - this.pos.y) * Math.min(1, dt * 4);
           if (this.pos.y - gh < 0.5) this.land(null);
         }
@@ -312,6 +329,11 @@ export class Player {
     this.critter && this.critter.bump(5);
     this.emit('takeoff', s);
   }
+  // v2.5.1 Fangbereich (m, waagrecht): Grundradius × Faktor, mit der Figurgröße (Riese mehr, Winzling etwas weniger)
+  catchR(L) { return (L.r || 2.6) * (this.landK || 1) * (0.8 + 0.2 * ((this.critter && this.critter.size) || 1)); }
+  // Grundfläche der Blüte (m): darunter wird nicht eingefangen
+  footR(L) { const S = L.seat, k = (this.critter && this.critter.size) || 1; return (S ? (S.kind === 'lily' ? S.s : 1.1 * S.s) : 1) + 0.6 * k; }
+  overWater() { const P0 = pond(); return P0[2] > 1 && Math.hypot(this.pos.x - P0[0], this.pos.z - P0[1]) < P0[2] * 1.05; }
   seatHover() { return 0.25 + 0.35 * ((this.critter && this.critter.size) || 1); } // Schwebe-Abstand über dem Sitz (m)
   // Kamera-Winkel beim Sitzen: erst der gewohnte (2,2 rad, Gesicht zeigen), sonst der nächste freie
   pickSeatOrbit(obs, portrait) {

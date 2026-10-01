@@ -198,6 +198,7 @@ export class Game {
       stunt: (tp) => { this.app.audio.sfx(tp === 'loop' ? 'loop' : 'roll'); this.app.haptics.buzz('stunt'); this.player.kick(7, 0); },
       stuntDone: (tp) => this.onStuntDone(tp),
       showDone: (id) => this.onShowDone(id),
+      lock: (spot) => this.onLock(spot),
     };
     this.showAt = -99;
     this.app.player.critter.happyT = 0;
@@ -390,6 +391,13 @@ export class Game {
     for (const t of this.tasks) if (t.onLand && t.onLand(spot)) used = true;
     if (!this.shownHints.takeoff) { this.shownHints.takeoff = true; this.app.ui.hint(used ? '🍯 Nektar schlürfen … dann ▲ oben halten zum Abheben' : '▲ Oben halten zum Abheben'); }
     this.app.stat('landings');
+  }
+  // v2.5.1 Landeplatz eingerastet: leises Aufsetz-Signal (Glitzer, Ton, Haptik), die Figur landet dann von selbst
+  onLock(spot) {
+    this.app.audio.sfx('land', 0, { gain: 0.45, rate: 1.3 });
+    this.app.haptics.buzz('land');
+    this.bursts.emit({ n: 12, pos: spot.pos, colors: [0x9ff0ff, 0xffffff, 0xfff3b0], shape: 1, size: 0.3, speed: 2.2, up: 0.8, life: 0.7, grav: -0.5 });
+    if (!this.shownHints.lock) { this.shownHints.lock = true; this.app.ui.hint('✨ Eingefangen! Die Blume holt dich – ▲ oben halten zum Abbrechen'); }
   }
   onStuntDone(type) {
     this.app.stat(type === 'loop' ? 'loops' : 'rolls');

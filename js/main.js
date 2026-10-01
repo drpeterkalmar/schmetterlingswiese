@@ -6,7 +6,7 @@ import { World } from './world/world.js';
 import { height } from './world/terrain.js';
 import { Bursts } from './world/particles.js';
 import { Trail } from './world/trails.js';
-import { Player } from './actors/player.js';
+import { Player, LAND_K } from './actors/player.js';
 import { Game } from './game/game.js';
 import { LEVELS, DIFFS, levelById, worldOf, dailyLevel, todayStr } from './game/levels.js';
 import { WORLDS } from './game/worlds.js';
@@ -16,7 +16,7 @@ import { Input } from './input.js';
 import { UI } from './ui/ui.js';
 import { STUNTS, FINALES } from './game/stunts.js';
 
-export const VERSION = '2.5.0';
+export const VERSION = '2.5.1';
 
 class App {
   constructor() {
@@ -30,6 +30,8 @@ class App {
     this.bursts = new Bursts(1000); this.scene.add(this.bursts.points);
     this.trail = new Trail(this.bursts, (k) => this.onPuff(k));
     this.player = new Player(this.scene);
+    // v2.5.1 Fangbereich beim Landen: ?landen=<Faktor> (1 = wie v2.5.0, A/B)
+    this.player.landK = parseFloat(new URLSearchParams(location.search).get('landen')) || LAND_K;
     this.progress = new Progress();
     this.audio = new AudioEngine();
     this.world.fx = { bursts: this.bursts, audio: this.audio, pan: (p) => this.screenPan(p) }; // Wiesen-Leben: Partikel + Klänge

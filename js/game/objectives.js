@@ -384,6 +384,12 @@ class LandTask extends Task {
       suns.forEach((s, i) => { s.seat.hi = i; });
     }
     this.mpool = new Pool(g.scene, 'marker', this.spots.length, { glow: true, glowI: 0.5, emis: 0.5 });
+    // v2.5.1 Leuchtkreis = Fangbereich (flacher Ring, so groß wie der Bereich, in dem ▼ den Platz einfängt)
+    if ((g.player.landK || 1) > 1.001) {
+      const rg = P.torus(1, 0.03, 4, 72); rg.rotateX(Math.PI / 2);
+      this.cring = new THREE.InstancedMesh(rg, toonMat({ color: 0x9ff0ff, emis: 1, transparent: true, opacity: 0.5 }), this.spots.length);
+      this.cring.frustumCulled = false; g.scene.add(this.cring);
+    }
     this.spots.forEach(s => g.player.landables.push(s));
     this.camObstacles(g);
     this.sip = null;
@@ -473,6 +479,17 @@ class LandTask extends Task {
       this.mpool.set(i, _v, 0, t, 0, sc, 0x9ff0ff, s.done || occ === s ? 0.001 : 2.2);
     });
     this.mpool.flush();
+    if (this.cring) {
+      const pl = g.player, pp = pl.pos;
+      this.spots.forEach((s, i) => {
+        const R = pl.catchR(s), near = (s.pos.x - pp.x) ** 2 + (s.pos.z - pp.z) ** 2 < (R + 16) ** 2;
+        const hide = s.done || occ === s || pl.landing === s || !near;
+        _o.position.copy(s.pos); _o.position.y -= 0.25; _o.rotation.set(0, t * 0.2, 0);
+        const k = hide ? 0.0001 : R * (1 + 0.025 * Math.sin(t * 2.4 + i));
+        _o.scale.set(k, hide ? 0.0001 : 1, k); _o.updateMatrix(); this.cring.setMatrixAt(i, _o.matrix);
+      });
+      this.cring.instanceMatrix.needsUpdate = true;
+    }
   }
   target() {
     let best = null, bd = 1e9; const pl = this.g.player.pos;
@@ -488,6 +505,7 @@ class LandTask extends Task {
   dispose() {
     this.mpool.dispose(); this.fpool && this.fpool.dispose();
     if (this.honey) { this.g.scene.remove(this.honey); this.honey.material.dispose(); this.honey.dispose(); }
+    if (this.cring) { this.g.scene.remove(this.cring); this.cring.material.dispose(); this.cring.geometry.dispose(); this.cring.dispose(); }
     const W = this.g.world.sunflowers;
     if (W && this.hidden.length) { for (const [i, m] of this.hidden) W.setMatrixAt(i, m); W.instanceMatrix.needsUpdate = true; }
     const L = this.g.player.landables; for (const s of this.spots) { const k = L.indexOf(s); if (k >= 0) L.splice(k, 1); }

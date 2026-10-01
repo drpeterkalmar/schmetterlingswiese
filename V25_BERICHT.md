@@ -1,6 +1,6 @@
 # Schmetterlingswiese 2.5 – Zielpfeil am Himmel, saubere Nektar-Landung, Stunt-Richtung, Wettflug-Sterne
 
-Stand: 30.09.2026 · Branch `main` · Live: https://drpeterkalmar.github.io/schmetterlingswiese/ (Version 2.5.0)
+Stand: 01.10.2026 · Branch `main` · Live: https://drpeterkalmar.github.io/schmetterlingswiese/ (Version 2.5.1, Nachtrag unten)
 
 Wünsche (29.09.): „Zielpfeil höher am Himmel platzieren. Nektar saugen fixen, derzeit schneidet nach der Landung die
 Sonnenblume durch die Spielfigur. Alle Stunts sollten nach Abschluss nicht die Flugrichtung ändern, aber ich glaube, das
@@ -250,3 +250,57 @@ Bilder: `tests/shots/v25/wettflug_karte_<hoch|quer>.jpg`, `wettflug_ergebnis_<ho
 4. **Wettflug 2-3 oder 3-3:** Auf der Level-Karte stehen jetzt Zeitziele. Wer die ⚡ Blitzzeit schafft, bekommt den dritten
    Stern.
 5. **Rückmeldung:** Sollen die Rennen auf Schwer leichter werden (siehe „Offen“)?
+
+## Nachtrag v2.5.1 – Nektar-Landung leichter (01.10.2026)
+
+Wunsch (30.09.): „Nektarlandung leichter machen (man muss nicht so präzise treffen).“
+Die Sitz-Geometrie aus v2.5 bleibt unverändert. Geändert sind nur Fang und Anflug (`js/actors/player.js`).
+
+**Was sich ändert:**
+- **Großer Fangbereich:**
+  - ▼ fängt einen Landeplatz jetzt im Umkreis von ≈ 5 m statt 2,6–2,8 m (Faktor 1,9).
+  - Der Bereich wächst mit der Figur: Riese ×1,11, Winzling ×0,92.
+  - In der Höhe gilt: bis 8 m darüber (vorher 6 m) und bis 2,5 m darunter.
+  - Von unten fängt er nur außerhalb der Blüte. Die Figur steigt dann erst und gleitet von oben hinein, nie von unten
+    oder seitlich durch den Blütenkranz.
+- **Einrasten:**
+  - Ist ein Platz gefangen, holt die Blume die Figur von selbst herein und sie setzt auf. Kurz tippen reicht, ▼ muss nicht
+    gehalten werden.
+  - Abbrechen geht nur aktiv: ▲ (steigen) oder deutlich wegsteuern (≥ 0,45 s links/rechts).
+  - Erledigte Blumen fangen nie.
+  - Über dem Teich landet die Figur nicht mehr auf dem Wasser.
+- **Anzeige:**
+  - Ein flacher hellblauer **Leuchtkreis** zeigt den Fangbereich jeder offenen Landeblume (sichtbar ab ≈ 16 m Nähe).
+  - Beim Einrasten kommen ein leises Aufsetz-Glitzern, ein Ton und Haptik.
+  - Beim ersten Mal erscheint der Hinweis „✨ Eingefangen! Die Blume holt dich – ▲ oben halten zum Abbrechen“.
+- **A/B:** `?landen=<Faktor>` in der URL stellt den Fangbereich ein. `?landen=1` ist genau das Verhalten von v2.5.0, ohne
+  Einrasten.
+
+**Messung** (`tests/test_v251_fang.py`):
+- Je Blumenart 30 Bot-Anflüge mit zufälligem Versatz 0–5 m und Höhe 1–8 m über der Landemarke. Die Figur fliegt mit
+  voller Geschwindigkeit und schaut ungefähr zur Blume.
+- ▼ wurde entweder nur 0,3 s getippt oder gehalten.
+- „Vorher“ ist der Stand v2.5.0 (`?landen=1`).
+
+| Landequote bei Versatz ≤ 4 m | ▼ getippt vorher | ▼ getippt nachher | ▼ gehalten vorher | ▼ gehalten nachher |
+|---|---|---|---|---|
+| Sonnenblume (2-1) | 4 % | **100 %** | 96 % | **100 %** |
+| Seerose (3-1) | 5 % | **100 %** | 100 % | **100 %** |
+| Mondblume (5-2) | 12 % | **100 %** | 100 % | **100 %** |
+
+- Über alle Versätze bis 5 m: getippt 100 / 97 / 100 %, gehalten 100 / 97 / 100 %. Die fehlenden 3 % bei der Seerose sind
+  eine Landung auf einem näheren, noch offenen Nachbarblatt. Das ist eine richtige Landung, nur auf einem anderen Blatt.
+- Fehllandungen auf Boden oder Wasser: 0 (vorher 1 Bodenlandung neben der Sonnenblume beim Halten).
+- Auf erledigten Blumen: 0 von 18 Versuchen gelandet.
+- Abbruch mit ▲: in allen Versuchen kein Aufsetzen.
+- `test_v25_landen` bleibt grün: im Sitzen weiterhin ≥ 2,5 cm Abstand zur Blüte, beim Aufsetzen ≥ 2,5 cm.
+  `test_levels`, `test_celebrate` und `test_ui` sind ebenfalls grün.
+
+Bilder:
+- `tests/shots/v25/fang_leuchtkreis_sonne.jpg`, `fang_leuchtkreis_teich.jpg` (der Fangbereich).
+- `fang_eingerastet_sonne.jpg`, `fang_gelandet_teich.jpg` (nach kurzem Tippen eingefangen und gelandet).
+
+**Für Peter:**
+- App einmal ganz schließen und neu öffnen (Version 2.5.1).
+- In 2-1, 3-1 oder 5-2 in die Nähe einer Landeblume fliegen: Der hellblaue Kreis zeigt, wo ein kurzes ▼ reicht.
+- Ist der Kreis zu groß oder zu klein? Zum Ausprobieren gibt es `…/schmetterlingswiese/?landen=1.5` oder `?landen=2.5`.
