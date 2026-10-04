@@ -37,6 +37,37 @@ body.won #zones, body.won #stick { display: none !important; }
   background: radial-gradient(circle, rgba(255,255,255,.25), rgba(255,255,255,.08)); border: 3px solid rgba(255,255,255,.6); transition: opacity .15s; }
 #stick > div { position: absolute; left: 40px; top: 40px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,.85); box-shadow: 0 4px 14px rgba(60,20,80,.3); }
 
+/* ---------- Zielanzeige (v2.6): Stern über dem Ziel bzw. Randpfeil links/rechts, Lage/Größe/Deckkraft setzt game.js ---------- */
+#guide { position: fixed; inset: 0; pointer-events: none; z-index: 3; display: none; }
+body.playing #guide { display: block; }
+body.won #guide { display: none; }
+#guide > div { position: absolute; left: 0; top: 0; visibility: hidden; opacity: 0; will-change: transform, opacity; }
+#guide svg { display: block; width: 100%; height: 100%; overflow: visible; }
+#guide polygon { fill: #ffd84a; stroke: #3a1e08; stroke-width: 6; stroke-linejoin: round; }
+/* Marker: Spitze unten in der Mitte = Ankerpunkt (zeigt AUF das Ziel), sanftes Wippen + Leuchthof */
+.gm { width: 64px; height: 64px; margin: -64px 0 0 -32px; transform-origin: 50% 100%; }
+.gm .gb { position: absolute; inset: 0; animation: gBob 1.2s ease-in-out infinite alternate; }
+.gm .gb::before { content: ''; position: absolute; left: -14%; top: -18%; width: 128%; height: 104%; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,250,210,.85) 0, rgba(255,236,140,.45) 38%, rgba(255,236,140,0) 70%); animation: gGlow 1.2s ease-in-out infinite alternate; }
+.gm.clamp .tip { display: none; }
+/* Randpfeil: Mitte = Ankerpunkt, schiebt sich sanft nach außen (= dorthin drehen) */
+.ge { width: 64px; height: 80px; margin: -40px 0 0 -32px; }
+.ge .gc { position: absolute; inset: 0; animation: gNudge .9s ease-in-out infinite; --gd: 1; }
+.ge.l .gc { --gd: -1; }
+.ge.l svg { transform: scaleX(-1); }
+.ge .gh { opacity: .6; }
+.ge .gc::before { content: ''; position: absolute; inset: -12%; border-radius: 50%; background: radial-gradient(circle, rgba(255,250,210,.7) 0, rgba(255,236,140,0) 68%); }
+/* ▲/▼-Abzeichen: Ziel deutlich höher/tiefer (deckt sich mit steigen/sinken) */
+#guide .bdg { position: absolute; display: none; width: 30px; height: 30px; margin-left: -15px; border-radius: 50%; background: #fff; border: 3px solid #ffd84a;
+  color: #3a1e08; font: normal 900 15px/24px var(--font); text-align: center; box-shadow: 0 2px 8px rgba(60, 20, 80, .35); }
+#guide .bdg.up, #guide .bdg.dn { display: block; }
+.gm .bdg { left: 96%; top: 46%; }
+.ge .bdg { left: 50%; }
+.ge .bdg.up { top: -30px; } .ge .bdg.dn { top: 80px; }
+@keyframes gBob { from { transform: translateY(0); } to { transform: translateY(-7px); } }
+@keyframes gGlow { from { opacity: .55; transform: scale(.9); } to { opacity: 1; transform: scale(1.08); } }
+@keyframes gNudge { 0%, 100% { transform: translateX(0) scale(1); } 50% { transform: translateX(calc(var(--gd) * 8px)) scale(1.06); } }
+
 /* ---------- HUD ---------- */
 #hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; display: none; }
 body.playing #hud { display: block; }

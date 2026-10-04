@@ -16,6 +16,20 @@ const _x = new THREE.Vector3(), _y = new THREE.Vector3();
 const RB1 = RAINBOW.map(c => [c]), PUFF = [0xffffff, 0xfff4e8], DUST = [0xfff3b0, 0xcfe8ff], FLASH = [0xfff3b0];
 const ZZ = [['a', 1 / 6], ['b', 0.5], ['c', 5 / 6]], WK = [['a', 0.125], ['b', 0.375], ['c', 0.625], ['d', 0.875]];
 
+// v2.6 Zielanzeige (Default, ?ziel=marker): Stern über dem Ziel, solange es im Bild ist; sonst Randpfeil links/rechts
+// (= dorthin drehen, wie die Lenkzonen ◀ ▶). Höhe nur als ▲/▼-Abzeichen, nie als Hauptrichtung. ?ziel=pfeil = v2.5-Pfeil.
+export const GUIDE = {
+  near: 6, far: 9,            // in Zielnähe weich ausblenden (m), wie der v2.5-Pfeil
+  sizeM: 1.3,                 // Stern-Größe in der Welt (m) → Bildpixel, geklemmt:
+  px: { port: [44, 66], land: [38, 54] },
+  lift: 6,                    // Luft zwischen Stern-Spitze und Oberkante des Ziels (px)
+  edgeHyst: 16,               // Bildrand-Hysterese Stern ↔ Randpfeil (px)
+  backHyst: 0.5,              // Ziel hinten: Seite wechselt erst, wenn es ≥ 0,5 rad (≈ 29°) auf der anderen Seite liegt
+  badgeDy: 3, badgeHyst: 0.6, // ▲/▼ ab 3 m Höhenunterschied (nur Ziel außerhalb des Bildes), Hysterese 0,6 m
+  edgeK: { port: 1, land: 0.75 }, // Randpfeil-Größe (64×80 px = 1)
+  dimFig: 0.35,               // Stern über der Figur: blasser
+  fade: 8,                    // Ein-/Ausblend-Tempo (1/s)
+};
 // Zielpfeil: Ausblenden in Zielnähe (weich zwischen near und far, m), Abstand zur Kamera (hoch/quer, m)
 const ARROW = { near: 6, far: 9 };
 const AR_D = { port: 9.5, land: 7 };
@@ -66,7 +80,9 @@ export class Game {
     this.flyers = null;
     this.state = 'idle'; // idle | countdown | play | won | failed | paused
     this.tasks = [];
+    this.guideMode = new URLSearchParams(location.search).get('ziel') === 'pfeil' ? 'pfeil' : 'marker'; // A/B (v2.6)
     this.buildArrow();
+    this.buildGuide();
     // Regenwolken
     const rb = new Build();
     [[0, 0, 0, 2.6], [2.3, -0.3, 0.4, 1.9], [-2.2, -0.2, -0.3, 2.0], [0.6, 0.9, -0.2, 1.8], [-0.8, -0.4, 1.4, 1.6]].forEach(([x, y, z, r]) => rb.add(P.ico(r, 2), 0xffffff, { p: [x, y, z], s: [1, 0.75, 1] }));
@@ -221,7 +237,7 @@ export class Game {
     this.animals.clear();
     this.wasps.setup([]);
     this.bursts.clear();
-    this.arrow.visible = false; this.arrowA = 0;
+    this.arrow.visible = false; this.arrowA = 0; this.guideOff();
     this.state = 'idle';
     this.player.frozen = false; this.player.cheer = false; this.player.hover = false; this.finale = null; this.app.timeScale = 1; this.rollQ = null;
     document.body.classList.remove('won');
@@ -604,8 +620,8 @@ export class Game {
     else this.wasps.update(dt, t, null);
     // Kombo verfällt
     if (this.combo > 0 && this.time - this.lastHit > this.diffCfg.comboWin) { this.combo = 0; this.app.ui.combo(0); this.app.audio.setIntensity(0.4); }
-    // Zielpfeil
-    this.updateArrow(dt, t);
+    // Zielanzeige (v2.6) bzw. alter Zielpfeil (?ziel=pfeil)
+    if (this.guideMode === 'pfeil') this.updateArrow(dt, t); else this.updateGuide(dt);
     // Hinweise
     if (playing) this.hints();
     // Sieg / Zeit
@@ -781,6 +797,143 @@ export class Game {
     }
     return false;
   }
+
+  // ---------------------------------------------------------------- Zielanzeige v2.6 (DOM über dem Bild, 0 Draw-Calls)
+  buildGuide() {
+    const root = document.getElementById('guide'), q = (s) => root && root.querySelector(s);
+    this.guide = { mode: null, side: 0, badge: '', clamp: false, aM: 0, aE: 0, x: 0, y: 0, size: 0, tx: 0, ty: 0, ex: 0, ey: 0, dim: 1,
+      el: root ? { m: q('.gm'), e: q('.ge'), mb: q('.gm .bdg'), eb: q('.ge .bdg') } : null, w: {} };
+  }
+  guideOff() {
+    const S = this.guide; if (!S) return;
+    S.aM = S.aE = 0; S.mode = null; S.side = 0;
+    this.guideDraw();
+  }
+  // Ziel-Radius (Ring, Tropfen, Landeplatz …) aus den Aufgaben-Marken
+  guideMarks(tg) {
+    const pts = this._arrowPts || (this._arrowPts = []); pts.length = 0;
+    for (const tk of this.tasks) tk.marks && tk.marks(pts);
+    for (let i = 0; i < pts.length; i += 2) if (pts[i] === tg) return pts[i + 1];
+    return 0.7;
+  }
+  updateGuide(dt) {
+    const S = this.guide, G = GUIDE, pl = this.player, cam = this.app.camera, mm = THREE.MathUtils;
+    if (!S.el) return;
+    const tg = this.state === 'play' && this.diffCfg.arrow ? this.guideTarget() : null;
+    const want = tg ? mm.smoothstep(_v.subVectors(tg, pl.pos).length(), G.near, G.far) : 0;
+    let wantM = 0, wantE = 0;
+    if (want > 0) {
+      const L = this.guideLayout(cam), W = L.W, H = L.H;
+      cam.updateMatrixWorld();
+      const r = this.guideMarks(tg);
+      const [tx, ty, tz] = proj(tg, cam, W, H);
+      S.tx = tx; S.ty = ty;
+      // waagrechter Kamera-Rahmen: vorn/rechts → Winkel des Ziels um die Hochachse (0 = geradeaus, ±π = genau hinten)
+      _x.set(0, 0, -1).applyQuaternion(cam.quaternion); _x.y = 0; _x.normalize();
+      _w.subVectors(tg, cam.position);
+      const fw = _w.x * _x.x + _w.z * _x.z, rt = _w.z * _x.x - _w.x * _x.z;
+      const ang = Math.atan2(rt, fw);
+      let side = ang < 0 ? -1 : 1;
+      if (S.side && side !== S.side && Math.abs(ang) > Math.PI - G.backHyst) side = S.side; // kein Flackern hinten
+      S.side = side; S.ang = ang;
+      const dy = tg.y - pl.pos.y, tall = Math.abs(dy) > (S.badge ? G.badgeDy - G.badgeHyst : G.badgeDy);
+      const hy = S.mode === 'marker' ? -G.edgeHyst : G.edgeHyst; // drinbleiben leichter als hineinkommen
+      if (tz < 1 && fw > 0.5 && tx > L.x0 + hy && tx < L.x1 - hy) {
+        // Ziel im Bild (waagrecht): Stern schwebt darüber, Spitze zeigt auf das Ziel
+        S.mode = 'marker';
+        const d = Math.max(0.5, tg.distanceTo(cam.position));
+        const size = mm.clamp(G.sizeM * L.f / d, L.px[0], L.px[1]);
+        _pu.copy(tg); _pu.y += r;
+        const topY = proj(_pu, cam, W, H)[1];
+        const yMin = L.y0 + size, yMax = L.y1, vy = S.clamp ? G.edgeHyst : 0;
+        const out = ty < L.y0 - vy || ty > L.y1 + vy; // senkrecht außerhalb (sehr hoch/tief): Stern am Rand, ohne Spitze
+        let x = tx, y = out ? mm.clamp(ty, yMin, yMax) : mm.clamp(Math.min(ty, topY) - G.lift, yMin, yMax);
+        S.clamp = out; S.badge = out && tall ? (dy > 0 ? 'up' : 'dn') : '';
+        // ▲/▼-Steuerhilfe und STUNT-Knopf nicht verdecken: senkrecht daran vorbei (Spitze bleibt über dem Ziel, z. B. im
+        // Ring); nur wenn das Ziel selbst darunter liegt, seitlich daneben
+        for (const u of L.icons) {
+          if (!(x + size / 2 > u.left - 4 && x - size / 2 < u.right + 4 && y > u.top - 4 && y - size < u.bottom + 4)) continue;
+          const yy = u.bottom < H / 2 ? u.bottom + 4 + size : u.top - 4;
+          if (yy <= ty + 2 && yy - size >= L.y0) y = yy;
+          else x = tx < (u.left + u.right) / 2 ? u.left - size / 2 - 6 : u.right + size / 2 + 6;
+        }
+        S.x = x; S.y = y; S.size = size;
+        const R = [x - size / 2, y - size, x + size / 2, y];
+        wantM = this.guideHidden(R, L) ? 0 : 1;
+        // über der Figur: blasser statt weg (der Stern ist die Hauptinfo). Andere Ringe/Tropfen dürfen dahinter liegen –
+        // bei Ring-Parcours liegen die nächsten Ringe fast immer genau dort.
+        const c = pl.critter, pp = proj(pl.pos, cam, W, H), rad = 0.9 * (c ? c.size || 1 : 1) * L.f / Math.max(0.5, pl.pos.distanceTo(cam.position));
+        S.dim = c && pp[2] < 1 && pp[0] + rad > R[0] && pp[0] - rad < R[2] && pp[1] + rad > R[1] && pp[1] - rad < R[3] ? G.dimFig : 1;
+      } else {
+        // Ziel außerhalb des Bildes oder hinten: Randpfeil links/rechts = dorthin drehen
+        S.mode = 'edge'; S.clamp = false;
+        S.badge = tall ? (dy > 0 ? 'up' : 'dn') : '';
+        S.ex = side < 0 ? L.eL : L.eR;
+        if (L.eY !== null) S.ey = L.eY;
+        else { const pp = proj(pl.pos, cam, W, H); S.ey = mm.clamp(pp[1], H * 0.32, H * 0.68); }
+        const h = 40 * L.ek, w = 32 * L.ek;
+        wantE = this.guideHidden([S.ex - w, S.ey - h - (S.badge === 'up' ? 30 : 0), S.ex + w, S.ey + h + (S.badge === 'dn' ? 30 : 0)], L) ? 0 : 1;
+      }
+    }
+    const k = Math.min(1, dt * G.fade);
+    S.aM += (want * wantM - S.aM) * k; S.aE += (want * wantE - S.aE) * k;
+    if (S.aM < 0.01 && wantM === 0) S.aM = 0;
+    if (S.aE < 0.01 && wantE === 0) S.aE = 0;
+    this.guideDraw();
+  }
+  // Toast oder Kombo-Anzeige liegt drüber → ausblenden (wie beim v2.5-Pfeil)
+  guideHidden(R, L) {
+    const ui = this.app.ui.el;
+    for (const [el, rc] of [[ui.toast, L.toast], [ui.combo, L.combo]]) {
+      if (rc && el && el.classList.contains('show') && rc.right > R[0] && rc.left < R[2] && rc.bottom > R[1] && rc.top < R[3]) return true;
+    }
+    return false;
+  }
+  // Nur schreiben, was sich geändert hat (Stil-Schreiben ohne Layout-Lesen)
+  guideDraw() {
+    const S = this.guide, E = S.el; if (!E) return;
+    const w = S.w, L = this._guideL;
+    const set = (el, key, prop, val) => { if (w[key] !== val) { w[key] = val; el.style[prop] = val; } };
+    const om = S.aM * S.dim, oe = S.aE;
+    set(E.m, 'mv', 'visibility', om > 0.01 ? 'visible' : 'hidden');
+    set(E.e, 'ev', 'visibility', oe > 0.01 ? 'visible' : 'hidden');
+    if (om > 0.01) {
+      set(E.m, 'mo', 'opacity', om.toFixed(2));
+      set(E.m, 'mt', 'transform', `translate3d(${S.x.toFixed(1)}px,${S.y.toFixed(1)}px,0) scale(${(S.size / 64).toFixed(3)})`);
+      const cls = 'gm' + (S.clamp ? ' clamp' : ''); if (w.mc !== cls) { w.mc = cls; E.m.className = cls; }
+      const b = S.mode === 'marker' ? S.badge : ''; if (w.mb !== b) { w.mb = b; E.mb.className = 'bdg ' + b; E.mb.textContent = b === 'up' ? '▲' : b === 'dn' ? '▼' : ''; }
+    }
+    if (oe > 0.01) {
+      set(E.e, 'eo', 'opacity', oe.toFixed(2));
+      set(E.e, 'et', 'transform', `translate3d(${S.ex.toFixed(1)}px,${S.ey.toFixed(1)}px,0) scale(${(L ? L.ek : 1).toFixed(3)})`);
+      const cls = 'ge' + (S.side < 0 ? ' l' : ' r'); if (w.ec !== cls) { w.ec = cls; E.e.className = cls; }
+      const b = S.mode === 'edge' ? S.badge : ''; if (w.eb !== b) { w.eb = b; E.eb.className = 'bdg ' + b; E.eb.textContent = b === 'up' ? '▲' : b === 'dn' ? '▼' : ''; }
+    }
+  }
+  // Bildbereiche aus dem echten HUD (zweimal pro Sekunde gemessen): Stern-Zone zwischen den Lenkzonen-Symbolen ◀ ▶ und
+  // unter der Kopfleiste; Randpfeil gleich innen neben ◀ bzw. ▶ (auf deren Höhe) bzw. mit Joystick am Bildrand
+  guideLayout(cam) {
+    const sz = this.app.renderer.r.getSize(_sz), H = sz.y || innerHeight, W = sz.x || innerWidth;
+    const now = performance.now(), C = this._guideL || (this._guideL = { t: -1e9 });
+    if (now - C.t > 500 || C.W !== W || C.H !== H || C.fov !== cam.fov) {
+      C.t = now; C.W = W; C.H = H; C.fov = cam.fov;
+      const q = (sel) => { const e = document.querySelector(sel), r = e && e.getBoundingClientRect(); return r && r.width ? r : null; };
+      const top = q('.hudtop'), zl = q('#zones .zl i'), zr = q('#zones .zr i'), zu = q('#zones .zu i'), zd = q('#zones .zd i'), show = q('#bShow');
+      const port = W < H, G = GUIDE;
+      C.f = H / 2 / Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2);
+      C.px = port ? G.px.port : G.px.land; C.ek = port ? G.edgeK.port : G.edgeK.land;
+      C.x0 = zl ? zl.right + 6 : W * 0.08; C.x1 = zr ? zr.left - 6 : W * 0.92;
+      C.y0 = (top ? top.bottom : 62) + 6; C.y1 = H - 28;
+      C.icons = [zu, zd, show].filter(Boolean);               // ▲/▼-Steuerhilfe und STUNT-Knopf frei lassen
+      const hw = 32 * C.ek;
+      C.eL = (zl ? zl.right + 14 : 8) + hw; C.eR = (zr ? zr.left - 14 : W - 8) - hw; // Abstand: Schubs-Animation nach außen
+      C.eY = zl ? (zl.top + zl.bottom) / 2 : null;
+      C.toast = q('#toast'); C.combo = q('#combo');
+      // (leere Meldung ist flacher: Höhe fest wie beim Pfeil)
+      if (C.toast && port) C.toast = { left: C.toast.left, right: C.toast.right, top: C.toast.top, bottom: C.toast.top + 54 };
+    }
+    return C;
+  }
   hints() {
     const H = this.shownHints, T = this.time, ui = this.app.ui;
     if (this.level.tutorial && this.app.firstTime('tut1')) {
@@ -798,7 +951,7 @@ export class Game {
     const stars = 1 + (this.time <= this.par ? 1 : 0) + (third ? 1 : 0);
     this.stars = stars;
     this.player.frozen = false;
-    this.arrow.visible = false;
+    this.arrow.visible = false; this.guideOff();
     document.body.classList.add('won'); // Steuer-Pfeile ausblenden – Bühne frei fürs Finale
     this.app.audio.setIntensity(0.9);
     this.startFinale();

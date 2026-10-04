@@ -10,7 +10,9 @@ PIXEL7_LAND = dict(PIXEL7, viewport={"width": 915, "height": 412})
 # 60 statt 5 fps, 0,2 statt 3 CPU-Kerne, gleiches Bild. Bisher SwiftShader (reine CPU-Emulation).
 # --enable-unsafe-swiftshader nur als Rückfall, falls Metal einmal fehlt (dann warnt _check_gl).
 # SwiftShader erzwingen: WEBGL=swiftshader python3 tests/<test>.py
-GPU_ARGS = ["--use-angle=metal", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"]
+# Windows (rog17): ANGLE/D3D11 statt Metal (Plattform-Weiche, Mac unverändert)
+GPU_ANGLE, GPU_NAME = ("d3d11", "Direct3D") if sys.platform == 'win32' else ("metal", "Metal")
+GPU_ARGS = ["--use-angle=" + GPU_ANGLE, "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"]
 SWIFT_ARGS = ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"]
 ARGS = SWIFT_ARGS if os.environ.get('WEBGL') == 'swiftshader' else GPU_ARGS
 GL_RENDERER = """(() => { const gl = __app.renderer.r.getContext(); const e = gl.getExtension('WEBGL_debug_renderer_info');
@@ -44,7 +46,7 @@ class Session:
         _gl_checked = True
         try: r = self.ev(GL_RENDERER)
         except Exception as e: r = 'unbekannt (' + str(e)[:80] + ')'
-        if ARGS is GPU_ARGS and 'Metal' not in str(r):
+        if ARGS is GPU_ARGS and GPU_NAME not in str(r):
             print('WARNUNG WebGL läuft nicht auf der GPU:', r, file=sys.stderr, flush=True)
     def ev(self, js, arg=None):
         return self.pg.evaluate(js, arg) if arg is not None else self.pg.evaluate(js)
