@@ -36,6 +36,8 @@ MEASURE = """(() => { const g = __app.game, S = g.guide, cam = __app.camera, THR
   const rc = (sel) => { const e = document.querySelector(sel); if (!e) return null; const b = e.getBoundingClientRect(); return b.width ? [b.left, b.top, b.right, b.bottom].map(v => +v.toFixed(1)) : null; };
   const shown = (sel) => { const e = document.querySelector(sel), cs = getComputedStyle(e); return cs.visibility === 'visible' && +cs.opacity > 0.05 && cs.display !== 'none'; };
   const op = (sel) => +getComputedStyle(document.querySelector(sel)).opacity;
+  const fb = new THREE.Box3().setFromObject(p.critter.root, true), fig = [1e9, 1e9, -1e9, -1e9];
+  for (let i = 0; i < 8; i++) { const [x, y] = px(new THREE.Vector3(i & 1 ? fb.max.x : fb.min.x, i & 2 ? fb.max.y : fb.min.y, i & 4 ? fb.max.z : fb.min.z)); fig[0] = Math.min(fig[0], x); fig[1] = Math.min(fig[1], y); fig[2] = Math.max(fig[2], x); fig[3] = Math.max(fig[3], y); }
   const t = tg ? px(tg) : null, top = tg ? px(tg.clone().setY(tg.y + g.guideMarks(tg))) : null; // Oberkante Ziel (Ring-Radius …)
   // Seite unabhängig vom Spielcode: Kamera-Rechts-Vektor · (Ziel − Kamera)
   const right = new THREE.Vector3(1, 0, 0).applyQuaternion(cam.quaternion), fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(cam.quaternion);
@@ -48,6 +50,7 @@ MEASURE = """(() => { const g = __app.game, S = g.guide, cam = __app.camera, THR
   return { W, H, mode: S.mode, side: S.side, clamp: S.clamp, aM: +S.aM.toFixed(3), aE: +S.aE.toFixed(3), size: +S.size.toFixed(1),
     td: tg ? +tg.distanceTo(p.pos).toFixed(1) : null, dy: tg ? +(tg.y - p.pos.y).toFixed(2) : null,
     t: t && t.map(v => +v.toFixed(1)), top: top && top.map(v => +v.toFixed(1)), expSide: rel ? Math.sign(rel.dot(right)) : 0, ahead: rel ? +rel.clone().setY(0).normalize().dot(fwd.clone().setY(0).normalize()).toFixed(3) : 0,
+    lifted: !!S.lifted, fig: fig.map(v => +v.toFixed(1)), figHit: m.on && !!m.star && ov(m.star, fig),
     m, e, mHit: m.on ? hits(m.rect) : [], eHit: e.on ? hits(e.rect) : [], toast: document.querySelector('#toast').classList.contains('show') };
 })()"""
 
@@ -78,8 +81,10 @@ def marker_ok(m, strict=True):
     gap = min(m['t'][1], m['top'][1]) - tipb     # px zwischen Spitze und Oberkante des Ziels (Spitze liegt darüber)
     dx = tipx - m['t'][0]
     down = (M['tip'][1] + M['tip'][3]) / 2 > (M['star'][1] + M['star'][3]) / 2  # Spitze unter dem Stern = zeigt aufs Ziel
-    ok = tipb <= m['t'][1] + 4 and gap < 40 and abs(dx) < 4 and down and M['badge'] != '▲' and not m['e']['on'] and not m['mHit']
-    return ok, {'gap': round(gap, 1), 'dx': round(dx, 1), 'down': down}
+    # über die Figur gehoben: Spitze knapp über ihrem Kopf statt knapp über dem Ziel
+    near = gap < 40 or (m['lifted'] and tipb <= m['fig'][1] + 12)
+    ok = tipb <= m['t'][1] + 4 and near and abs(dx) < 4 and down and not (m['figHit'] and M['op'] > 0.5) and M['badge'] != '▲' and not m['e']['on'] and not m['mHit']
+    return ok, {'gap': round(gap, 1), 'dx': round(dx, 1), 'down': down, 'lifted': m['lifted'], 'figHit': m['figHit']}
 
 res = {}
 with sync_playwright() as pw:

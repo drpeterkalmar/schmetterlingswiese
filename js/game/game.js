@@ -27,7 +27,7 @@ export const GUIDE = {
   backHyst: 0.5,              // Ziel hinten: Seite wechselt erst, wenn es ≥ 0,5 rad (≈ 29°) auf der anderen Seite liegt
   badgeDy: 3, badgeHyst: 0.6, // ▲/▼ ab 3 m Höhenunterschied (nur Ziel außerhalb des Bildes), Hysterese 0,6 m
   edgeK: { port: 1, land: 0.75 }, // Randpfeil-Größe (64×80 px = 1)
-  dimFig: 0.35,               // Stern über der Figur: blasser
+  dimFig: 0.35,               // Stern über der Figur (nur falls Anheben nicht geht): blasser
   fade: 8,                    // Ein-/Ausblend-Tempo (1/s)
 };
 // Zielpfeil: Ausblenden in Zielnähe (weich zwischen near und far, m), Abstand zur Kamera (hoch/quer, m)
@@ -36,7 +36,7 @@ const AR_D = { port: 9.5, land: 7 };
 const G_BEND = 0.0009; // = uBend (gfx.js)
 const uBendAt = (p, c) => G_BEND * ((p.x - c.x) ** 2 + (p.z - c.z) ** 2);
 const SEAT_TMP = { pos: new THREE.Vector3(), n: new THREE.Vector3(), yaw: null };
-const _pv = new THREE.Vector3(), _pr = new THREE.Vector3(), _pu = new THREE.Vector3(), _sz = new THREE.Vector2();
+const _pv = new THREE.Vector3(), _pr = new THREE.Vector3(), _pu = new THREE.Vector3(), _sz = new THREE.Vector2(), _fb = new THREE.Box3();
 // Weltpunkt → Bildschirm-Pixel (inkl. Weltkrümmung wie im Shader); z > 1 = hinter der Kamera
 function proj(p, cam, W, H) {
   _pv.copy(p); _pv.y -= uBendAt(p, cam.position); _pv.project(cam);
@@ -857,13 +857,18 @@ export class Game {
           if (yy <= ty + 2 && yy - size >= L.y0) y = yy;
           else x = tx < (u.left + u.right) / 2 ? u.left - size / 2 - 6 : u.right + size / 2 + 6;
         }
+        // nie über der Figur: Stern über ihren Kopf heben (bleibt senkrecht über dem Ziel); geht das nicht, blasser.
+        // Andere Ringe/Tropfen dürfen dahinter liegen – bei Ring-Parcours liegen die nächsten Ringe fast immer genau dort.
+        const F = this.guideFig(cam, L);
+        const onFig = (yy) => F && F[0] < x + size / 2 && F[2] > x - size / 2 && F[1] < yy && F[3] > yy - size;
+        S.lifted = false; S.dim = 1;
+        if (onFig(y)) {
+          const yy = F[1] - 3;
+          if (yy - size >= L.y0 && !L.icons.some(u => x + size / 2 > u.left && x - size / 2 < u.right && yy > u.top && yy - size < u.bottom)) { y = yy; S.lifted = true; }
+          else S.dim = G.dimFig;
+        }
         S.x = x; S.y = y; S.size = size;
-        const R = [x - size / 2, y - size, x + size / 2, y];
-        wantM = this.guideHidden(R, L) ? 0 : 1;
-        // über der Figur: blasser statt weg (der Stern ist die Hauptinfo). Andere Ringe/Tropfen dürfen dahinter liegen –
-        // bei Ring-Parcours liegen die nächsten Ringe fast immer genau dort.
-        const c = pl.critter, pp = proj(pl.pos, cam, W, H), rad = 0.9 * (c ? c.size || 1 : 1) * L.f / Math.max(0.5, pl.pos.distanceTo(cam.position));
-        S.dim = c && pp[2] < 1 && pp[0] + rad > R[0] && pp[0] - rad < R[2] && pp[1] + rad > R[1] && pp[1] - rad < R[3] ? G.dimFig : 1;
+        wantM = this.guideHidden([x - size / 2, y - size, x + size / 2, y], L) ? 0 : 1;
       } else {
         // Ziel außerhalb des Bildes oder hinten: Randpfeil links/rechts = dorthin drehen
         S.mode = 'edge'; S.clamp = false;
@@ -880,6 +885,20 @@ export class Game {
     if (S.aM < 0.01 && wantM === 0) S.aM = 0;
     if (S.aE < 0.01 && wantE === 0) S.aE = 0;
     this.guideDraw();
+  }
+  // Bildschirm-Rechteck der Figur (Flügel, Hut … eingeschlossen): Hülle relativ zur Figur zweimal pro Sekunde messen,
+  // je Bild nur 8 Ecken projizieren
+  guideFig(cam, L) {
+    const pl = this.player, c = pl.critter; if (!c) return null;
+    if (L.figT !== L.t) { L.figT = L.t; const b = _fb.setFromObject(c.root); L.fb0 = b.min.sub(pl.pos).toArray(L.fb0); L.fb1 = b.max.sub(pl.pos).toArray(L.fb1); }
+    const a = L.fb0, b = L.fb1, R = this._figR || (this._figR = [0, 0, 0, 0]);
+    R[0] = R[1] = 1e9; R[2] = R[3] = -1e9;
+    for (let i = 0; i < 8; i++) {
+      _pr.set(pl.pos.x + (i & 1 ? b[0] : a[0]), pl.pos.y + (i & 2 ? b[1] : a[1]), pl.pos.z + (i & 4 ? b[2] : a[2]));
+      const [x, y, z] = proj(_pr, cam, L.W, L.H); if (z > 1) return null;
+      R[0] = Math.min(R[0], x); R[1] = Math.min(R[1], y); R[2] = Math.max(R[2], x); R[3] = Math.max(R[3], y);
+    }
+    return R;
   }
   // Toast oder Kombo-Anzeige liegt drüber → ausblenden (wie beim v2.5-Pfeil)
   guideHidden(R, L) {
