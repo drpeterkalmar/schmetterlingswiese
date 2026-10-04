@@ -64,3 +64,5 @@ Einzelfälle `tests/shots/v26/ziel_<fall>_<hoch|quer>.jpg`.
   Wettflug, Tiere, Landen, Fang, Schmuck, Magnet, Glitzer, UI, Werkstatt, PWA/offline, Audio, Fluggeräusch, Anatomie,
   Speicherlecks, Leistung, Bildzeiten.
 - Leistung: 60 fps, CPU pro Bild 0,61–0,65 ms (v2.5: 0,70–0,85 ms), also nicht schlechter.
+- Live (github.io): Pages-Build fertig, `sw.js`-Version live = lokal (`fe8b0c2faf`, Spiel 2.6.0); `test_live.py` gegen
+  github.io **0 Fehler** (Ton nach dem Tipp, Level gewonnen, Freischaltung, offline neu laden).
