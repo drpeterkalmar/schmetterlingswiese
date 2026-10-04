@@ -16,7 +16,7 @@ import { Input } from './input.js';
 import { UI } from './ui/ui.js';
 import { STUNTS, FINALES } from './game/stunts.js';
 
-export const VERSION = '2.5.1';
+export const VERSION = '2.6.0';
 
 class App {
   constructor() {

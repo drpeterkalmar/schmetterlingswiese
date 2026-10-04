@@ -17,7 +17,7 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
   Wettfliegen gegen Flora Falter und Lilli Libelle, Glühwürmchen und fallende Kirschblüten fangen
 - **1–3 Sterne pro Level:** Aufgabe geschafft · schnell genug · Glitzerstern gefunden (Schwer: große Kombo);
   **Wettflüge (v2.5):** nur Zeiten zählen – Rennen gewonnen · schneller als par · ⚡ Blitzzeit (0,8 · par), kein Glitzerstern
-- **Schwierigkeit:** 🌱 Leicht (kein Zeitdruck, Zielpfeil hoch am Himmel, Magnet, man kann nicht verlieren) ·
+- **Schwierigkeit:** 🌱 Leicht (kein Zeitdruck, Zielanzeige, Magnet, man kann nicht verlieren) ·
   🌼 Mittel · 🔥 Schwer (Zeitlimit, Windböen, freche Wespen, kleinere Ringe)
 - **Werkstatt (v2.2):** alle 6 Grundfiguren ab Start, freie Farbwahl je Figur (24er-Palette + 🎲 Zufall),
   Größe, Flügelform, Fühler, Augenstil, Flügelmuster, Hüte – jede Figur merkt sich ihr eigenes Outfit
@@ -33,6 +33,10 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
   Seerosenblätter und Mondblumen tragen jede Figur, Größe, jeden Hut und Schmuck, ohne dass etwas durchschneidet;
   **v2.5.1:** Landen ist leichter – ▼ kurz tippen reicht im großen Leuchtkreis, die Blume „fängt“ die Figur und holt sie
   herein (▲ bricht ab); `?landen=<Faktor>` in der URL stellt den Fangbereich ein (1 = wie v2.5.0)
+- **Zielanzeige (v2.6):** Ein leuchtender Stern schwebt über dem nächsten Ziel, solange es im Bild ist. Ist es
+  außerhalb oder hinter dir, zeigt ein gelber Randpfeil neben ◀ bzw. ▶, wohin du drehen sollst. Liegt das Ziel deutlich
+  höher oder tiefer, kommt ein kleines ▲/▼ dazu (= steigen/sinken). Auf Leicht und Mittel; `?ziel=pfeil` zeigt zum
+  Vergleich den alten 3D-Pfeil aus v2.5
 - **Tierbabys (v2.4):** Bärenbaby, Capybara, Häschen und Entchen mit Schnauze, Pfoten mit Ballen, Bauchfell und
   Schwänzchen; sie laufen mit echten Beinbewegungen, blinzeln, zucken mit den Ohren, schauen dich an, wenn du nah
   bist, und freuen sich über Besuch mit Hüpfer, ^ ^-Augen und Herzchen
