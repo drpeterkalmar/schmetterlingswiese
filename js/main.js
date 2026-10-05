@@ -16,7 +16,7 @@ import { Input } from './input.js';
 import { UI } from './ui/ui.js';
 import { STUNTS, FINALES } from './game/stunts.js';
 
-export const VERSION = '2.6.0';
+export const VERSION = '2.7.0';
 
 class App {
   constructor() {
@@ -243,15 +243,18 @@ class App {
   quit() { this.toShowcase(); this.ui.show('map'); }
   onWon(res) {
     const lvl = this.game.level;
+    const open0 = WORLDS.map(w => this.progress.worldOpen(w.id));
     const rec = this.progress.record(lvl.id, this.diff, res, !!lvl.daily);
-    this.lastResult = { ...res, ...rec, level: lvl, diff: this.diff };
+    // v2.7: Welt, die dieser Sieg gerade geöffnet hat (Ergebnis zeigt „Neue Welt offen“)
+    const nw = WORLDS.find((w, i) => !open0[i] && this.progress.worldOpen(w.id));
+    this.lastResult = { ...res, ...rec, level: lvl, diff: this.diff, newWorld: nw ? nw.id : null };
     this.ui.hideHints();
   }
   onFailed(msg) { setTimeout(() => this.ui.show('fail', { msg }), 900); }
+  // v2.7 „Weiter“: nächste Mission derselben Welt; nach der letzten die erste der nächsten Welt (falls offen)
   nextLevel() {
-    const i = LEVELS.findIndex(l => l.id === this.levelId);
-    const n = LEVELS[i + 1];
-    if (n && this.progress.unlocked(n.id)) this.ui.show('levelcard', { id: n.id });
+    const n = this.progress.nextMission(this.levelId);
+    if (n) this.ui.show('levelcard', { id: n });
     else this.quit();
   }
   stat(k) { this.progress.stat(k); }
@@ -279,6 +282,12 @@ class App {
   autoSteer() {
     const g = this.game, pl = this.player;
     const task = g.tasks.find(t => !t.done);
+    if (task && task.cfg.type === 'stunts' && task.s < task.needS && g.state === 'play' && !pl.landed) {
+      // v2.7 Kunststück-Mission: 🎪 tippen, sobald der Knopf bereit ist (wie ein Kind), dazwischen sanfte Kurve in sicherer Höhe
+      const alt = pl.pos.y - height(pl.pos.x, pl.pos.z);
+      if (!pl.stunt && alt > 3 && g.showReady()) this.input.actions.push('show');
+      this.input.injected = { turn: 0.25, climb: alt < 5 ? 1 : 0 }; return;
+    }
     if (task && task.cfg.type === 'stunts' && !pl.stunt && !pl.landed && g.state === 'play') {
       const alt = pl.pos.y - height(pl.pos.x, pl.pos.z);
       if (alt < 5) { this.input.injected = { turn: 0, climb: 1 }; return; }
@@ -311,6 +320,8 @@ class App {
   // Abklingring als Kind-Element (der Knopf selbst bleibt ruhig) – DOM nur bei Änderung anfassen
   showBtnUpdate() {
     const g = this.game, ready = g.showReady(), cd = ready ? 1 : Math.round(g.showCd() * 50) / 50;
+    const want = g.tasks.some(t => t.needS && !t.done);
+    if (want !== this._want) { this._want = want; this.showBtn.classList.toggle('want', want); }
     if (cd === this._cd) return;
     this._cd = cd;
     this.showBtn.classList.toggle('ready', ready);
@@ -410,6 +421,7 @@ window.__game = {
   timeScale: () => app.timeScale,
   autopilot: (on = true) => { app.autopilot = on; if (!on) app.input.injected = null; },
   levels: () => LEVELS.map(l => l.id),
+  unlocked: () => LEVELS.filter(l => app.progress.unlocked(l.id)).map(l => l.id),
   daily: () => dailyLevel().id,
   show: (s, d) => app.ui.show(s, d),
   setQuality: (q) => app.setSetting('quality', q),

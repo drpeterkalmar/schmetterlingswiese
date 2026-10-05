@@ -23,7 +23,7 @@ def run(dev, tag):
         s.ev("__app.progress.cur.levels['1-1'] = {leicht: {stars: 3}, mittel: {stars: 3}, schwer: {stars: 3}}; __app.progress.cur.levels['1-2'] = {leicht: {stars: 3}}; __app.progress.save()")
         s.tap('[data-a=wardrobe]'); time.sleep(1)
         for char in ['schmetterling', 'katze']:
-            if char == 'katze': s.ev("__app.progress.cur.levels['9'] = {leicht: {stars: 90}}; __app.progress.save()"); s.tap('[data-a=wtab][data-v=figur]'); s.tap('[data-a=wchar][data-v=katze]')
+            if char == 'katze': s.ev("__app.progress.cur.levels['9'] = {leicht: {stars: 200}}; __app.progress.save()"); s.tap('[data-a=wtab][data-v=figur]'); s.tap('[data-a=wchar][data-v=katze]')
             for t in ['figur', 'farbe', 'form', 'fluegel', 'hut', 'spur']:
                 s.tap(f'[data-a=wtab][data-v={t}]'); time.sleep(1.4)
                 s.shot(f'v22/werkstatt_{tag}_{char}_{t}')

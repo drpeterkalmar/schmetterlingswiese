@@ -10,7 +10,7 @@ BASE = "{char: 'schmetterling', look: {}}"
 with sync_playwright() as pw:
     s = Session(pw, dpr=1)
     s.open(); s.tap('#title'); s.pg.fill('input.name', 'Perf'); s.tap('[data-a=create]')
-    s.ev("__app.progress.cur.levels['t'] = {leicht: {stars: 135}}; __app.progress.save()")
+    s.ev("__app.progress.cur.levels['t'] = {leicht: {stars: 360}}; __app.progress.save()")
     out = {'A': [], 'B': [], 'C': []}
     for q in [0]:
         s.ev(f"__game.setQuality({q})")

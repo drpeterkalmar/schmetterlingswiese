@@ -19,3 +19,5 @@ tests/shots/v24/*.png
 tests/shots/v25/*.png
 !tests/shots/v26/
 tests/shots/v26/*.png
+!tests/shots/v27/
+tests/shots/v27/*.png

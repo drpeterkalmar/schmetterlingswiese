@@ -1,6 +1,7 @@
 // Fortschritt & Profile (localStorage), Sammelalbum, Abzeichen, Freischaltungen
-import { LEVELS, todayStr } from './levels.js';
-import { CHARACTERS, HATS, EXTRAS, SKINS, TRAILS, SIZES, FUN, fullLook } from '../actors/characters.js';
+import { LEVELS, todayStr, worldUnlockNeed } from './levels.js';
+import { WORLDS } from './worlds.js';
+import { CHARACTERS, HATS, EXTRAS, SKINS, TRAILS, SIZES, FUN, STARS_V26, fullLook } from '../actors/characters.js';
 
 const KEY = 'schmetterlingswiese.v2';
 export const AVATAR_COLORS = ['#ff7eb6', '#7cc4ff', '#ffc94a', '#9ce07a', '#b89cff', '#ff9a5a'];
@@ -33,11 +34,11 @@ export const BADGES = [
   { id: 'tierfreund', emoji: '💞', name: 'Tierfreund', desc: '15 Tierbabys glücklich gemacht', check: (p) => (p.stats.animals || 0) >= 15 },
   { id: 'kombo10', emoji: '🔥', name: 'Kombo-König', desc: 'Eine 10er-Kombo geschafft', check: (p) => (p.stats.bestCombo || 0) >= 10 },
   { id: 'glitzer', emoji: '⭐', name: 'Sternensucher', desc: '5 Glitzersterne gefunden', check: (p) => (p.stats.glitter || 0) >= 5 },
-  { id: 'welt1', emoji: '🌼', name: 'Wiesen-Held', desc: 'Frühlingswiese komplett', check: (p) => worldDone(p, 'wiese') },
-  { id: 'welt2', emoji: '🌻', name: 'Sonnenkind', desc: 'Sonnenblumenfeld komplett', check: (p) => worldDone(p, 'sonne') },
-  { id: 'welt3', emoji: '🪷', name: 'Teich-Taucher', desc: 'Seerosenteich komplett', check: (p) => worldDone(p, 'teich') },
-  { id: 'welt4', emoji: '🌸', name: 'Blütenzauber', desc: 'Kirschblütenhain komplett', check: (p) => worldDone(p, 'kirsch') },
-  { id: 'welt5', emoji: '✨', name: 'Nachtfalter', desc: 'Glühwürmchen-Abend komplett', check: (p) => worldDone(p, 'abend') },
+  { id: 'welt1', emoji: '🌼', name: 'Wiesen-Held', desc: 'Alle Missionen: Frühlingswiese', check: (p) => worldDone(p, 'wiese') },
+  { id: 'welt2', emoji: '🌻', name: 'Sonnenkind', desc: 'Alle Missionen: Sonnenblumenfeld', check: (p) => worldDone(p, 'sonne') },
+  { id: 'welt3', emoji: '🪷', name: 'Teich-Taucher', desc: 'Alle Missionen: Seerosenteich', check: (p) => worldDone(p, 'teich') },
+  { id: 'welt4', emoji: '🌸', name: 'Blütenzauber', desc: 'Alle Missionen: Kirschblütenhain', check: (p) => worldDone(p, 'kirsch') },
+  { id: 'welt5', emoji: '✨', name: 'Nachtfalter', desc: 'Alle Missionen: Glühwürmchen-Abend', check: (p) => worldDone(p, 'abend') },
   { id: 'schwer', emoji: '💪', name: 'Mutig!', desc: 'Ein Level auf Schwer geschafft', check: (p) => Object.values(p.levels).some(l => l.schwer && l.schwer.stars > 0) },
   { id: 'dreisterne', emoji: '🌟', name: 'Drei-Sterne-Flieger', desc: '10 Mal drei Sterne', check: (p) => Object.values(p.levels).reduce((a, l) => a + Object.values(l).filter(d => d.stars === 3).length, 0) >= 10 },
   { id: 'tag3', emoji: '📅', name: 'Treue Flügel', desc: '3 Tagesaufgaben geschafft', check: (p) => Object.keys(p.daily.done || {}).length >= 3 },
@@ -56,7 +57,7 @@ function newProfile(name, color) {
     created: Date.now(), diff: 'leicht',
     look: { char: 'schmetterling', per: {} },
     levels: {}, stats: {}, album: {}, badges: {}, daily: { done: {} }, seen: {},
-    fun: { hupe: false, pupsTon: true }, seenUnl: {}, lv: 22,
+    fun: { hupe: false, pupsTon: true }, seenUnl: {}, keepUnl: {}, lv: 27,
   };
 }
 // v2.0/2.1 → v2.2: Aussehen je Figur (Farben explizit, Hut je Figur). Alte Felder bleiben unangetastet erhalten.
@@ -78,9 +79,27 @@ export function migrateProfile(p) {
   p.seenUnl = p.seenUnl || {};
   p.levels = p.levels || {}; p.stats = p.stats || {}; p.album = p.album || {}; p.badges = p.badges || {};
   p.daily = p.daily || { done: {} }; p.daily.done = p.daily.done || {}; p.seen = p.seen || {};
-  p.lv = 22;
+  // v2.7: Sterne-Schwellen der Werkstatt sind höher (40 statt 15 Missionen). Was ein Profil schon hatte, bleibt frei:
+  // einmalig alles merken, was mit den alten Schwellen (STARS_V26) freigeschaltet war.
+  p.keepUnl = p.keepUnl || {};
+  if ((p.lv || 0) < 27) {
+    const s = profileStars(p);
+    for (const [type, list] of Object.entries(LISTS)) for (const it of list) {
+      const old = it.stars && STARS_V26[type === 'size' ? 'riesig' : it.id];
+      if (old && s >= old) p.keepUnl[unlKey(type, it.id)] = 1;
+    }
+  }
+  p.lv = 27;
   return p;
 }
+// gesamte Sterne eines Profils (Level aller Stufen + je Tagesaufgabe 1)
+function profileStars(p) {
+  let n = 0;
+  for (const l of Object.values(p.levels || {})) for (const d of Object.values(l)) n += d.stars || 0;
+  return n + Object.keys((p.daily && p.daily.done) || {}).length;
+}
+// Schlüssel einer Freischaltung (Riese und Winzling teilen sich eine: size:xl)
+const unlKey = (type, id) => type === 'size' ? 'size:xl' : type + ':' + id;
 const LISTS = { char: CHARACTERS, hat: HATS, extra: EXTRAS, skin: SKINS, trail: TRAILS, size: SIZES, fun: FUN };
 const TYPE_NAME = { char: 'Figur', hat: 'Hut', extra: 'Extra', skin: 'Flügel', trail: 'Spur', size: 'Spaß', fun: 'Spaß' };
 
@@ -104,19 +123,33 @@ export class Progress {
   remove(id) { this.data.profiles = this.data.profiles.filter(p => p.id !== id); if (this.data.current === id) this.data.current = null; this.save(); }
   rename(id, name) { const p = this.data.profiles.find(q => q.id === id); if (p) { p.name = String(name).trim().slice(0, 14) || p.name; this.save(); } }
 
-  stars(p = this.cur) {
-    if (!p) return 0;
-    let n = 0;
-    for (const l of Object.values(p.levels)) for (const d of Object.values(l)) n += d.stars || 0;
-    n += Object.keys(p.daily.done || {}).length; // jede Tagesaufgabe = 1 Stern
-    return n;
-  }
+  stars(p = this.cur) { return p ? profileStars(p) : 0; } // jede Tagesaufgabe = 1 Stern
   levelStars(id, diff, p = this.cur) { return (p && p.levels[id] && p.levels[id][diff] && p.levels[id][diff].stars) || 0; }
   bestStars(id, p = this.cur) { const l = p && p.levels[id]; if (!l) return 0; return Math.max(0, ...Object.values(l).map(d => d.stars || 0)); }
+  // v2.7: in einer Welt der Reihe nach (Mission n braucht ≥ 1 Stern in Mission n−1); die erste Mission einer Welt öffnet,
+  // sobald in der Welt davor worldUnlockNeed (3) Missionen geschafft sind
   unlocked(id, p = this.cur) {
-    const i = LEVELS.findIndex(l => l.id === id);
-    if (i <= 0) return true;
-    return this.bestStars(LEVELS[i - 1].id, p) > 0;
+    const lvl = LEVELS.find(l => l.id === id);
+    if (!lvl) return true; // Tagesaufgabe
+    const wl = LEVELS.filter(l => l.world === lvl.world), i = wl.indexOf(lvl);
+    if (i > 0) return this.bestStars(wl[i - 1].id, p) > 0;
+    return this.worldOpen(lvl.world, p);
+  }
+  // geschaffte Missionen einer Welt (≥ 1 Stern auf irgendeiner Stufe)
+  worldCount(wid, p = this.cur) { return LEVELS.filter(l => l.world === wid && this.bestStars(l.id, p) > 0).length; }
+  worldOpen(wid, p = this.cur) {
+    const wi = WORLDS.findIndex(w => w.id === wid);
+    if (wi <= 0) return true;
+    const prev = WORLDS[wi - 1].id;
+    return this.worldCount(prev, p) >= worldUnlockNeed(prev);
+  }
+  // „Weiter“: nächste Mission derselben Welt; nach der letzten die erste der nächsten Welt – nur wenn offen
+  nextMission(id, p = this.cur) {
+    const lvl = LEVELS.find(l => l.id === id); if (!lvl) return null;
+    const wl = LEVELS.filter(l => l.world === lvl.world), i = wl.indexOf(lvl);
+    let n = wl[i + 1];
+    if (!n) { const wi = WORLDS.findIndex(w => w.id === lvl.world), nw = WORLDS[wi + 1]; n = nw && LEVELS.find(l => l.world === nw.id); }
+    return n && this.unlocked(n.id, p) ? n.id : null;
   }
   // Freischaltbares nach Sternen (v2.2: Figuren, Farben und Muster sind frei – freigeschaltet werden verrückte Sachen)
   unlockables() {
@@ -143,7 +176,7 @@ export class Progress {
   unseen(p = this.cur) {
     if (!p) return [];
     const s = this.stars(p);
-    return this.unlockables().filter(u => s >= u.stars && !p.seenUnl[u.type + ':' + u.id]);
+    return this.unlockables().filter(u => (s >= u.stars || p.keepUnl[u.type + ':' + u.id]) && !p.seenUnl[u.type + ':' + u.id]);
   }
   isNew(type, id, p = this.cur) {
     if (!p) return false;
@@ -164,7 +197,7 @@ export class Progress {
     p.stats.bestCombo = Math.max(p.stats.bestCombo || 0, res.maxCombo);
     if (res.maxCombo >= 10) p.album.regenbogen = p.album.regenbogen || Date.now();
     const after = this.stars(p);
-    const unlocks = this.unlockables().filter(u => u.stars > before && u.stars <= after);
+    const unlocks = this.unlockables().filter(u => u.stars > before && u.stars <= after && !p.keepUnl[u.type + ':' + u.id]);
     const badges = this.checkBadges(p).filter(b => !badgesBefore[b.id]);
     this.save();
     return { unlocks, badges, before, after };
@@ -183,6 +216,6 @@ export class Progress {
     if (!list) return true; // Farben, Muster, Formen, Augen, Fühler: alles frei
     const it = list.find(x => x.id === id);
     if (!it) return false;
-    return !it.stars || this.stars(p) >= it.stars;
+    return !it.stars || this.stars(p) >= it.stars || !!(p && p.keepUnl && p.keepUnl[unlKey(type, id)]);
   }
 }

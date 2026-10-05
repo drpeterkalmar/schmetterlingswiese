@@ -1,6 +1,6 @@
 // Oberfläche: Titel, Profile, Weltkarte, Level-Karte, HUD, Pause, Ergebnis, Garderobe, Album, Abzeichen, Einstellungen
 import { WORLDS } from '../game/worlds.js';
-import { LEVELS, DIFFS, levelById, levelsOfWorld, dailyLevel, todayStr, isRace, timeGoals } from '../game/levels.js';
+import { LEVELS, DIFFS, levelById, levelsOfWorld, dailyLevel, todayStr, isRace, timeGoals, rivalOf, worldUnlockNeed } from '../game/levels.js';
 import { AVATAR_COLORS, ALBUM, BADGES } from '../game/progress.js';
 import { CHARACTERS, COLORS, HATS, EXTRAS, PATTERNS, SKINS, TRAILS, SIZES, WINGFORMS, ANTENNAE, EYESTYLES, FUN, PALETTE, SLOT_NAMES, DEFAULT_LOOK, randomLook } from '../actors/characters.js';
 import { wingMask, glassWing, skinWing, tintMask, wingIcon } from '../engine/textures.js';
@@ -19,8 +19,8 @@ const TASKTXT = {
   land: (c) => `🛬 Lande auf ${c.n} ${c.on === 'lily' ? 'Seerosen' : c.on === 'sunflower' ? 'Sonnenblumen' : 'Mondblumen'} und nasche Nektar`,
   visit: (c) => `💞 Besuche ${c.n} Tierbabys`,
   deliver: (c) => `🍓 Bring ${c.n} Tierbabys eine Beere`,
-  stunts: (c) => `🤸 ${[c.loop ? `${c.loop} Looping${c.loop > 1 ? 's' : ''}` : '', c.roll ? `${c.roll} Schraube${c.roll > 1 ? 'n' : ''}` : ''].filter(Boolean).join(' und ')}`,
-  race: (c) => `🏁 Gewinne das Wettfliegen gegen ${c.rival === 'libelle' ? 'Lilli Libelle' : 'Flora Falter'}`,
+  stunts: (c) => c.show ? `🎪 Zeig ${c.show} Kunststücke mit dem STUNT-Knopf` : `🤸 ${[c.loop ? `${c.loop} Looping${c.loop > 1 ? 's' : ''}` : '', c.roll ? `${c.roll} Schraube${c.roll > 1 ? 'n' : ''}` : ''].filter(Boolean).join(' und ')}`,
+  race: (c) => `🏁 Gewinne das Wettfliegen gegen ${rivalOf(c.rival).full}`,
 };
 
 export class UI {
@@ -70,13 +70,15 @@ export class UI {
       case 'delyes': P.remove(v); this.show(P.profiles.length ? 'profiles' : 'newprofile'); break;
       case 'map': app.toShowcase(); this.show('map'); break;
       case 'diff': app.setDiff(v); this.show('map'); break;
-      case 'level': if (P.unlocked(v)) this.show('levelcard', { id: v }); else this.toastMenu('🔒 Schaffe zuerst das Level davor!'); break;
+      case 'level': if (P.unlocked(v)) this.show('levelcard', { id: v }); else this.toastMenu(this.lockText(v)); break;
+      case 'wlocked': this.toastMenu(this.lockText(levelsOfWorld(v)[0].id)); this.app.audio.sfx('back'); break;
       case 'daily': this.show('levelcard', { id: dailyLevel().id }); break;
       case 'go': app.startLevel(v); break;
       case 'resume': app.resume(); break;
       case 'restart': app.restart(); break;
       case 'quit': app.quit(); break;
       case 'next': app.toShowcase(); app.nextLevel(); break;
+      case 'nextw': app.toShowcase(); this.show('levelcard', { id: v }); break;
       case 'again': app.restart(); break;
       case 'wardrobe': app.toShowcase('wardrobe'); this.show('wardrobe'); break;
       case 'wtab': this.wardTab = v; this.show('wardrobe'); break;
@@ -135,6 +137,13 @@ export class UI {
     this.toastMenu(`🔒 Noch ${need} ⭐ – sammle Sterne in den Leveln!`);
     this.app.audio.sfx('back');
   }
+  // v2.7 Sperr-Hinweis: Mission davor in derselben Welt, oder X Missionen in der Welt davor
+  lockText(id) {
+    const P = this.app.progress, lvl = levelById(id), wl = levelsOfWorld(lvl.world), i = wl.indexOf(lvl);
+    if (i > 0) return `🔒 Schaffe zuerst Mission ${i}!`;
+    const wi = WORLDS.findIndex(w => w.id === lvl.world), pw = WORLDS[wi - 1];
+    return `🔒 Schaffe noch ${worldUnlockNeed(pw.id) - P.worldCount(pw.id)} Mission${worldUnlockNeed(pw.id) - P.worldCount(pw.id) > 1 ? 'en' : ''} in ${pw.emoji} ${pw.name}!`;
+  }
   toastMenu(txt) {
     let t = this.root.querySelector('.mtoast');
     if (!t) { t = document.createElement('div'); t.className = 'mtoast'; t.style.cssText = 'position:absolute;left:50%;bottom:calc(var(--sb) + 24px);transform:translateX(-50%);background:#fff;border-radius:999px;padding:12px 20px;font-weight:900;box-shadow:0 8px 24px rgba(60,30,90,.25);z-index:30;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis'; this.root.appendChild(t); }
@@ -146,7 +155,7 @@ export class UI {
     const k = this.loadK;
     return `<div class="screen" id="title" data-a="start">
       <div class="logo"><div class="bfly"><i class="sp s1">✨</i>🦋<i class="sp s2">✨</i></div><div class="t1">Schmetterlings&shy;wiese</div><div class="t2">Fliegen · Sammeln · Tierbabys besuchen</div>
-        <div class="neu">Neu: 🎪 Stunt-Knopf!</div></div>
+        <div class="neu">Neu: 8 Missionen pro Welt!</div></div>
       <div class="bottom"><div class="tapgo">👆 Tippe, um loszufliegen!</div>
       <div class="loadbar" style="${k >= 1 ? 'opacity:0' : ''}"><div style="width:${Math.round(k * 100)}%"></div></div>
       <div class="loadtxt" style="${k >= 1 ? 'opacity:0' : ''}">🎵 Klänge werden gezaubert … ${Math.round(k * 100)} %</div></div>
@@ -196,14 +205,28 @@ export class UI {
     const total = P.stars();
     const worlds = WORLDS.map((w, wi) => {
       const lv = levelsOfWorld(w.id);
-      const open = P.unlocked(lv[0].id);
+      const open = P.worldOpen(w.id);
       const ws = lv.reduce((a, l) => a + P.levelStars(l.id, diff), 0);
-      return `<div class="wcard" data-e="${w.emoji}" style="background:${WGRAD[w.id]}"><div class="whead"><div class="we">${w.emoji}</div><h3>${w.name}</h3><div class="tod">Welt ${wi + 1} · ${w.tod}</div>${open ? `<div class="wstars">⭐ ${ws} / ${lv.length * 3}</div>` : ''}</div>
-        <div class="lv">${lv.map((l, i) => { const u = P.unlocked(l.id); return `<button class="lvbtn ${u ? '' : 'locked'}" data-a="level" data-v="${l.id}"><span class="n">${u ? i + 1 : '🔒'}</span><span class="nm">${l.name}</span>${starsHtml(P.levelStars(l.id, diff))}</button>`; }).join('')}</div>
-        ${open ? '' : `<div class="wlock">🔒<div>Schaffe die Welt davor!</div></div>`}</div>`;
+      // v2.7 gesperrte Welt: „Schaffe 3 Missionen in <Welt davor>“ mit Fortschritt (Punkte ●●○)
+      const pw = WORLDS[wi - 1], need = pw ? worldUnlockNeed(pw.id) : 0, have = pw ? Math.min(need, P.worldCount(pw.id)) : 0;
+      const lock = open ? '' : `<div class="wlock" data-a="wlocked" data-v="${w.id}">🔒<div>Schaffe ${need} Missionen<br>in ${pw.emoji} ${pw.name}!</div>
+        <div class="wneed" aria-label="${have} von ${need}">${Array.from({ length: need }, (_, k) => `<i class="${k < have ? 'on' : ''}">${k < have ? '⭐' : ''}</i>`).join('')}</div><div class="wcount">${have} / ${need}</div></div>`;
+      return `<div class="wcard" data-e="${w.emoji}" data-w="${w.id}" style="background:${WGRAD[w.id]}"><div class="whead"><div class="we">${w.emoji}</div><div class="wtx"><h3>${w.name}</h3><div class="tod">Welt ${wi + 1} · ${w.tod}</div>${open ? `<div class="wstars">⭐ ${ws} / ${lv.length * 3}</div>` : ''}</div></div>
+        <div class="lvwrap"><div class="lv">${lv.map((l, i) => { const u = P.unlocked(l.id); return `<button class="lvbtn ${u ? '' : 'locked'}" data-a="level" data-v="${l.id}"><span class="n">${u ? i + 1 : '🔒'}</span><span class="nm">${l.name}</span>${starsHtml(P.levelStars(l.id, diff))}</button>`; }).join('')}</div><i class="more up" aria-hidden="true">▲</i><i class="more dn" aria-hidden="true">▼</i></div>
+        ${lock}</div>`;
     }).join('');
     const lastW = WORLDS.findIndex(w => w.id === (p.lastWorld || 'wiese'));
-    this.after = () => { const ws = this.root.querySelector('.worlds'); const c = ws && ws.children[Math.max(0, lastW)]; if (c) ws.scrollLeft = c.offsetLeft - (ws.clientWidth - c.clientWidth) / 2; };
+    this.after = () => {
+      const ws = this.root.querySelector('.worlds'); const c = ws && ws.children[Math.max(0, lastW)]; if (c) ws.scrollLeft = c.offsetLeft - (ws.clientWidth - c.clientWidth) / 2;
+      // v2.7: jede Missionsliste zur ersten offenen Mission ohne 3 Sterne (auf der gewählten Stufe) scrollen
+      this.root.querySelectorAll('.wcard').forEach(card => {
+        const lvEl = card.querySelector('.lv'), wrap = card.querySelector('.lvwrap');
+        const btns = [...lvEl.children], tgt = btns.find(b => !b.classList.contains('locked') && P.levelStars(b.dataset.v, diff) < 3);
+        if (tgt && lvEl.scrollHeight > lvEl.clientHeight + 2) lvEl.scrollTop = Math.max(0, tgt.offsetTop - lvEl.offsetTop - (lvEl.clientHeight - tgt.offsetHeight) / 2);
+        const upd = () => { wrap.classList.toggle('more-dn', lvEl.scrollTop + lvEl.clientHeight < lvEl.scrollHeight - 4); wrap.classList.toggle('more-up', lvEl.scrollTop > 4); };
+        lvEl.addEventListener('scroll', upd, { passive: true }); upd();
+      });
+    };
     return `<div class="screen" id="map">
       <div class="maptop"><button class="who" data-a="profiles">${this.avatar(p)}<span>${esc(p.name)}</span></button><div class="chip">⭐ ${total}</div><div class="spacer"></div><button class="round" data-a="settings" aria-label="Einstellungen">⚙️</button>
       <div class="seg">${Object.values(DIFFS).map(d => `<button data-a="diff" data-v="${d.id}" class="${d.id === diff ? 'sel' : ''}">${d.emoji} ${d.name}</button>`).join('')}</div></div>
@@ -240,9 +263,9 @@ export class UI {
   }
   s_result(r) {
     const lvl = r.level;
-    const i = LEVELS.findIndex(l => l.id === lvl.id);
-    const hasNext = !lvl.daily && LEVELS[i + 1];
+    const hasNext = !lvl.daily && this.app.progress.nextMission(lvl.id);
     r.hasNext = !!hasNext;
+    const nw = r.newWorld && WORLDS.find(w => w.id === r.newWorld), nwFirst = nw && levelsOfWorld(nw.id)[0];
     this.after = () => {
       const spans = this.root.querySelectorAll('.bigstars span');
       for (let k = 0; k < r.stars; k++) setTimeout(() => { spans[k] && spans[k].classList.add('on'); this.app.audio.sfx('star' + k); this.app.haptics.buzz('star'); }, 450 + k * 520);
@@ -255,7 +278,7 @@ export class UI {
       <div class="facts">${r.race ? `<div>🏁 Rennen gewonnen ✅</div>` : ''}<div>⏱️ ${fmt(r.time)} s ${r.time <= r.par ? '✅' : `(Ziel ${r.par} s)`}</div>${r.race
         ? `<div>⚡ Blitzzeit ${r.blitz} s ${r.time <= r.blitz ? '✅' : '❌'}</div>`
         : `<div>🔥 Kombo ${r.maxCombo}${r.diff === 'schwer' ? ` / ${r.comboReq}` : ''}</div>${r.diff !== 'schwer' ? `<div>⭐ Glitzerstern ${r.bonus ? '✅' : '❌'}</div>` : ''}`}</div>
-      </div><div>${r.unlocks.map((u, k) => `<div class="unl" style="animation-delay:${1.6 + k * 0.2}s"><span class="e">${this.unlIcon(u)}</span><span>Neu freigeschaltet:<br>${esc(u.name)}</span></div>`).join('')}
+      </div><div>${nw ? `<button class="unl neww" data-a="nextw" data-v="${nwFirst.id}" style="animation-delay:1.4s"><span class="e">${nw.emoji}</span><span>Neue Welt offen:<br>${nw.name} ➜</span></button>` : ''}${r.unlocks.map((u, k) => `<div class="unl" style="animation-delay:${1.6 + k * 0.2}s"><span class="e">${this.unlIcon(u)}</span><span>Neu freigeschaltet:<br>${esc(u.name)}</span></div>`).join('')}
       ${r.badges.map((b, k) => `<div class="unl" style="animation-delay:${1.8 + k * 0.2}s"><span class="e">${b.emoji}</span><span>Abzeichen: ${b.name}</span></div>`).join('')}
       </div></div><div class="row cta"><button class="btn soft" data-a="map">🗺️ Karte</button><button class="btn alt" data-a="again">🔄 Nochmal</button>${r.unlocks.length ? `<button class="btn big surprise" data-a="surprise"><i class="gift">🎁</i> Überraschung!</button>` : hasNext ? `<button class="btn big" data-a="next">Weiter ➜</button>` : ''}</div>
     </div></div>`;

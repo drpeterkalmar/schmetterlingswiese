@@ -6,6 +6,7 @@ import { height, pond } from '../world/terrain.js';
 import { Critter } from '../actors/characters.js';
 import { sunflowerGeo } from '../world/nature.js';
 import { HeightField, seatWorld } from './seat.js';
+import { rivalOf } from './levels.js';
 
 const _o = new THREE.Object3D();
 const _c = new THREE.Color();
@@ -616,23 +617,24 @@ class DeliverTask extends Task {
   dispose() { this.bpool.dispose(); this.berries.dispose(); this.wants.dispose(); this.g.player.carry = null; }
 }
 
-// --- Stunts
+// --- Stunts (v2.7: show = Kunststücke mit dem 🎪-Knopf; Looping/Schraube gibt es nur noch über die Tastatur)
 class StuntTask extends Task {
   constructor(g, cfg) {
     super(g, cfg);
-    this.needL = cfg.loop || 0; this.needR = cfg.roll || 0;
-    this.max = this.needL + this.needR; this.l = 0; this.r = 0;
-    this.icon = '🤸'; this.label = this.needR && this.needL ? 'Loopings & Schrauben' : this.needL ? 'Loopings' : 'Schrauben';
+    this.needL = cfg.loop || 0; this.needR = cfg.roll || 0; this.needS = cfg.show || 0;
+    this.max = this.needL + this.needR + this.needS; this.l = 0; this.r = 0; this.s = 0;
+    this.icon = '🤸'; this.label = this.needS ? 'Kunststücke' : this.needR && this.needL ? 'Loopings & Schrauben' : this.needL ? 'Loopings' : 'Schrauben';
   }
   onStunt(type) {
     if (type === 'loop' && this.l < this.needL) this.l++;
     else if (type === 'roll' && this.r < this.needR) this.r++;
+    else if (type === 'show' && this.s < this.needS) this.s++;
     else return;
-    this.cur = this.l + this.r;
+    this.cur = this.l + this.r + this.s;
     this.g.hit(this.g.player.pos, 'stunt', 0xffe07a);
   }
-  debugNext() { if (this.l < this.needL) this.onStunt('loop'); else this.onStunt('roll'); }
-  detail() { return (this.needL ? `🤸${this.l}/${this.needL} ` : '') + (this.needR ? `🌀${this.r}/${this.needR}` : ''); }
+  debugNext() { if (this.l < this.needL) this.onStunt('loop'); else if (this.r < this.needR) this.onStunt('roll'); else this.onStunt('show'); }
+  detail() { return (this.needS ? `🎪${this.s}/${this.needS} ` : '') + (this.needL ? `🤸${this.l}/${this.needL} ` : '') + (this.needR ? `🌀${this.r}/${this.needR}` : ''); }
 }
 
 // --- Wettflug gegen freundliche Rivalin
@@ -640,9 +642,10 @@ class RaceTask extends RingTask {
   constructor(g, cfg) {
     const pts = ringCourse(g, cfg.n, { wild: false });
     super(g, cfg, pts);
-    this.icon = '🏁'; this.label = cfg.rival === 'libelle' ? 'Wettflug mit Lilli Libelle' : 'Wettflug mit Flora';
-    this.rivalName = cfg.rival === 'libelle' ? 'Lilli' : 'Flora';
-    this.rival = new Critter(cfg.rival === 'libelle' ? 'libelle' : 'schmetterling', { color: cfg.rival === 'libelle' ? 1 : 3, pattern: 'herzen', hat: 'schleife' });
+    const R = rivalOf(cfg.rival);
+    this.icon = '🏁'; this.label = 'Wettflug mit ' + R.full;
+    this.rivalName = R.name;
+    this.rival = new Critter(R.char, R.look);
     g.scene.add(this.rival.root);
     const all = [g.spawn.clone().add(new THREE.Vector3(Math.cos(g.spawnYaw) * 3.4, 0.4, -Math.sin(g.spawnYaw) * 3.4)), ...pts];
     const first = all[0].clone(); first.y = g.spawn.y;

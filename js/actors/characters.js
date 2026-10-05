@@ -8,7 +8,15 @@ import { wingMask, glassWing, skinWing } from '../engine/textures.js';
 
 // ---------------------------------------------------------------- Kataloge
 // Freischalt-Stufen (Sterne). Alles ohne Stern-Angabe ist ab Start frei.
+// v2.7: 40 statt 15 Missionen → max. Sterne 360 statt 135 (nur Leicht: 120 statt 45). Die ersten Schwellen bleiben gleich
+// (schnelles Erfolgserlebnis), danach wachsen sie auf ≈ das Doppelte: neu ≈ alt · (1 + min(1, alt/40)). Reihenfolge gleich.
+// Wer Leicht durchspielt (≈ 2,5 ⭐ je Mission), hat nach Welt 1 ≈ 20 ⭐ (6 Sachen) – v2.6: 6 Sachen nach Welt 2 (6 Level).
 export const STARS = {
+  blasen: 2, brille: 4, herzen: 7, regenbogen: 10, propeller: 13, bart: 17, pups: 22, drache: 30, melone: 36, pizza: 43,
+  riesig: 50, glitzer: 58, umhang: 68, einhorn: 80, galaxie: 90, hupe: 100, disco: 112, schweif: 124, helm: 136, katze: 150, leucht: 170, konfetti: 190,
+};
+// Schwellen bis v2.6 – nur für den Bestandsschutz alter Profile (progress.js: was damit frei war, bleibt frei)
+export const STARS_V26 = {
   blasen: 2, brille: 4, herzen: 6, regenbogen: 8, propeller: 10, bart: 13, pups: 16, drache: 20, melone: 23, pizza: 26,
   riesig: 29, glitzer: 32, umhang: 36, einhorn: 40, galaxie: 45, hupe: 50, disco: 56, schweif: 62, helm: 68, katze: 75, leucht: 85, konfetti: 95,
 };

@@ -577,6 +577,8 @@ export class Game {
     if (this.state === 'won') { this.finaleEnd(); return; }
     this.em(10, pl.pos, SC.STAR, 1, 0.3, 2.5, 0.8, 0.7, -0.8);
     pl.critter && pl.critter.bump(3);
+    // v2.7: zählt nur in Kunststück-Missionen (stunts mit show), sonst bleibt der 🎪-Knopf purer Spaß
+    for (const t of this.tasks) if (t.needS && !t.done) { t.onStunt('show'); this.app.ui.hudTasks(this.tasks); }
   }
   fail(msg) {
     if (this.state !== 'play') return;
@@ -960,8 +962,9 @@ export class Game {
     }
     if (this.level.tutorial && T > 5 && !H.t2) { H.t2 = true; ui.hint('☝️ Mitte oben halten = steigen · Mitte unten = sinken'); }
     if (this.level.tutorial && T > 11 && !H.t3) { H.t3 = true; ui.hint('✨ Fliege durch die glitzernden Tropfen!'); }
-    if (this.tasks.some(t => t.cfg.type === 'land') && T > 3 && !H.land) { H.land = true; ui.hint('🛬 Über dem Leuchtring ▼ unten halten = landen'); }
+    if (this.tasks.some(t => t.cfg.type === 'land') && T > 3 && !H.land) { H.land = true; H.landT = T; ui.hint('🛬 Über dem Leuchtring ▼ unten halten = landen'); }
     if (this.tasks.some(t => t.cfg.type === 'deliver') && T > 2 && !H.del) { H.del = true; ui.hint('🍓 Hol Beeren von den Büschen und bring sie den Tierbabys'); }
+    if (this.tasks.some(t => t.needS && !t.done) && T > (this.tasks.some(t => t.cfg.type === 'land') ? (H.land ? H.landT + 4.6 : 1e9) : 2) && !H.show) { H.show = true; ui.hint('🎪 Tippe unten rechts auf STUNT – zeig ein Kunststück!'); }
   }
   win() {
     this.state = 'won'; this.wonT = 0; this.resultShown = false;

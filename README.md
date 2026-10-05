@@ -10,18 +10,21 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
 
 ## Spielidee
 
-- **5 Welten × 3 Level** – Frühlingswiese (Morgen), Sonnenblumenfeld (Mittag), Seerosenteich
-  (Nachmittag), Kirschblütenhain (goldene Stunde), Glühwürmchen-Abend (Nacht mit Sternen)
+- **5 Welten × 8 Missionen (v2.7, vorher 3)** – Frühlingswiese (Morgen), Sonnenblumenfeld (Mittag), Seerosenteich
+  (Nachmittag), Kirschblütenhain (goldene Stunde), Glühwürmchen-Abend (Nacht mit Sternen). Die Missionsliste jeder
+  Welt scrollt (▼ zeigt „da kommt noch mehr“). In einer Welt geht es der Reihe nach; die **nächste Welt öffnet schon
+  nach 3 geschafften Missionen** der Welt davor (`?weltfrei=N` in der URL ändert die Zahl, A/B)
 - **Aufgaben:** Nektartropfen sammeln, Flugring-Parcours, auf Blüten/Seerosen landen und
   Nektar naschen, Tierbabys besuchen, Beeren zu Capybaras bringen, Freuden-Schrauben & Sieger-Loopings,
-  Wettfliegen gegen Flora Falter und Lilli Libelle, Glühwürmchen und fallende Kirschblüten fangen
+  Wettfliegen gegen Flora Falter, Lilli Libelle, Hugo Hummel und Mona Mondfalter, Glühwürmchen und fallende
+  Kirschblüten fangen, Kunststück-Missionen mit dem 🎪 STUNT-Knopf (zählt nur dort)
 - **1–3 Sterne pro Level:** Aufgabe geschafft · schnell genug · Glitzerstern gefunden (Schwer: große Kombo);
   **Wettflüge (v2.5):** nur Zeiten zählen – Rennen gewonnen · schneller als par · ⚡ Blitzzeit (0,8 · par), kein Glitzerstern
 - **Schwierigkeit:** 🌱 Leicht (kein Zeitdruck, Zielanzeige, Magnet, man kann nicht verlieren) ·
   🌼 Mittel · 🔥 Schwer (Zeitlimit, Windböen, freche Wespen, kleinere Ringe)
 - **Werkstatt (v2.2):** alle 6 Grundfiguren ab Start, freie Farbwahl je Figur (24er-Palette + 🎲 Zufall),
   Größe, Flügelform, Fühler, Augenstil, Flügelmuster, Hüte – jede Figur merkt sich ihr eigenes Outfit
-- **Verrückte Freischaltungen:** 22 Stufen von 2 bis 95 ⭐ (Spuren, Hüte, Extras, Flügel-Skins, Figuren,
+- **Verrückte Freischaltungen:** 22 Stufen von 2 bis 190 ⭐ (v2.7; bis v2.6: 95 ⭐ – schon Freigeschaltetes bleibt frei) (Spuren, Hüte, Extras, Flügel-Skins, Figuren,
   Riesen-/Winzling-Modus, Quietsch-Hupe) mit Konfetti-Karte „NEU freigeschaltet!“ und „Gleich anziehen“
 - **Belohnungen:** Sammelalbum mit Natur-Fakten, Abzeichen und eine tägliche Aufgabe –
   ohne Käufe, ohne Werbung, ohne Wartezeiten
@@ -70,6 +73,8 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
 python3 -m http.server 8471          # dann http://localhost:8471/
 python3 tools/update_sw.py           # nach Änderungen: Service-Worker-Version (Cache-Busting)
 tests/run_all.sh                     # Headless-Tests (Python-Playwright, Pixel-7-Emulation)
+python3 tests/flieger.py --diffs leicht,mittel,schwer --rennen   # Test-Flieger im Zeitraffer (alle Level)
+python3 tests/v27_par.py             # par neuer Missionen aus den Flugzeiten
 ```
 
 Debug-Hilfe im Browser: `window.__game` (Zustand, Level starten, Autopilot, Einfrieren, Audio-Messung).

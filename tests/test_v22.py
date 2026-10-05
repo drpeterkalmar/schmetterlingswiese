@@ -53,7 +53,7 @@ with sync_playwright() as pw:
     ul = json.loads(s.ev("JSON.stringify(__app.progress.unlockables().map(u => ({type: u.type, id: u.id, stars: u.stars, name: u.name})))"))
     ok(15 <= len(ul) <= 24, f'{len(ul)} Freischaltungen')
     stars = sorted(u['stars'] for u in ul)
-    ok(max(stars) <= 135 and len(set(stars)) == len(stars), f'Stufen eindeutig und ≤ Max-Sterne: {stars}')
+    ok(max(stars) <= 360 and len(set(stars)) == len(stars), f'Stufen eindeutig und ≤ Max-Sterne (v2.7: 40 Missionen × 9 = 360): {stars}')
     for u in ul:
         lock0 = s.ev(f"__app.progress.isUnlocked('{u['type']}', '{u['id']}')")
         s.ev(f"__app.progress.cur.levels['t'] = {{leicht: {{stars: {u['stars']}}}}}; __app.progress.save()")
@@ -65,7 +65,7 @@ with sync_playwright() as pw:
         ok(not lock0 and lock1 and worn and L['calls'] > 10, f"{u['stars']:>3} ⭐ {u['type']}:{u['id']} gesperrt→frei, angezogen, gerendert ({L['calls']} Draw-Calls)")
         s.ev("__app.progress.cur.levels = {}; __app.progress.save()")
     # alles gleichzeitig tragen + im Level fliegen (Draw-Call-Budget)
-    s.ev("__app.progress.cur.levels['t'] = {leicht: {stars: 135}}; __app.progress.setLook({hat: 'propeller', extra: 'umhang', skin: 'disco', trail: 'schweif', size: 'xl'}); __app.setLookFromProfile()")
+    s.ev("__app.progress.cur.levels['t'] = {leicht: {stars: 360}}; __app.progress.setLook({hat: 'propeller', extra: 'umhang', skin: 'disco', trail: 'schweif', size: 'xl'}); __app.setLookFromProfile()")
     s.ev("__game.start('2-1', 'mittel')"); s.ev("__game.autopilot(true)"); time.sleep(3)
     calls = s.ev("__game.info().calls"); ok(calls < 150, f'Draw-Calls mit vollem Outfit im Level 2-1: {calls} (< 150)')
     s.ev("__game.autopilot(false)")
@@ -106,7 +106,7 @@ with sync_playwright() as pw:
     ok(r['qchar'] == 'libelle' and r['q']['a'] == r['lib2']['a'], 'zweites Profil: Libelle in Rubin übernommen')
     s.pg.reload(); s.pg.wait_for_function("window.__app && window.__app.frames > 3", timeout=90000)
     r2 = json.loads(s.ev("JSON.stringify({stars: __app.progress.stars(), a: __app.player.critter.look.a, lv: __app.progress.cur.lv})"))
-    ok(r2['stars'] == r['stars'] and r2['a'] == r['a'] and r2['lv'] == 22, 'nach Neuladen identisch (Migration idempotent)')
+    ok(r2['stars'] == r['stars'] and r2['a'] == r['a'] and r2['lv'] == 27, 'nach Neuladen identisch (Migration idempotent, v2.7: lv 27)')
     ok(s.errors == [], f'keine Fehler ({s.errors[:3]})')
     s.close()
 
