@@ -92,3 +92,6 @@ freigeschaltet“ angekündigt (getestet: Profil mit 30 ⭐ behält Melone, Pizz
   Frühlingswiese!“ und ⭐⭐○ 2/3 – auch ohne Lesen erkennbar, dass ein Stern fehlt. Grenze: Auf dem hohen Pixel-Format
   (915 px) passen 7 von 8 Missionen fast ganz auf die Karte, dort scrollt die Liste nur ein Stück; auf dem iPhone 5 von 8,
   quer 4 von 8. Auf 390 px Breite bricht die untere Knopfleiste (Werkstatt/Album …) in 2 Zeilen um – war schon vor 2.7 so.
+- **Live (github.io):** Pages-Build fertig, `sw.js`-Version live = lokal (`5fe880cc76`, Spiel 2.7.0). `test_live.py` gegen
+  github.io **0 Fehler** (Ton nach dem Tipp, Level gewonnen, Freischaltung, offline neu laden); live 40 Missionen, nach
+  3 geschafften Missionen sind 1-4 und 2-1 offen.
