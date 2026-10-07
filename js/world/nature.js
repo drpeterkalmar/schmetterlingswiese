@@ -466,7 +466,7 @@ void main(){
 #ifdef DEKO
   // v2.8: der Himmel spiegelt sich (am Horizont hell, steil von oben eher Wasserfarbe)
   vec3 Rf = reflect(-V, N);
-  vec3 c = mix(base, mix(uSkyHor, uSkyZen, smoothstep(0.0, 0.5, Rf.y)) * 1.05, fres * 0.75 + 0.06);
+  vec3 c = uDq > 0.0 ? mix(base, mix(uSkyHor, uSkyZen, smoothstep(0.0, 0.5, Rf.y)) * 1.05, fres * 0.75 + 0.06) : mix(base, uSkyAmb * 1.25, fres * 0.7);
 #else
   vec3 c = mix(base, uSkyAmb * 1.25, fres * 0.7);
 #endif

@@ -40,6 +40,12 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
   außerhalb oder hinter dir, zeigt ein gelber Randpfeil neben ◀ bzw. ▶, wohin du drehen sollst. Liegt das Ziel deutlich
   höher oder tiefer, kommt ein kleines ▲/▼ dazu (= steigen/sinken). Auf Leicht und Mittel; `?ziel=pfeil` zeigt zum
   Vergleich den alten 3D-Pfeil aus v2.5
+- **Blumenwiese & Lichtzauber (v2.8):** Rund um die Figur blüht ein bunter Blütenteppich, der sich im Wind wiegt
+  (nachts glimmen die Blüten), Löwenzahn-Schirmchen und Sonnenstaub schweben in der Luft, Lichtstrahlen fallen im
+  Gegenlicht durch den Dunst (am schönsten zur goldenen Stunde), Graswellen laufen über die Wiese, der Teich spiegelt den
+  Himmel und glitzert, Glühwürmchen blinken mit Lichthof, nachts gibt es Milchstraße und einen Mond mit Mondmeeren,
+  Flügel schimmern perlmuttartig, beim Landen und Nektar-Naschen funkelt es. **`?deko=0`** in der URL zeigt das
+  Aussehen bis v2.7 (A/B-Vergleich), siehe `DEKO_BERICHT.md`
 - **Tierbabys (v2.4):** Bärenbaby, Capybara, Häschen und Entchen mit Schnauze, Pfoten mit Ballen, Bauchfell und
   Schwänzchen; sie laufen mit echten Beinbewegungen, blinzeln, zucken mit den Ohren, schauen dich an, wenn du nah
   bist, und freuen sich über Besuch mit Hüpfer, ^ ^-Augen und Herzchen
@@ -66,6 +72,9 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
   Hochpass, Kompressor und Limiter (≈ −16 LUFS), Ducking, Stereo-Panning, Haptik
 - **Android-first:** große Touch-Ziele, Hoch- und Querformat, adaptive Grafikqualität,
   PWA mit Service-Worker (offline, installierbar)
+- **Deko v2.8** (`js/world/deko.js`, `js/engine/deko.js`): alles prozedural auf der GPU, je Schicht 1 Draw-Call, keine
+  Texturen; Stückzahl je Qualitätsstufe (Niedrig = aus und Shader wie v2.7), bei Auto-Drosselung halbiert;
+  `prefers-reduced-motion` → kein Kamera-Ruckeln, halber Partikelregen, langsamere Schirmchen
 
 ### Entwickeln
 
@@ -75,6 +84,9 @@ python3 tools/update_sw.py           # nach Änderungen: Service-Worker-Version 
 tests/run_all.sh                     # Headless-Tests (Python-Playwright, Pixel-7-Emulation)
 python3 tests/flieger.py --diffs leicht,mittel,schwer --rennen   # Test-Flieger im Zeitraffer (alle Level)
 python3 tests/v27_par.py             # par neuer Missionen aus den Flugzeiten
+python3 tests/deko_shots.py <label> [query] [port]   # Deko-Rundgang hoch + quer (v2.8)
+python3 tests/deko_perf.py <label> [query] [port]    # Bildzeiten mit CPU-Drosselung 4× (v2.8)
+python3 tools/load_size.py           # Ladegröße (gzip) aller Spieldateien
 ```
 
 Debug-Hilfe im Browser: `window.__game` (Zustand, Level starten, Autopilot, Einfrieren, Audio-Messung).

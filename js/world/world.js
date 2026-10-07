@@ -15,7 +15,8 @@ export class World {
     this.scene = scene;
     // v2.8 Deko: feinere Kugel (Milchstraße je Eckpunkt) und Himmel NACH der Landschaft zeichnen → verdeckte Himmelspixel
     // fallen beim Tiefentest weg (vorher wurde der ganze Bildschirm erst mit Himmel gefüllt)
-    this.sky = new THREE.Mesh(DEKO ? new THREE.SphereGeometry(900, 96, 48) : new THREE.SphereGeometry(900, 32, 16), skyMat());
+    this.skyLo = new THREE.SphereGeometry(900, 32, 16); this.skyHi = DEKO ? new THREE.SphereGeometry(900, 96, 48) : this.skyLo;
+    this.sky = new THREE.Mesh(this.skyHi, skyMat());
     this.sky.frustumCulled = false; this.sky.renderOrder = DEKO ? 2 : -2;
     scene.add(this.sky);
     this.group = null;
@@ -64,6 +65,7 @@ export class World {
     this.deko = DEKO ? new Deko(w, quality, quality.dekoK ?? 1) : null;
     if (this.deko) g.add(this.deko.group);
     G.uDq.value = DEKO && quality.id > 0 ? (quality.dekoK ?? 1) : 0;
+    this.skyQ(quality);
     const P0 = pond();
     const avoidPond = P0[2] > 1 ? (x, z) => Math.hypot(x - P0[0], z - P0[1]) < P0[2] * 1.35 : null;
     const sfC = w.sunflowers ? { x: 0, z: 0, R: 62 } : null;
@@ -145,6 +147,12 @@ export class World {
     if (this.ambient) this.ambient.setCount(q.particles);
     if (this.deko) this.deko.setQuality(q, k);
     G.uDq.value = DEKO && q.id > 0 ? k : 0;
+    this.skyQ(q);
+  }
+  // v2.8: Himmel auf Niedrig wie bisher (grobe Kugel, zuerst gezeichnet), sonst feine Kugel und nach der Landschaft
+  skyQ(q) {
+    const hi = DEKO && q.id > 0;
+    this.sky.geometry = hi ? this.skyHi : this.skyLo; this.sky.renderOrder = hi ? 2 : -2;
   }
 
   dispose() {

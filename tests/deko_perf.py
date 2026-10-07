@@ -57,6 +57,7 @@ with sync_playwright() as pw:
             lid = SC[sc]
             if lid: s.ev(f"__game.start('{lid}', 'leicht')"); s.ev("__game.autopilot(true)")
             else: s.ev("__game.autopilot(false)"); s.ev("__app.toShowcase(); __game.show('map')")
+            if os.environ.get('PRE'): s.ev(os.environ['PRE'])  # Messhilfe: z. B. Deko-Teile zur Laufzeit abschalten
             time.sleep(2.5)
             s.ev("__m.cpu.length = 0; __m.gpu.length = 0; __m.raf.length = 0; __m.on = true")
             time.sleep(SEC)
@@ -66,6 +67,7 @@ with sync_playwright() as pw:
                  'cpu_p50': pct(m['cpu'], .5), 'cpu_p95': pct(m['cpu'], .95), 'gpu_n': len(m['gpu']), 'gpu_p50': pct(m['gpu'], .5), 'gpu_p95': pct(m['gpu'], .95),
                  'calls': info['calls'], 'tris': info['tris'], 'tex': info['tex'], 'geos': info['geos'], 'tier': info['tier'], 'dpr': info['dpr']}
             res['scenes'][f'q{q}_{sc}'] = r
+            if os.environ.get('RAW'): res.setdefault('raw', {})[f'q{q}_{sc}'] = {'raf': [round(x, 2) for x in m['raf']], 'cpu': [round(x, 3) for x in m['cpu']], 'gpu': [round(x, 3) for x in m['gpu']]}
             print(f'q{q} {sc:7s}', r, flush=True)
             if lid: s.ev("__game.autopilot(false)"); s.ev("__app.quit()")
     cdp.send('Emulation.setCPUThrottlingRate', {'rate': 1})

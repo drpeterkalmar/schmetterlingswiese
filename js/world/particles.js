@@ -12,6 +12,7 @@ vec4 bendW(vec4 wp){ vec2 d = wp.xz - uCam.xz; wp.y -= uBend * dot(d, d); return
 const AMB_V = /* glsl */`
 ${V_BEND}
 uniform float uTime, uPx, uMode; uniform vec3 uCenter, uBox; uniform vec3 uWind;
+uniform float uDq; // v2.8: Deko-Stufe (0 = Niedrig: kleine Lichter wie bisher)
 attribute vec4 aR;
 varying float vA; varying float vRot; varying float vK;
 void main(){
@@ -26,7 +27,7 @@ void main(){
     drift = vec3(sin(t * 0.4 + aR.w * 30.0) * 2.5, sin(t * 0.7 + aR.w * 17.0) * 1.2, cos(t * 0.35 + aR.w * 23.0) * 2.5);
 #ifdef DEKO
     // v2.8: echtes Glühwürmchen-Blinken (schnell an, langsam aus, Pause) + größerer Lichthof
-    size = 0.42 + aR.w * 0.2;
+    size = uDq > 0.0 ? 0.32 + aR.w * 0.14 : 0.22 + aR.w * 0.12;
     float fp = fract(t * (0.22 + aR.w * 0.18) + aR.w * 7.0);
     a = 0.1 + 0.9 * smoothstep(0.0, 0.05, fp) * (1.0 - smoothstep(0.08, 0.5, fp));
 #else
@@ -45,10 +46,13 @@ void main(){
   float edge = 1.0 - smoothstep(0.35, 0.5, length((p - uCenter).xz / uBox.xz));
   vA = a * edge; vRot = aR.w * 6.28 + t * (0.5 + aR.w); vK = aR.w;
   gl_PointSize = size * uPx * projectionMatrix[1][1] * 0.5 / max(-mv.z, 0.1);
+#ifdef DEKO
+  gl_PointSize = min(gl_PointSize, uPx * 0.06); // v2.8: nahe Lichter nicht bildschirmgroß (Füllrate)
+#endif
   gl_Position = projectionMatrix * mv;
 }`;
 const AMB_F = /* glsl */`
-uniform float uMode; uniform vec3 uCol, uCol2, uSunCol;
+uniform float uMode; uniform vec3 uCol, uCol2, uSunCol; uniform float uDq;
 varying float vA; varying float vRot; varying float vK;
 void main(){
   vec2 q = gl_PointCoord - 0.5;
@@ -64,9 +68,9 @@ void main(){
     a = pow(max(1.0 - d, 0.0), uMode > 0.5 ? 1.6 : 2.4);
     c = mix(uCol, uCol2, vK) * (uMode > 0.5 ? 2.2 : 1.4);
 #ifdef DEKO
-    if (uMode > 0.5) { // heller Kern + weicher Schein
+    if (uMode > 0.5 && uDq > 0.0) { // heller Kern + weicher Schein (nicht auf Niedrig)
       float core = smoothstep(0.2, 0.0, d);
-      a = core + pow(max(1.0 - d, 0.0), 2.6) * 0.5;
+      a = core + pow(max(1.0 - d, 0.0), 2.4) * 0.55;
       c = mix(uCol, uCol2, vK) * (1.3 + 1.8 * core);
     }
 #endif
@@ -86,7 +90,7 @@ export class Ambient {
     const cols = { pollen: [0xfff4c0, 0xffffff], fireflies: [0xd8ff6a, 0xfff08a], petals: [0xffc2d8, 0xffe6ef] }[kind];
     this.mat = new THREE.ShaderMaterial({
       uniforms: {
-        uTime: G.uTime, uBend: G.uBend, uCam: G.uCam, uWind: G.uWind, uSunCol: G.uSunCol, uPx: PX,
+        uTime: G.uTime, uBend: G.uBend, uCam: G.uCam, uWind: G.uWind, uSunCol: G.uSunCol, uPx: PX, uDq: G.uDq,
         uMode: { value: mode }, uCenter: { value: new THREE.Vector3() },
         uBox: { value: mode === 1 ? new THREE.Vector3(70, 9, 70) : new THREE.Vector3(46, 18, 46) },
         uCol: { value: new THREE.Color(cols[0]) }, uCol2: { value: new THREE.Color(cols[1]) },

@@ -191,6 +191,9 @@ void main(){
 const TOON_F = /* glsl */`
 ${F_LIGHT}
 uniform vec3 uColor; uniform float uRimAmt, uGloss, uEmis, uSoft, uOpacity;
+#ifdef DEKO
+uniform float uDq;
+#endif
 #ifdef USE_MAPX
 uniform sampler2D uMap; uniform vec3 uWA, uWB, uWC;
 #endif
@@ -226,10 +229,12 @@ void main(){
   c += alb * uSunCol * tr;
 #endif
 #if (defined(WINGMASK) || defined(IRI)) && defined(DEKO)
-  // v2.8: Perlmutt-Schimmer – der Farbton wandert mit Blickwinkel und Flügelschlag, am Rand am stärksten
+  // v2.8: Perlmutt-Schimmer – der Farbton wandert mit Blickwinkel und Flügelschlag, am Rand am stärksten (nicht auf Niedrig)
+  if (uDq > 0.0) {
   float nv = dot(N, V);
   vec3 iri = 0.5 + 0.5 * cos(6.2831 * (nv * 1.4 + vUv.x * 0.6 + vec3(0.0, 0.33, 0.67)));
   c += iri * (0.06 + 0.22 * pow(1.0 - abs(nv), 2.0)) * (0.35 + 0.65 * dot(alb, vec3(0.33))) * (uSkyAmb + uSunCol * 0.5);
+  }
 #endif
   c = mix(c, alb * (1.0 + uEmis), clamp(vCol.a + uEmis, 0.0, 1.0));
 #ifdef CLOUD
@@ -355,6 +360,7 @@ attribute vec4 aOff; // x,z in [0,1), rand, scale
 varying vec3 vWP; varying float vH; varying float vR; varying float vWave; varying vec3 vN;
 #ifdef DEKO
 varying vec3 vPat; // v2.8: Farbmuster je Halm (Fleck, Goldlicht, Büschel) – im Vertex- statt Pixel-Shader
+uniform float uDq;
 #endif
 void main(){
   vec2 base = aOff.xy * uField;
@@ -387,9 +393,10 @@ void main(){
   vec4 wp = vec4(p.x + lp.x, gh + lp.y, p.y + lp.z, 1.0);
   vWP = wp.xyz; vH = t; vR = aOff.z; vWave = wave;
 #ifdef DEKO
-  vPat = vec3(sin(p.x * 0.07 + sin(p.y * 0.05) * 2.0) * 0.5 + 0.5,
+  if (uDq > 0.0) vPat = vec3(sin(p.x * 0.07 + sin(p.y * 0.05) * 2.0) * 0.5 + 0.5,
               smoothstep(0.55, 0.95, sin(p.x * 0.043 + sin(p.y * 0.061) * 2.3) * sin(p.y * 0.039 - 1.1 + sin(p.x * 0.05))),
               sin(p.x * 0.29 + sin(p.y * 0.23) * 1.7) * sin(p.y * 0.26 - sin(p.x * 0.19) * 1.3));
+  else vPat = vec3(0.0);
 #endif
   vN = normalize(vec3(-sa * 0.3 + bend.x * 0.4, 1.0, ca * 0.3 + bend.y * 0.4));
   gl_Position = projectionMatrix * viewMatrix * bendW(wp);
@@ -400,11 +407,16 @@ ${CLOUD_SH}
 uniform vec3 uGrassA, uGrassB, uGrassC; uniform vec4 uGold;
 varying vec3 vWP; varying float vH; varying float vR; varying float vWave; varying vec3 vN;
 #ifdef DEKO
-varying vec3 vPat;
+varying vec3 vPat; uniform float uDq;
 #endif
 void main(){
 #ifdef DEKO
-  float patchN = vPat.x, gold = vPat.y;
+  float patchN, gold;
+  if (uDq > 0.0) { patchN = vPat.x; gold = vPat.y; }
+  else { // Stufe Niedrig: wie bis v2.7 je Pixel
+    patchN = sin(vWP.x * 0.07 + sin(vWP.z * 0.05) * 2.0) * 0.5 + 0.5;
+    gold = smoothstep(0.55, 0.95, sin(vWP.x * 0.043 + sin(vWP.z * 0.061) * 2.3) * sin(vWP.z * 0.039 - 1.1 + sin(vWP.x * 0.05)));
+  }
 #else
   float patchN = sin(vWP.x * 0.07 + sin(vWP.z * 0.05) * 2.0) * 0.5 + 0.5;
   // v2.3: goldene Lichtflecken (Morgen/Goldene Stunde)
@@ -415,9 +427,12 @@ void main(){
   vec3 alb = mix(uGrassA, tip, smoothstep(0.0, 1.0, vH));
 #ifdef DEKO
   // v2.8: Büschel unterschiedlich satt/hell, vereinzelt sonnengelbe Halme, Windwellen als heller Glanz über die Wiese
-  alb *= 0.9 + 0.2 * fract(vR * 7.3) + 0.07 * vPat.z;
-  alb = mix(alb, mix(alb, uGrassC * 1.1, 0.55), smoothstep(0.8, 1.0, fract(vR * 3.7)) * vH);
-  alb += (uSunCol * 0.09 + vec3(0.05, 0.06, 0.02)) * vWave * vWave * vH * 1.6;
+  // (Stufe Niedrig: wie bisher)
+  if (uDq > 0.0) {
+    alb *= 0.9 + 0.2 * fract(vR * 7.3) + 0.07 * vPat.z;
+    alb = mix(alb, mix(alb, uGrassC * 1.1, 0.55), smoothstep(0.8, 1.0, fract(vR * 3.7)) * vH);
+    alb += (uSunCol * 0.09 + vec3(0.05, 0.06, 0.02)) * vWave * vWave * vH * 1.6;
+  } else alb += vec3(0.07, 0.08, 0.03) * vWave * vH;
 #else
   alb += vec3(0.07, 0.08, 0.03) * vWave * vH;
 #endif
@@ -521,8 +536,10 @@ void main(){
   if (uMoon > 0.0) {
     float md = dot(d, uMoonDir);
 #ifdef DEKO
-    // v2.8: Mond mit Meeren und Randverdunklung (nicht mehr nur ein heller Fleck), zarter Hof-Ring (nur in Mondnähe gerechnet)
-    if (md > 0.96) {
+    // v2.8: Mond mit Meeren und Randverdunklung (nicht mehr nur ein heller Fleck), zarter Hof-Ring (nur in Mondnähe gerechnet;
+    // Stufe Niedrig: Mond wie bisher)
+    if (uDq <= 0.0) col += vec3(1.0, 0.97, 0.88) * smoothstep(0.9993, 0.9996, md) * 2.2 * uMoon;
+    else if (md > 0.96) {
     vec3 mt1 = normalize(cross(uMoonDir, vec3(0.0, 1.0, 0.0))), mt2 = cross(mt1, uMoonDir);
     vec2 mq = vec2(dot(d, mt1), dot(d, mt2)) / 0.042;
     float mr = length(mq);

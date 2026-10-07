@@ -6,9 +6,11 @@
 # ONLY=wiese,abend schränkt die Welten ein, LAND=0 lässt das Querformat weg.
 import time, sys, os, json
 sys.path.insert(0, 'tests')
+import util
 from util import *
 LABEL = sys.argv[1] if len(sys.argv) > 1 else 'nachher'
 Q = sys.argv[2] if len(sys.argv) > 2 else '?nosw'
+if len(sys.argv) > 3: util.BASE = f'http://localhost:{sys.argv[3]}/'  # z. B. 8472 = Referenz v2.7
 OUT = 'tests/shots/deko'
 os.makedirs(OUT, exist_ok=True)
 WORLDS = [('1-1', 'wiese'), ('2-1', 'sonne'), ('3-1', 'teich'), ('4-1', 'kirsch'), ('5-1', 'abend')]
