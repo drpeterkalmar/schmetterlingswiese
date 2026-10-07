@@ -21,3 +21,5 @@ tests/shots/v25/*.png
 tests/shots/v26/*.png
 !tests/shots/v27/
 tests/shots/v27/*.png
+!tests/shots/deko/
+tests/shots/deko/*.png

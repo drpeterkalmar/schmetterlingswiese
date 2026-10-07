@@ -29,6 +29,8 @@ export class Renderer {
     this.resize();
   }
   get q() { return QUALITY[this.tier]; }
+  // v2.8 Deko-Faktor: 1 = voll; 0,5 sobald die Auto-Drosselung die Auflösung dieser Stufe senken musste
+  get dekoK() { return this.dpr < Math.min(this.q.dpr, devicePixelRatio || 1) - 1e-3 ? 0.5 : 1; }
   setMode(m) {
     this.mode = m;
     if (m !== 'auto') { this.tier = m; this.dpr = Math.min(QUALITY[m].dpr, devicePixelRatio || 1); }
@@ -63,13 +65,13 @@ export class Renderer {
     const Q = this.q;
     if (this.slowT > 2000) {
       this.slowT = 0; this.lastChange = now; this.ft.length = 0;
-      if (this.dpr - 0.25 >= Q.dprMin - 1e-3) this.dpr -= 0.25;
+      if (this.dpr - 0.25 >= Q.dprMin - 1e-3) this.dpr -= 0.25; // (onTier unten meldet auch das → Deko halbiert)
       else if (this.tier > 0) { this.maxTier = this.tier - 1; this.tier--; this.dpr = Math.min(QUALITY[this.tier].dpr, devicePixelRatio || 1); }
       this.resize(true); this.onTier && this.onTier(this.q);
     } else if (this.fastT > 9000) {
       this.fastT = 0; this.lastChange = now; this.ft.length = 0;
       const maxD = Math.min(Q.dpr, devicePixelRatio || 1);
-      if (this.dpr + 0.25 <= maxD + 1e-3) { this.dpr += 0.25; this.resize(true); }
+      if (this.dpr + 0.25 <= maxD + 1e-3) { this.dpr += 0.25; this.resize(true); this.onTier && this.onTier(this.q); }
       else if (this.tier < this.maxTier) { this.tier++; this.dpr = Math.max(QUALITY[this.tier].dprMin, Math.min(this.dpr, devicePixelRatio || 1)); this.resize(true); this.onTier && this.onTier(this.q); }
     }
   }

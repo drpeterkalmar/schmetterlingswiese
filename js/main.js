@@ -16,7 +16,7 @@ import { Input } from './input.js';
 import { UI } from './ui/ui.js';
 import { STUNTS, FINALES } from './game/stunts.js';
 
-export const VERSION = '2.7.0';
+export const VERSION = '2.8.0';
 
 class App {
   constructor() {
@@ -50,7 +50,7 @@ class App {
     this.finaleOverride = new URLSearchParams(location.search).get('finale'); // ?finale=<n|id>: Sieger-Einlage erzwingen
     this.timeScale = 1; this.realDt = 0; // Zeitlupe der Sieger-Einlage (nur Spielgeschehen, nicht Musik/Wind)
     this.applySettings();
-    this.renderer.onTier = (q) => { this.world.setQuality(q); this.ui.onQuality && this.ui.onQuality(q); };
+    this.renderer.onTier = (q) => { this.world.setQuality(q, this.renderer.dekoK); this.ui.onQuality && this.ui.onQuality(q); };
     this.bindGlobal();
     const p = this.progress.cur;
     this.menuWorld(p && p.lastWorld ? p.lastWorld : 'wiese');
@@ -74,7 +74,7 @@ class App {
     if (s.quality !== 'auto') this.renderer.setMode(+s.quality); else this.renderer.mode = 'auto';
   }
   setSetting(k, v) { this.settings[k] = v; this.progress.save(); this.applySettings(); }
-  qualityForBuild() { return { ...this.renderer.q, grassMax: GRASS_MAX }; }
+  qualityForBuild() { return { ...this.renderer.q, grassMax: GRASS_MAX, dekoK: this.renderer.dekoK }; }
 
   bindGlobal() {
     const unlock = () => this.audio.unlock();

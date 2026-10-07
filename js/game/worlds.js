@@ -13,6 +13,8 @@ export const WORLDS = [
     far: [{ color: 0x7fb49a, h: 40, mist: 0.1 }, { color: 0x9fc3d6, h: 68, mist: 0.2 }, { color: 0xc2d8ee, h: 100, mist: 0.3 }],
     terrain: { t1: [2.4, 0.035, 0.041, 1.7], t2: [1.3, 0.09, 0.075, 2.0], t3: [0.6, 0.15, 0.17, 0.4], edge: [115, 185, 26] },
     cloudN: 14, flowerN: 1100, particles: 'pollen', wind: [0.55, 0.3],
+    // v2.8 Deko: Lichtstrahlen-Stärke, Anteil Schirmchen (Rest Sonnenstaub), Farben der Wiesenblüten
+    deko: { shafts: 0.17, fluff: 0.55, bloom: [0xffffff, 0xff8fb0, 0xffd23f, 0x8fd3ff, 0xb38cff, 0xffffff] },
     // v2.3: Regenbogen, goldene Morgen-Lichter, Sand-/Pfadflecken, Vergissmeinnicht + Gänseblümchen
     patch: [0.6, 3.0, 0, 0], patchCol: 0xdccf9c, gold: [0xffe9a8, 0.26], carpet: [0x6ec6ff, 0x8fd3ff, 0xffffff],
     music: { root: 65, mode: 'major', bpm: 84 }, amb_sfx: ['birds', 'wind'],
@@ -32,6 +34,8 @@ export const WORLDS = [
     far: [{ color: 0xa6b877, h: 32, mist: 0.1, round: 2 }, { color: 0xc9c995, h: 55, mist: 0.2 }, { color: 0xe6dcc0, h: 85, mist: 0.3 }],
     terrain: { t1: [1.6, 0.03, 0.036, 0.6], t2: [0.9, 0.08, 0.07, 1.2], t3: [0.4, 0.14, 0.16, 2.2], edge: [118, 190, 24] },
     cloudN: 10, flowerN: 900, sunflowers: 200, particles: 'pollen', wind: [0.7, 0.2],
+    // v2.8 Deko: Lichtstrahlen-Stärke, Anteil Schirmchen (Rest Sonnenstaub), Farben der Wiesenblüten
+    deko: { shafts: 0.1, fluff: 0.45, bloom: [0xffd23f, 0xffffff, 0xff9f43, 0xff6b6b, 0xfff07a, 0xffffff] },
     music: { root: 67, mode: 'major', bpm: 92 }, amb_sfx: ['birds', 'wind'],
   },
   {
@@ -47,6 +51,8 @@ export const WORLDS = [
     far: [{ color: 0x6aa996, h: 42, mist: 0.1 }, { color: 0x92c4c0, h: 72, mist: 0.2 }, { color: 0xbde0e2, h: 105, mist: 0.3 }],
     terrain: { t1: [2.0, 0.034, 0.04, 2.9], t2: [1.1, 0.085, 0.07, 0.3], t3: [0.5, 0.15, 0.16, 1.1], edge: [118, 185, 24], pond: [0, 0, 34, 2.4] },
     cloudN: 14, flowerN: 1000, pads: 46, particles: 'pollen', wind: [0.45, 0.35],
+    // v2.8 Deko: Lichtstrahlen-Stärke, Anteil Schirmchen (Rest Sonnenstaub), Farben der Wiesenblüten
+    deko: { shafts: 0.13, fluff: 0.5, bloom: [0xff9ec4, 0x8fd3ff, 0xffffff, 0xd6a4ff, 0xfff07a, 0xffffff] },
     patch: [0.45, 2.8, 2.1, 1.3], carpet: [0x8fd3ff, 0xffffff, 0xd6a4ff], bench: 'plain',
     music: { root: 62, mode: 'lydian', bpm: 78 }, amb_sfx: ['birds', 'water', 'wind'],
   },
@@ -63,6 +69,8 @@ export const WORLDS = [
     far: [{ color: 0xb48ca8, h: 38, mist: 0.15 }, { color: 0xd3a2b4, h: 64, mist: 0.25 }, { color: 0xefc1c0, h: 92, mist: 0.35 }],
     terrain: { t1: [2.6, 0.032, 0.038, 0.9], t2: [1.2, 0.09, 0.08, 2.4], t3: [0.6, 0.16, 0.14, 0.2], edge: [115, 180, 28] },
     cloudN: 12, flowerN: 1000, particles: 'petals', wind: [0.6, 0.35],
+    // v2.8 Deko: Lichtstrahlen-Stärke, Anteil Schirmchen (Rest Sonnenstaub), Farben der Wiesenblüten
+    deko: { shafts: 0.26, fluff: 0.12, shaftCol: 0xffc890, bloom: [0xffffff, 0xffc9dc, 0xff9fc0, 0xfff1a8, 0xd9b3ff, 0xffffff] },
     patch: [0.5, 3.0, 0.7, 2.2], patchCol: 0xe8cfb0, gold: [0xffc27a, 0.36], carpet: [0xffffff, 0xffc9dc, 0xffe6ef],
     flowerPal: { poppy: [0xff85b3, 0xff6f9a, 0xffb3cf], bell: [0xd9b3ff, 0xc8a8ff, 0xffffff], heath: [0xffb3cf, 0xe8a0d8] },
     music: { root: 64, mode: 'pentatonic', bpm: 74 }, amb_sfx: ['birds', 'wind'],
@@ -80,6 +88,8 @@ export const WORLDS = [
     far: [{ color: 0x3a3a6c, h: 40, mist: 0.45 }, { color: 0x4e4c82, h: 68, mist: 0.5 }, { color: 0x6e6496, h: 98, mist: 0.55 }],
     terrain: { t1: [2.2, 0.036, 0.04, 4.1], t2: [1.2, 0.088, 0.072, 1.6], t3: [0.6, 0.15, 0.17, 3.0], edge: [115, 185, 25] },
     cloudN: 8, cloud: 0x8a88b8, flowerN: 1000, particles: 'fireflies', wind: [0.35, 0.2],
+    // v2.8 Deko: Lichtstrahlen-Stärke, Anteil Schirmchen (Rest Sonnenstaub), Farben der Wiesenblüten
+    deko: { bloom: [0x9fd8ff, 0xd0a8ff, 0xb8ffe8, 0xfff0a0, 0xff9ed2, 0x9fd8ff] },
     patch: [0.4, 2.9, 3.1, 0.6], patchCol: 0x7c8494, cloudShadow: 0, bench: 'lantern', carpet: [0x9fd8ff, 0xd0a8ff, 0xffffff],
     flowerPal: { poppy: [0xff9ed2, 0xd0a8ff], bell: [0x9fd8ff, 0xb0c8ff], heath: [0xd0a8ff, 0xb89cff] },
     music: { root: 60, mode: 'dorian', bpm: 66 }, amb_sfx: ['crickets', 'wind'],

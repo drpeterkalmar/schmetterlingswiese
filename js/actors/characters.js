@@ -470,7 +470,7 @@ export class Critter {
     const skin = L.skin && L.skin !== 'none' ? L.skin : null, form = L.wing || 'rund';
     const tshape = form === 'spitz' ? (shape === 'long' ? 'longtip' : 'tip') : shape;
     const st = form === 'lang' ? [1.3, 0.85] : [1, 1];
-    const gm = this.mat({ map: tex('g:' + tshape + ':' + (skin || ''), () => glassWing(tshape, skin)), transparent: true, side: THREE.DoubleSide, rim: 1.2, soft: 0.3, emis: skin === 'leucht' ? 0.6 : skin ? 0.2 : 0.15, color: skin ? 0xffffff : tint });
+    const gm = this.mat({ map: tex('g:' + tshape + ':' + (skin || ''), () => glassWing(tshape, skin)), transparent: true, side: THREE.DoubleSide, rim: 1.2, soft: 0.3, emis: skin === 'leucht' ? 0.6 : skin ? 0.2 : 0.15, color: skin ? 0xffffff : tint, iri: !skin });
     this.fxMat(gm, skin);
     for (const w of specs) for (const s of [1, -1]) {
       const W = w.w * st[0], H = w.h * st[1];

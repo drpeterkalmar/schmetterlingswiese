@@ -7,6 +7,8 @@ import * as N from './nature.js';
 const _c = new THREE.Color(), _v = new THREE.Vector3();
 import { Ambient } from './particles.js';
 import { Life } from './life.js';
+import { Deko } from './deko.js';
+import { DEKO } from '../engine/deko.js';
 
 export class World {
   constructor(scene) {
@@ -36,6 +38,9 @@ export class World {
     su.uStars.value = w.sky.stars || 0; su.uMoon.value = w.sky.moon || 0;
     if (w.sky.moon) su.uMoonDir.value.copy(G.uSunDir.value);
     G.uWaterY.value = w.terrain.pond ? 0 : -99;
+    // v2.8 Deko: Nachtblüten glimmen, Wasser spiegelt den Himmel
+    G.uNight.value = DEKO && w.sky.stars ? 1 : 0;
+    G.uSkyZen.value.set(w.sky.zenith); G.uSkyHor.value.set(w.sky.horizon);
     // v2.3: Regenbogen, goldene Graslichter, Sternschnuppen
     su.uRainbow.value = w.sky.rainbow || 0; su.uShootT.value = -1;
     const gd = w.gold || [0xffffff, 0]; _c.set(gd[0]); G.uGold.value.set(_c.r, _c.g, _c.b, gd[1]);
@@ -53,6 +58,10 @@ export class World {
     this.far = buildFar(w, hashStr(w.id)); g.add(this.far);
     this.grass = N.buildGrass(quality.grassMax, 64, rng(99)); g.add(this.grass);
     this.grass.userData.setCount(quality.grass);
+    // v2.8: Wiesenblüten, Lichtstrahlen, Schirmchen (nur mit Deko; Stückzahl je Qualitätsstufe)
+    this.deko = DEKO ? new Deko(w, quality, quality.dekoK ?? 1) : null;
+    if (this.deko) g.add(this.deko.group);
+    G.uDq.value = DEKO && quality.id > 0 ? (quality.dekoK ?? 1) : 0;
     const P0 = pond();
     const avoidPond = P0[2] > 1 ? (x, z) => Math.hypot(x - P0[0], z - P0[1]) < P0[2] * 1.35 : null;
     const sfC = w.sunflowers ? { x: 0, z: 0, R: 62 } : null;
@@ -104,6 +113,7 @@ export class World {
       const c = this.grass.material.uniforms.uCenter.value;
       const dx = focus.x - cam.position.x, dz = focus.z - cam.position.z, l = Math.hypot(dx, dz) || 1;
       c.set(focus.x + dx / l * 9, focus.y, focus.z + dz / l * 9);
+      if (this.deko) this.deko.update(dt, cam, focus, c);
     }
     if (this.clouds) this.clouds.userData.update(dt);
     if (this.pond) this.pond.userData.update(dt, G.uTime.value);
@@ -128,9 +138,11 @@ export class World {
     }
   }
 
-  setQuality(q) {
+  setQuality(q, k = 1) {
     if (this.grass) this.grass.userData.setCount(q.grass);
     if (this.ambient) this.ambient.setCount(q.particles);
+    if (this.deko) this.deko.setQuality(q, k);
+    G.uDq.value = DEKO && q.id > 0 ? k : 0;
   }
 
   dispose() {

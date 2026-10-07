@@ -1,5 +1,6 @@
 // Grafik-Kern: gemeinsame Uniforms, Toon-Shader, Himmel, Post-Processing.
 import * as THREE from 'three';
+import { DEF } from './deko.js';
 
 // Gemeinsame Uniform-Objekte (per Referenz in allen Materialien geteilt)
 export const G = {
@@ -30,6 +31,11 @@ export const G = {
   uPatch: { value: new THREE.Vector4(0, 1, 0, 0) },
   uGold: { value: new THREE.Vector4(1, 0.9, 0.6, 0) },
   uCloudSh: { value: [0, 1, 2, 3, 4, 5].map(() => new THREE.Vector4(0, 0, 1, 0)) },
+  // v2.8 Deko: Stufe (0 = aus/Niedrig, 0,5 = Auto-Drosselung, 1 = voll), Nacht (leuchtende Blüten), Himmelsfarben fürs Wasser
+  uDq: { value: 1 },
+  uNight: { value: 0 },
+  uSkyZen: { value: new THREE.Color(0.4, 0.6, 0.9) },
+  uSkyHor: { value: new THREE.Color(0.85, 0.92, 1) },
 };
 // Wolkenschatten: weiche dunkle Flecken, die mit dem Wind über die Wiese ziehen (nur Boden + Gras, kein Draw-Call)
 const CLOUD_SH = /* glsl */`
@@ -61,13 +67,13 @@ float patchAmt(vec2 p){
   return smoothstep(0.62, 0.92, s) * uPatch.x;
 }`;
 
-const V_COMMON = /* glsl */`
+export const V_COMMON = /* glsl */`
 uniform float uTime; uniform float uBend; uniform vec3 uCam; uniform vec3 uWind; uniform vec3 uPlayer;
 vec4 bendW(vec4 wp){ vec2 d = wp.xz - uCam.xz; wp.y -= uBend * dot(d, d); return wp; }
 float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
 `;
 
-const F_LIGHT = /* glsl */`
+export const F_LIGHT = /* glsl */`
 uniform vec3 uSunDir, uSunCol, uSkyAmb, uGndAmb, uRim, uFogCol, uFogSun; uniform vec4 uFog; uniform vec3 uCam;
 vec3 applyFog(vec3 col, vec3 wp){
   vec3 dv = wp - uCam; float dist = length(dv);
@@ -219,6 +225,12 @@ void main(){
   float tr = pow(clamp(dot(-V, uSunDir), 0.0, 1.0), 2.0) * 0.6;
   c += alb * uSunCol * tr;
 #endif
+#if (defined(WINGMASK) || defined(IRI)) && defined(DEKO)
+  // v2.8: Perlmutt-Schimmer – der Farbton wandert mit Blickwinkel und Flügelschlag, am Rand am stärksten
+  float nv = dot(N, V);
+  vec3 iri = 0.5 + 0.5 * cos(6.2831 * (nv * 1.4 + vUv.x * 0.6 + vec3(0.0, 0.33, 0.67)));
+  c += iri * (0.06 + 0.22 * pow(1.0 - abs(nv), 2.0)) * (0.35 + 0.65 * dot(alb, vec3(0.33))) * (uSkyAmb + uSunCol * 0.5);
+#endif
   c = mix(c, alb * (1.0 + uEmis), clamp(vCol.a + uEmis, 0.0, 1.0));
 #ifdef CLOUD
   // weiche Wolkenkanten: Silhouette geht in den Dunst über
@@ -242,6 +254,7 @@ export function toonMat(o = {}) {
   if (o.tint) defines.USE_TINT = '';
   if (o.cloud) defines.CLOUD = '';
   if (o.rig) defines.RIG = '';
+  if (o.iri) defines.IRI = ''; // v2.8: Perlmutt-Schimmer (Glasflügel)
   if (o.alphaTest) defines.ALPHATEST = o.alphaTest.toFixed(3);
   const u = {
     ...G,
@@ -259,7 +272,7 @@ export function toonMat(o = {}) {
     uWC: { value: new THREE.Color(o.wc ?? 0x3a2418) },
   };
   const m = new THREE.ShaderMaterial({
-    uniforms: u, defines, vertexShader: TOON_V, fragmentShader: TOON_F,
+    uniforms: u, defines, vertexShader: TOON_V, fragmentShader: DEF + TOON_F,
     vertexColors: !!o.vc, side: o.side ?? THREE.FrontSide,
     transparent: !!o.transparent, depthWrite: o.depthWrite ?? !o.transparent, depthTest: o.depthTest ?? true,
   });
@@ -385,7 +398,15 @@ void main(){
   float gold = smoothstep(0.55, 0.95, sin(vWP.x * 0.043 + sin(vWP.z * 0.061) * 2.3) * sin(vWP.z * 0.039 - 1.1 + sin(vWP.x * 0.05)));
   tip = mix(tip, uGold.rgb, uGold.a * gold);
   vec3 alb = mix(uGrassA, tip, smoothstep(0.0, 1.0, vH));
+#ifdef DEKO
+  // v2.8: Büschel unterschiedlich satt/hell, vereinzelt sonnengelbe Halme, Windwellen als heller Glanz über die Wiese
+  float cl = sin(vWP.x * 0.29 + sin(vWP.z * 0.23) * 1.7) * sin(vWP.z * 0.26 - sin(vWP.x * 0.19) * 1.3);
+  alb *= 0.9 + 0.2 * fract(vR * 7.3) + 0.07 * cl;
+  alb = mix(alb, mix(alb, uGrassC * 1.1, 0.55), smoothstep(0.8, 1.0, fract(vR * 3.7)) * vH);
+  alb += (uSunCol * 0.09 + vec3(0.05, 0.06, 0.02)) * vWave * vWave * vH * 1.6;
+#else
   alb += vec3(0.07, 0.08, 0.03) * vWave * vH;
+#endif
   vec3 V = normalize(uCam - vWP);
   float ndl = clamp(dot(normalize(vN), uSunDir), 0.0, 1.0);
   vec3 amb = mix(uGndAmb, uSkyAmb, 0.6 + 0.4 * vH);
@@ -402,7 +423,7 @@ void main(){
 export function grassMat(field) {
   return new THREE.ShaderMaterial({
     uniforms: { ...G, uField: { value: field }, uCenter: { value: new THREE.Vector3() } },
-    vertexShader: GRASS_V, fragmentShader: GRASS_F, side: THREE.DoubleSide,
+    vertexShader: GRASS_V, fragmentShader: DEF + GRASS_F, side: THREE.DoubleSide,
   });
 }
 
