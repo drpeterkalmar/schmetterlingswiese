@@ -1,6 +1,7 @@
 // Natur: Gras, Blumen, Bäume, Sonnenblumen, Seerosen, Wolken, Wasser, Pilze …
 import * as THREE from 'three';
 import { G, toonMat, grassMat, glowMat } from '../engine/gfx.js';
+import { DEF } from '../engine/deko.js';
 import { Build, P, petalGeo, clumpGeo, rng } from '../engine/geo.js';
 import { height, pond } from './terrain.js';
 
@@ -451,6 +452,7 @@ void main(){ vec4 wp = modelMatrix * vec4(position, 1.0); vWP = wp.xyz;
 const WATER_F = /* glsl */`
 uniform vec3 uSunDir, uSunCol, uSkyAmb, uFogCol, uFogSun, uCam, uWDeep, uWShallow; uniform vec4 uFog; uniform float uTime; uniform vec4 uPond;
 uniform vec4 uRip[5]; // v2.3: Wasserringe (x, z, Startzeit, Stärke)
+uniform vec3 uSkyZen, uSkyHor; uniform float uDq;
 varying vec3 vWP;
 float n2(vec2 p){ return sin(p.x) * sin(p.y); }
 void main(){
@@ -461,10 +463,25 @@ void main(){
   float dc = distance(p, uPond.xy) / uPond.z;
   vec3 base = mix(uWDeep, uWShallow, smoothstep(0.3, 1.0, dc));
   float fres = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+#ifdef DEKO
+  // v2.8: der Himmel spiegelt sich (am Horizont hell, steil von oben eher Wasserfarbe)
+  vec3 Rf = reflect(-V, N);
+  vec3 c = mix(base, mix(uSkyHor, uSkyZen, smoothstep(0.0, 0.5, Rf.y)) * 1.05, fres * 0.75 + 0.06);
+#else
   vec3 c = mix(base, uSkyAmb * 1.25, fres * 0.7);
+#endif
   vec3 H = normalize(uSunDir + V);
   float s = pow(max(dot(N, H), 0.0), 180.0);
   c += uSunCol * smoothstep(0.3, 0.5, s) * 1.6;
+#ifdef DEKO
+  if (uDq > 0.0) { // Sonnenglitzer: einzelne Funken blitzen auf der Bahn zur Sonne
+    vec2 gp = p * 3.4 + vec2(uTime * 0.15, uTime * 0.07); vec2 gi = floor(gp), gf = fract(gp) - 0.5;
+    float gr = fract(sin(dot(gi, vec2(12.9898, 78.233))) * 43758.5453);
+    float tw = max(sin(uTime * (2.5 + gr * 5.0) + gr * 40.0), 0.0); tw *= tw * tw;
+    float spark = step(0.78, gr) * smoothstep(0.2, 0.0, length(gf)) * tw * pow(max(dot(N, H), 0.0), 20.0);
+    c += uSunCol * spark * 3.2;
+  }
+#endif
   // Glitzerlinien
   float lines = smoothstep(0.92, 1.0, sin((p.x + p.y) * 2.0 + w * 3.0 + uTime) * 0.5 + 0.5);
   c += vec3(1.0) * lines * 0.12 * (1.0 - fres);
@@ -487,7 +504,7 @@ void main(){
 function waterMat() {
   return new THREE.ShaderMaterial({
     uniforms: { ...G, uWDeep: { value: new THREE.Color(0x2f8fa8) }, uWShallow: { value: new THREE.Color(0x7fd6d0) }, uRip: { value: [0, 1, 2, 3, 4].map(() => new THREE.Vector4(0, 0, -99, 0)) } },
-    vertexShader: WATER_V, fragmentShader: WATER_F,
+    vertexShader: WATER_V, fragmentShader: DEF + WATER_F,
   });
 }
 

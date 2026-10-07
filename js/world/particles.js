@@ -1,6 +1,7 @@
 // Partikel: Umgebung (GPU, folgt dem Spieler) + Effekt-Bursts (Pool, 1 Draw-Call)
 import * as THREE from 'three';
 import { G } from '../engine/gfx.js';
+import { DEF, RM } from '../engine/deko.js';
 
 export const PX = { value: 800 }; // Pixelhöhe des Zeichenpuffers (für Punktgrößen)
 
@@ -23,8 +24,15 @@ void main(){
     size = 0.07 + aR.w * 0.07; a = 0.75;
   } else if (uMode < 1.5) { // Glühwürmchen
     drift = vec3(sin(t * 0.4 + aR.w * 30.0) * 2.5, sin(t * 0.7 + aR.w * 17.0) * 1.2, cos(t * 0.35 + aR.w * 23.0) * 2.5);
+#ifdef DEKO
+    // v2.8: echtes Glühwürmchen-Blinken (schnell an, langsam aus, Pause) + größerer Lichthof
+    size = 0.42 + aR.w * 0.2;
+    float fp = fract(t * (0.22 + aR.w * 0.18) + aR.w * 7.0);
+    a = 0.1 + 0.9 * smoothstep(0.0, 0.05, fp) * (1.0 - smoothstep(0.08, 0.5, fp));
+#else
     size = 0.22 + aR.w * 0.12;
     a = smoothstep(0.2, 0.9, sin(t * (1.2 + aR.w) + aR.w * 50.0) * 0.5 + 0.5);
+#endif
   } else { // Blütenblätter
     drift = vec3(uWind.x * t * 1.2 + sin(t * 0.9 + aR.w * 20.0) * 1.2, -t * (0.9 + aR.w * 0.6), uWind.y * t * 1.2 + cos(t * 0.8 + aR.w * 9.0) * 1.2);
     size = 0.16 + aR.w * 0.08; a = 1.0;
@@ -55,6 +63,13 @@ void main(){
     float d = length(q) * 2.0;
     a = pow(max(1.0 - d, 0.0), uMode > 0.5 ? 1.6 : 2.4);
     c = mix(uCol, uCol2, vK) * (uMode > 0.5 ? 2.2 : 1.4);
+#ifdef DEKO
+    if (uMode > 0.5) { // heller Kern + weicher Schein
+      float core = smoothstep(0.2, 0.0, d);
+      a = core + pow(max(1.0 - d, 0.0), 2.6) * 0.5;
+      c = mix(uCol, uCol2, vK) * (1.3 + 1.8 * core);
+    }
+#endif
   }
   gl_FragColor = vec4(c, a * vA);
 }`;
@@ -76,7 +91,7 @@ export class Ambient {
         uBox: { value: mode === 1 ? new THREE.Vector3(70, 9, 70) : new THREE.Vector3(46, 18, 46) },
         uCol: { value: new THREE.Color(cols[0]) }, uCol2: { value: new THREE.Color(cols[1]) },
       },
-      vertexShader: AMB_V, fragmentShader: AMB_F, transparent: true, depthWrite: false,
+      vertexShader: DEF + AMB_V, fragmentShader: DEF + AMB_F, transparent: true, depthWrite: false,
       blending: mode === 2 ? THREE.NormalBlending : THREE.AdditiveBlending,
     });
     this.points = new THREE.Points(g, this.mat);
@@ -150,6 +165,7 @@ export class Bursts {
     this.aCol = new THREE.BufferAttribute(this.col, 3).setUsage(THREE.DynamicDrawUsage);
     this.aP = new THREE.BufferAttribute(this.p, 4).setUsage(THREE.DynamicDrawUsage);
     g.setAttribute('position', this.aPos); g.setAttribute('aCol', this.aCol); g.setAttribute('aP', this.aP);
+    this.attrs = [this.aPos, this.aCol, this.aP];
     this.geo = g;
     const mat = new THREE.ShaderMaterial({
       uniforms: { uBend: G.uBend, uCam: G.uCam, uPx: PX }, vertexShader: B_V, fragmentShader: B_F,
@@ -162,7 +178,7 @@ export class Bursts {
   }
   // o: {n, pos(Vector3), spread, speed, up, life, size, colors[], shape, grav, spin, drag, vel(Vector3)}
   emit(o) {
-    const n = o.n || 10;
+    const n = RM && (o.n || 10) > 1 ? Math.ceil((o.n || 10) * 0.5) : (o.n || 10); // v2.8: prefers-reduced-motion
     for (let k = 0; k < n; k++) {
       let i;
       if (this.n < this.max) i = this.n++;
@@ -203,7 +219,8 @@ export class Bursts {
       i++;
     }
     this.geo.setDrawRange(0, this.n);
-    if (this.n) { this.aPos.needsUpdate = true; this.aCol.needsUpdate = true; this.aP.needsUpdate = true; }
+    // v2.8: nur den belegten Teil hochladen (vorher immer alle 1000 Plätze × 3 Puffer, sobald ein Teilchen lebte)
+    if (this.n) for (const a of this.attrs) { a.clearUpdateRanges(); a.addUpdateRange(0, this.n * a.itemSize); a.needsUpdate = true; }
   }
   kill(i) {
     const j = --this.n;

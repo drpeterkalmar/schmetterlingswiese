@@ -5,6 +5,7 @@ import { Build, P, rng, hashStr } from '../engine/geo.js';
 import { height, pond } from '../world/terrain.js';
 import { Flyers, Animals, Wasps } from '../actors/npcs.js';
 import { makeTask, GlitterStar } from './objectives.js';
+import { DEKO } from '../engine/deko.js';
 import { DIFFS, worldOf, isRace, timeGoals } from './levels.js';
 import { pickStunt, stuntByKey, stuntName, COOLDOWN, C as SC, ease, pickFinale, finaleByKey, ACCENT, FINALE_AMP, FINALE_DUR } from './stunts.js';
 
@@ -403,6 +404,10 @@ export class Game {
     this.app.audio.sfx('land');
     this.app.haptics.buzz('land');
     this.bursts.emit({ n: 10, pos: this.player.pos, colors: [0xffffff, 0xe0ffd0], shape: 0, size: 0.25, speed: 2, up: 0.8, life: 0.6, grav: -1 });
+    if (DEKO) { // v2.8: weicher Leuchtring + goldene Pollen stäuben auf
+      this.bursts.emit({ n: 1, pos: this.player.pos, colors: [0xfff3c0], shape: 5, size: 2.4, speed: 0, up: 0, life: 0.45, grav: 0, drag: 0 });
+      this.bursts.emit({ n: 12, pos: this.player.pos, colors: [0xffe07a, 0xfff6c8, 0xffc0dc], shape: 0, size: 0.16, speed: 1.6, up: 1.2, life: 1.2, grav: -0.6, drag: 2 });
+    }
     let used = false;
     for (const t of this.tasks) if (t.onLand && t.onLand(spot)) used = true;
     if (!this.shownHints.takeoff) { this.shownHints.takeoff = true; this.app.ui.hint(used ? '🍯 Nektar schlürfen … dann ▲ oben halten zum Abheben' : '▲ Oben halten zum Abheben'); }

@@ -5,6 +5,7 @@ import { AVATAR_COLORS, ALBUM, BADGES } from '../game/progress.js';
 import { CHARACTERS, COLORS, HATS, EXTRAS, PATTERNS, SKINS, TRAILS, SIZES, WINGFORMS, ANTENNAE, EYESTYLES, FUN, PALETTE, SLOT_NAMES, DEFAULT_LOOK, randomLook } from '../actors/characters.js';
 import { wingMask, glassWing, skinWing, tintMask, wingIcon } from '../engine/textures.js';
 import { BUILD } from '../build.js';
+import { DEKO } from '../engine/deko.js';
 
 const WGRAD = { wiese: 'linear-gradient(160deg,#8ee39a,#5db4ea)', sonne: 'linear-gradient(160deg,#ffd45a,#ff9460)', teich: 'linear-gradient(160deg,#5fd6c8,#5a92e8)', kirsch: 'linear-gradient(160deg,#ffa6cc,#b48cf0)', abend: 'linear-gradient(160deg,#3e4396,#9a62b4)' };
 const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -155,7 +156,7 @@ export class UI {
     const k = this.loadK;
     return `<div class="screen" id="title" data-a="start">
       <div class="logo"><div class="bfly"><i class="sp s1">✨</i>🦋<i class="sp s2">✨</i></div><div class="t1">Schmetterlings&shy;wiese</div><div class="t2">Fliegen · Sammeln · Tierbabys besuchen</div>
-        <div class="neu">Neu: 8 Missionen pro Welt!</div></div>
+        <div class="neu">${DEKO ? 'Neu: Blumenwiese &amp; Lichtzauber!' : 'Neu: 8 Missionen pro Welt!'}</div></div>
       <div class="bottom"><div class="tapgo">👆 Tippe, um loszufliegen!</div>
       <div class="loadbar" style="${k >= 1 ? 'opacity:0' : ''}"><div style="width:${Math.round(k * 100)}%"></div></div>
       <div class="loadtxt" style="${k >= 1 ? 'opacity:0' : ''}">🎵 Klänge werden gezaubert … ${Math.round(k * 100)} %</div></div>

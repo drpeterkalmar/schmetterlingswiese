@@ -11,12 +11,25 @@ const SPEC = {
 };
 const PUFF = { n: 7, shape: 7, size: 0.62, colors: [0xe8f7cc, 0xdff2ea, 0xf2ecff, 0xfff6d8], life: 1.7, grav: 0.3, drag: 2.2, speed: 1.1, up: 0.2, spread: 0.3 };
 const _p = new THREE.Vector3(), _f = new THREE.Vector3(), _one = [0];
+// v2.8 Deko: Flügelstaub (zart, kurz) – nur wenn keine Spur gewählt ist, damit freigeschaltete Spuren besonders bleiben
+const DUST = { every: 0.07, colors: [0xfff6d0, 0xffe7a0, 0xffd0ea, 0xd8f0ff], size: 0.09, life: 0.75 };
 
 export class Trail {
   constructor(bursts, onPuff) {
     this.b = bursts; this.onPuff = onPuff;
     this.acc = 0; this.puffT = 1.2; this.hue = 0;
     this.o = { n: 1, pos: _p, vel: new THREE.Vector3(), colors: _one, shape: 0, size: 0.3, speed: 0, up: 0, life: 1, grav: 0, drag: 1, spread: 0.2, spin: 3 };
+  }
+  dust(dt, pos, fwd, speed, k = 1) {
+    this.dAcc = (this.dAcc || 0) + dt * Math.min(1.5, speed / 7);
+    if (this.dAcc < DUST.every) return;
+    this.dAcc = 0;
+    const o = this.o;
+    _f.copy(fwd); _f.y = 0; if (_f.lengthSq() < 1e-6) _f.set(0, 0, 1); _f.normalize();
+    _p.copy(pos).addScaledVector(_f, -0.3 * k); _p.y += 0.05 * k;
+    o.n = 1; o.shape = 0; o.size = DUST.size * k; o.colors = DUST.colors; o.life = DUST.life; o.grav = -0.5; o.drag = 2.5;
+    o.speed = 0.35; o.up = 0; o.spread = 0.5 * k; o.spin = 0; o.vel.copy(_f).multiplyScalar(-0.6);
+    this.b.emit(o);
   }
   // pos: Figur, fwd: Blickrichtung, speed: m/s, k: Größe, drift: Zusatz-Geschwindigkeit (Menü: gedachter Fahrtwind)
   update(dt, id, pos, fwd, speed, k = 1, drift = null) {

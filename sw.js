@@ -1,5 +1,5 @@
 // Service-Worker: offline spielbar, sauberes Cache-Busting über Inhalts-Hash (tools/update_sw.py)
-const VERSION = '3f5f0ba1e4';
+const VERSION = 'e964bd9092';
 const CACHE = 'schmetterlingswiese-' + VERSION;
 const ASSETS = [
   './',

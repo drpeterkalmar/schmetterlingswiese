@@ -13,8 +13,10 @@ import { DEKO } from '../engine/deko.js';
 export class World {
   constructor(scene) {
     this.scene = scene;
-    this.sky = new THREE.Mesh(new THREE.SphereGeometry(900, 32, 16), skyMat());
-    this.sky.frustumCulled = false; this.sky.renderOrder = -2;
+    // v2.8 Deko: feinere Kugel (Milchstraße je Eckpunkt) und Himmel NACH der Landschaft zeichnen → verdeckte Himmelspixel
+    // fallen beim Tiefentest weg (vorher wurde der ganze Bildschirm erst mit Himmel gefüllt)
+    this.sky = new THREE.Mesh(DEKO ? new THREE.SphereGeometry(900, 96, 48) : new THREE.SphereGeometry(900, 32, 16), skyMat());
+    this.sky.frustumCulled = false; this.sky.renderOrder = DEKO ? 2 : -2;
     scene.add(this.sky);
     this.group = null;
     this.grass = null;

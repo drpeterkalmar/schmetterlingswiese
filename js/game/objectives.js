@@ -7,6 +7,7 @@ import { Critter } from '../actors/characters.js';
 import { sunflowerGeo } from '../world/nature.js';
 import { HeightField, seatWorld } from './seat.js';
 import { rivalOf } from './levels.js';
+import { DEKO } from '../engine/deko.js';
 
 const _o = new THREE.Object3D();
 const _c = new THREE.Color();
@@ -464,6 +465,9 @@ class LandTask extends Task {
       else {
         this.sip.t += dt;
         if (Math.random() < dt * 12) g.bursts.emit({ n: 1, pos: _v.copy(this.sip.spot.pos).add(_w.set(0, 0.3, 0)), colors: [0xffe07a, 0xffb0d8], speed: 1.2, up: 1.5, size: 0.18, life: 0.7, shape: 0, grav: -1 });
+        // v2.8 Deko: goldene Sternchen steigen aus der Blüte, dazu ein weicher Honig-Schein
+        if (DEKO && Math.random() < dt * 7) g.bursts.emit({ n: 1, pos: _v.copy(this.sip.spot.pos).add(_w.set((Math.random() - 0.5) * 0.6, 0.2, (Math.random() - 0.5) * 0.6)), colors: [0xfff3b0, 0xffd84a, 0xffffff], speed: 0.3, up: 1.1, size: 0.26, life: 1.1, shape: 1, grav: 0.15, drag: 1.5 });
+        if (DEKO && Math.random() < dt * 2.5) g.bursts.emit({ n: 1, pos: _v.copy(this.sip.spot.pos).add(_w.set(0, 0.25, 0)), colors: [0xffd870], speed: 0, up: 0, size: 1.4, life: 0.6, shape: 0, grav: 0, drag: 0 });
         if (this.sip.t > 1.0) { const s = this.sip.spot; s.done = true; this.cur++; this.sip = null; g.hit(s.pos, 'land', 0xffd84a); this.autoOff = 0.5; }
       }
     }

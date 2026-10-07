@@ -15,6 +15,7 @@ import { AudioEngine, Haptics, renderOffline, renderFlight, wavBase64, FLIGHT_NO
 import { Input } from './input.js';
 import { UI } from './ui/ui.js';
 import { STUNTS, FINALES } from './game/stunts.js';
+import { DEKO } from './engine/deko.js';
 
 export const VERSION = '2.8.0';
 
@@ -307,6 +308,7 @@ class App {
   // Spur hinter der Figur (im Spiel beim Fliegen, im Menü mit gedachtem Fahrtwind)
   trailUpdate(dt) {
     const pl = this.player, c = pl.critter, id = c && c.look ? c.look.trail : 'none';
+    if (c && id === 'none' && DEKO && this.mode === 'game' && this.game.state === 'play' && !pl.landed && !pl.frozen) this.trail.dust(dt, pl.pos, pl.forward(), pl.speed, c.size);
     if (!c || id === 'none') return;
     if (this.mode === 'game') {
       const st = this.game.state;

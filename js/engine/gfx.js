@@ -353,6 +353,9 @@ ${GLSL_TERRAIN}
 uniform float uField; uniform vec3 uCenter; uniform float uWaterY;
 attribute vec4 aOff; // x,z in [0,1), rand, scale
 varying vec3 vWP; varying float vH; varying float vR; varying float vWave; varying vec3 vN;
+#ifdef DEKO
+varying vec3 vPat; // v2.8: Farbmuster je Halm (Fleck, Goldlicht, Büschel) – im Vertex- statt Pixel-Shader
+#endif
 void main(){
   vec2 base = aOff.xy * uField;
   vec2 c = uCenter.xz;
@@ -383,6 +386,11 @@ void main(){
   lp.y -= length(bend) * t * t * s * 0.25;
   vec4 wp = vec4(p.x + lp.x, gh + lp.y, p.y + lp.z, 1.0);
   vWP = wp.xyz; vH = t; vR = aOff.z; vWave = wave;
+#ifdef DEKO
+  vPat = vec3(sin(p.x * 0.07 + sin(p.y * 0.05) * 2.0) * 0.5 + 0.5,
+              smoothstep(0.55, 0.95, sin(p.x * 0.043 + sin(p.y * 0.061) * 2.3) * sin(p.y * 0.039 - 1.1 + sin(p.x * 0.05))),
+              sin(p.x * 0.29 + sin(p.y * 0.23) * 1.7) * sin(p.y * 0.26 - sin(p.x * 0.19) * 1.3));
+#endif
   vN = normalize(vec3(-sa * 0.3 + bend.x * 0.4, 1.0, ca * 0.3 + bend.y * 0.4));
   gl_Position = projectionMatrix * viewMatrix * bendW(wp);
 }`;
@@ -391,17 +399,23 @@ ${F_LIGHT}
 ${CLOUD_SH}
 uniform vec3 uGrassA, uGrassB, uGrassC; uniform vec4 uGold;
 varying vec3 vWP; varying float vH; varying float vR; varying float vWave; varying vec3 vN;
+#ifdef DEKO
+varying vec3 vPat;
+#endif
 void main(){
+#ifdef DEKO
+  float patchN = vPat.x, gold = vPat.y;
+#else
   float patchN = sin(vWP.x * 0.07 + sin(vWP.z * 0.05) * 2.0) * 0.5 + 0.5;
-  vec3 tip = mix(uGrassB, uGrassC, patchN * 0.7 + vR * 0.3);
   // v2.3: goldene Lichtflecken (Morgen/Goldene Stunde)
   float gold = smoothstep(0.55, 0.95, sin(vWP.x * 0.043 + sin(vWP.z * 0.061) * 2.3) * sin(vWP.z * 0.039 - 1.1 + sin(vWP.x * 0.05)));
+#endif
+  vec3 tip = mix(uGrassB, uGrassC, patchN * 0.7 + vR * 0.3);
   tip = mix(tip, uGold.rgb, uGold.a * gold);
   vec3 alb = mix(uGrassA, tip, smoothstep(0.0, 1.0, vH));
 #ifdef DEKO
   // v2.8: Büschel unterschiedlich satt/hell, vereinzelt sonnengelbe Halme, Windwellen als heller Glanz über die Wiese
-  float cl = sin(vWP.x * 0.29 + sin(vWP.z * 0.23) * 1.7) * sin(vWP.z * 0.26 - sin(vWP.x * 0.19) * 1.3);
-  alb *= 0.9 + 0.2 * fract(vR * 7.3) + 0.07 * cl;
+  alb *= 0.9 + 0.2 * fract(vR * 7.3) + 0.07 * vPat.z;
   alb = mix(alb, mix(alb, uGrassC * 1.1, 0.55), smoothstep(0.8, 1.0, fract(vR * 3.7)) * vH);
   alb += (uSunCol * 0.09 + vec3(0.05, 0.06, 0.02)) * vWave * vWave * vH * 1.6;
 #else
@@ -423,19 +437,42 @@ void main(){
 export function grassMat(field) {
   return new THREE.ShaderMaterial({
     uniforms: { ...G, uField: { value: field }, uCenter: { value: new THREE.Vector3() } },
-    vertexShader: GRASS_V, fragmentShader: DEF + GRASS_F, side: THREE.DoubleSide,
+    vertexShader: DEF + GRASS_V, fragmentShader: DEF + GRASS_F, side: THREE.DoubleSide,
   });
 }
 
 // ---------------------------------------------------------------- Himmel
 const SKY_V = /* glsl */`
 varying vec3 vDir;
-void main(){ vDir = position; vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }`;
+#ifdef DEKO
+// v2.8: Milchstraßen-Wolken je Eckpunkt (feine Himmelskugel) statt je Pixel – spart die teure Rauschfunktion im Pixel-Shader
+uniform float uStars, uDq;
+varying vec2 vMw; // Band-Stärke, Wolkigkeit
+float h3(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+float vn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(h3(i), h3(i + vec3(1.0, 0.0, 0.0)), f.x), mix(h3(i + vec3(0.0, 1.0, 0.0)), h3(i + vec3(1.0, 1.0, 0.0)), f.x), f.y),
+             mix(mix(h3(i + vec3(0.0, 0.0, 1.0)), h3(i + vec3(1.0, 0.0, 1.0)), f.x), mix(h3(i + vec3(0.0, 1.0, 1.0)), h3(i + vec3(1.0, 1.0, 1.0)), f.x), f.y), f.z); }
+#endif
+void main(){ vDir = position;
+#ifdef DEKO
+  vMw = vec2(0.0);
+  if (uStars > 0.0 && uDq > 0.0) {
+    vec3 d = normalize(position);
+    float bd = dot(d, normalize(vec3(0.42, 0.62, -0.66)));
+    vMw.x = exp(-bd * bd * 20.0) * smoothstep(0.02, 0.35, d.y);
+    vMw.y = vn(d * 7.0) * 0.65 + vn(d * 11.0 + 4.1) * 0.35;
+  }
+#endif
+  vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }`;
 const SKY_F = /* glsl */`
 uniform vec3 uZenith, uHorizon, uSunDir, uSunCol, uGlow, uMoonDir; uniform float uSunSize, uStars, uTime, uMoon;
 uniform float uRainbow, uShootT; uniform vec3 uShootA, uShootB;
+uniform float uDq;
 varying vec3 vDir;
 float h3(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+#ifdef DEKO
+varying vec2 vMw;
+#endif
 void main(){
   vec3 d = normalize(vDir);
   float h = d.y;
@@ -453,6 +490,18 @@ void main(){
     float tw = 0.5 + 0.5 * sin(uTime * (1.3 + r * 4.0) + r * 40.0);
     st *= 0.3 + 0.7 * tw * tw;
     col += mix(vec3(1.0, 0.95, 0.85), vec3(0.8, 0.88, 1.0), fract(r * 7.0)) * st * uStars * 1.8;
+#ifdef DEKO
+    if (uDq > 0.0) {
+      // v2.8: Milchstraße – schräges, wolkiges Band mit vielen feinen Sternen
+      float band = vMw.x, cl = vMw.y;
+      col += mix(vec3(0.3, 0.28, 0.55), vec3(0.62, 0.5, 0.75), cl) * band * (0.12 + 0.5 * cl * cl) * 0.5 * uStars;
+      if (band > 0.04) { // viele feine Sterne nur im Band (spart Rechenarbeit am übrigen Himmel)
+        vec3 p2 = d * 420.0; float r2 = h3(floor(p2));
+        float st2 = step(0.99 - band * 0.05, r2) * smoothstep(0.32, 0.05, length(fract(p2) - 0.5));
+        col += vec3(0.85, 0.88, 1.0) * st2 * (0.35 + 0.65 * fract(r2 * 31.0)) * 0.9 * uStars;
+      }
+    }
+#endif
     // Sternschnuppe (Kopf + ausblendender Schweif, alle ~20 s)
     if (uShootT >= 0.0) {
       vec3 hd = normalize(mix(uShootA, uShootB, uShootT)), tl = normalize(mix(uShootA, uShootB, max(0.0, uShootT - 0.28)));
@@ -471,7 +520,23 @@ void main(){
   }
   if (uMoon > 0.0) {
     float md = dot(d, uMoonDir);
+#ifdef DEKO
+    // v2.8: Mond mit Meeren und Randverdunklung (nicht mehr nur ein heller Fleck), zarter Hof-Ring (nur in Mondnähe gerechnet)
+    if (md > 0.96) {
+    vec3 mt1 = normalize(cross(uMoonDir, vec3(0.0, 1.0, 0.0))), mt2 = cross(mt1, uMoonDir);
+    vec2 mq = vec2(dot(d, mt1), dot(d, mt2)) / 0.042;
+    float mr = length(mq);
+    float disk = smoothstep(1.0, 0.92, mr) * step(0.0, md);
+    float mare = smoothstep(0.45, 0.18, length(mq - vec2(-0.25, 0.2))) * 0.55 + smoothstep(0.32, 0.12, length(mq - vec2(0.32, -0.18))) * 0.45
+               + smoothstep(0.22, 0.07, length(mq - vec2(0.05, 0.52))) * 0.4 + smoothstep(0.15, 0.05, length(mq - vec2(0.45, 0.42))) * 0.35
+               + smoothstep(0.12, 0.03, length(mq - vec2(-0.5, -0.4))) * 0.3;
+    vec3 mc = vec3(1.0, 0.96, 0.86) * (1.0 - 0.42 * mare) * (1.0 - 0.25 * mr * mr);
+    col = mix(col, mc * 0.92, disk * uMoon);
+    col += vec3(0.75, 0.8, 1.0) * smoothstep(0.035, 0.0, abs(acos(clamp(md, -1.0, 1.0)) - 0.2)) * 0.04 * uMoon;
+    }
+#else
     col += vec3(1.0, 0.97, 0.88) * smoothstep(0.9993, 0.9996, md) * 2.2 * uMoon;
+#endif
     col += vec3(0.6, 0.65, 0.9) * pow(max(md, 0.0), 60.0) * 0.3 * uMoon;
     col += vec3(0.55, 0.6, 0.95) * pow(max(md, 0.0), 14.0) * 0.1 * uMoon; // v2.3: weicherer, weiter Halo
   }
@@ -488,9 +553,9 @@ export function skyMat() {
       uSunDir: G.uSunDir, uSunCol: { value: new THREE.Color() }, uGlow: { value: new THREE.Color() },
       uSunSize: { value: 0.045 }, uStars: { value: 0 }, uTime: G.uTime,
       uMoonDir: { value: new THREE.Vector3(-0.5, 0.4, -0.6).normalize() }, uMoon: { value: 0 },
-      uRainbow: { value: 0 }, uShootT: { value: -1 }, uShootA: { value: new THREE.Vector3(0, 0.5, 1) }, uShootB: { value: new THREE.Vector3(0.3, 0.4, 1) },
+      uRainbow: { value: 0 }, uDq: G.uDq, uShootT: { value: -1 }, uShootA: { value: new THREE.Vector3(0, 0.5, 1) }, uShootB: { value: new THREE.Vector3(0.3, 0.4, 1) },
     },
-    vertexShader: SKY_V, fragmentShader: SKY_F, side: THREE.BackSide, depthWrite: false,
+    vertexShader: DEF + SKY_V, fragmentShader: DEF + SKY_F, side: THREE.BackSide, depthWrite: false,
   });
 }
 

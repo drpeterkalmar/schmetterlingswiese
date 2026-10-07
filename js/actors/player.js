@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { Critter } from './characters.js';
 import { height, pond } from '../world/terrain.js';
 import { blobTex } from '../engine/textures.js';
+import { RM } from '../engine/deko.js';
 import { showOffset, showOrient, showLift, liftAt, showBounds } from '../game/stunts.js';
 
 const TAU = Math.PI * 2;
@@ -423,7 +424,7 @@ export class Player {
     this.camLook.lerp(_w, 1 - Math.exp(-dt * 9));
     cam.position.copy(this.camPos);
     if (this.shakeT > 0) {
-      this.shakeT -= dt; const k = this.shakeT * 0.5;
+      this.shakeT -= dt; const k = RM ? 0 : this.shakeT * 0.5; // v2.8: prefers-reduced-motion → kein Ruckeln
       cam.position.x += Math.sin(t * 61) * k; cam.position.y += Math.sin(t * 47 + 1) * k;
     }
     cam.lookAt(this.camLook);
