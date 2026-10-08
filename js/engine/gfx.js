@@ -1,6 +1,7 @@
 // Grafik-Kern: gemeinsame Uniforms, Toon-Shader, Himmel, Post-Processing.
 import * as THREE from 'three';
 import { DEF } from './deko.js';
+import { KANTEN_SR, rtGroesse } from './kern/hochskalieren.js';
 
 // Gemeinsame Uniform-Objekte (per Referenz in allen Materialien geteilt)
 export const G = {
@@ -663,9 +664,11 @@ const COMP_F = /* glsl */`
 uniform sampler2D tCol, tBlur, tBlur2, tDepth; uniform vec2 uNF; uniform float uBloom, uThresh, uDof, uFocus, uVig, uSat, uUseDepth;
 uniform vec3 uLift, uGain; uniform float uFlash; uniform vec3 uFlashCol;
 varying vec2 vUv;
+${KANTEN_SR}
 float linDepth(float d){ float z = d * 2.0 - 1.0; return 2.0 * uNF.x * uNF.y / (uNF.y + uNF.x - z * (uNF.y - uNF.x)); }
 void main(){
-  vec3 c = texture2D(tCol, vUv).rgb;
+  // v2.9: kantenbewusstes Hochskalieren aus der Renderskala (+ Kantenglättung/Schärfen je Stufe; ohne defines = wie bisher)
+  vec3 c = kantenSR(tCol, vUv);
   vec3 b = texture2D(tBlur, vUv).rgb;
   vec3 b2 = texture2D(tBlur2, vUv).rgb;
   if (uUseDepth > 0.5) {
@@ -708,6 +711,7 @@ export class Post {
         uBloom: { value: 0.4 }, uThresh: { value: 0.9 }, uDof: { value: 0.75 }, uFocus: { value: 26 }, uVig: { value: 0.45 },
         uSat: { value: 1.12 }, uLift: { value: new THREE.Color(0.35, 0.3, 0.55) }, uGain: { value: new THREE.Vector3(1, 1, 1) },
         uFlash: { value: 0 }, uFlashCol: { value: new THREE.Color(1, 0.97, 0.85) }, uUseDepth: { value: 1 },
+        uSrcTexel: { value: new THREE.Vector2(1, 1) }, uSharp: { value: 0 },
       },
       vertexShader: FS_V, fragmentShader: COMP_F, depthTest: false, depthWrite: false,
     });
@@ -721,9 +725,11 @@ export class Post {
     r.setRenderTarget(null);
     return ok;
   }
-  setup(w, h, samples, useDepth) {
+  // v2.9: skala = Renderskala des Szenen-Ziels (0,6–1; Endbild bleibt in voller Größe w×h), endbild = { aa, sharp } oder null
+  setup(w, h, samples, useDepth, skala = 1, endbild = null) {
+    this.endbild(endbild);
     for (let attempt = 0; attempt < 4; attempt++) {
-      this.build(w, h, samples, useDepth);
+      this.build(w, h, samples, useDepth, skala);
       if (this.complete(this.rtMain) && this.complete(this.rtA)) return true;
       // Rückfall-Kette: ohne MSAA → ohne Tiefentextur → 8-Bit-Ziele
       if (samples) samples = 0; else if (useDepth) useDepth = false; else if (this.type !== THREE.UnsignedByteType) this.type = THREE.UnsignedByteType; else break;
@@ -732,17 +738,30 @@ export class Post {
     this.failed = true;
     return false;
   }
-  build(w, h, samples, useDepth) {
+  // Kantenglättung/Schärfen im Endbild (defines AA/SHARP → Shader neu übersetzen nur bei Änderung)
+  endbild(e) {
+    const m = this.mComp, aa = !!(e && e.aa), sh = !!(e && e.sharp > 0);
+    m.uniforms.uSharp.value = e ? e.sharp || 0 : 0;
+    const key = (aa ? 'A' : '') + (sh ? 'S' : '');
+    if (key === this._eb) return;
+    this._eb = key;
+    m.defines = {}; if (aa) m.defines.AA = ''; if (sh) m.defines.SHARP = '';
+    m.needsUpdate = true;
+  }
+  build(w, h, samples, useDepth, skala = 1) {
     this.samples = samples; this.useDepth = useDepth;
+    const [rw, rh] = rtGroesse(w, h, skala);
+    this.rw = rw; this.rh = rh; this.skala = skala;
     // 8-Bit-Rückfall: Ziele im sRGB-Format speichern (sonst sichtbare Farbstufen in dunklen Himmeln, z. B. nachts)
     const mk = (ww, hh, o = {}) => { const rt = new THREE.WebGLRenderTarget(ww, hh, { type: this.type, depthBuffer: false, ...o }); if (this.type === THREE.UnsignedByteType) rt.texture.colorSpace = THREE.SRGBColorSpace; return rt; };
     [this.rtMain, this.rtA, this.rtB, this.rtC, this.rtD].forEach(rt => { if (rt) { if (rt.depthTexture) rt.depthTexture.dispose(); rt.dispose(); } });
     const opts = { depthBuffer: true, samples: this.isWebGL2 ? samples : 0 };
-    if (useDepth) { opts.depthTexture = new THREE.DepthTexture(w, h); opts.depthTexture.type = THREE.UnsignedIntType; }
-    this.rtMain = mk(w, h, opts);
-    const qw = Math.max(1, Math.round(w / 4)), qh = Math.max(1, Math.round(h / 4));
+    if (useDepth) { opts.depthTexture = new THREE.DepthTexture(rw, rh); opts.depthTexture.type = THREE.UnsignedIntType; }
+    this.rtMain = mk(rw, rh, opts);
+    // Unschärfe-/Glüh-Stufen aus dem Szenen-Ziel (Renderskala), nicht aus dem Bildschirm
+    const qw = Math.max(1, Math.round(rw / 4)), qh = Math.max(1, Math.round(rh / 4));
     this.rtA = mk(qw, qh); this.rtB = mk(qw, qh);
-    const ew = Math.max(1, Math.round(w / 12)), eh = Math.max(1, Math.round(h / 12));
+    const ew = Math.max(1, Math.round(rw / 12)), eh = Math.max(1, Math.round(rh / 12));
     this.rtC = mk(ew, eh); this.rtD = mk(ew, eh);
     this.w = w; this.h = h;
   }
@@ -753,7 +772,7 @@ export class Post {
     r.render(scene, camera);
     // Downsample 1/4 + Blur
     this.mDown.uniforms.tSrc.value = this.rtMain.texture;
-    this.mDown.uniforms.uTexel.value.set(1.5 / this.w, 1.5 / this.h);
+    this.mDown.uniforms.uTexel.value.set(1.5 / this.rw, 1.5 / this.rh);
     this.pass(this.mDown, this.rtA);
     const bu = this.mBlur.uniforms;
     bu.tSrc.value = this.rtA.texture; bu.uDir.value.set(1 / this.rtA.width, 0); this.pass(this.mBlur, this.rtB);
@@ -769,6 +788,7 @@ export class Post {
     cu.tDepth.value = this.useDepth ? this.rtMain.depthTexture : null;
     cu.uUseDepth.value = this.useDepth ? 1 : 0;
     cu.uNF.value.set(camera.near, camera.far);
+    cu.uSrcTexel.value.set(1 / this.rw, 1 / this.rh);
     this.pass(this.mComp, null);
   }
 }

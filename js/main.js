@@ -151,7 +151,7 @@ class App {
   // ------------------------------------------------------------ Menü-Schaukasten
   menuWorld(wid) {
     const w = WORLDS.find(x => x.id === wid) || WORLDS[0];
-    if (!this.world.def || this.world.def.id !== w.id) { this.world.build(w, this.qualityForBuild(), 'menu-' + w.id); this.world.seed = 'menu'; }
+    if (!this.world.def || this.world.def.id !== w.id) { this.world.build(w, this.qualityForBuild(), 'menu-' + w.id); this.world.seed = 'menu'; this.renderer.schonen(1.5); }
     this.game.clear();
     this.player.landables = []; this.player.colliders = [];
     const x = 6, z = 14;
@@ -221,6 +221,7 @@ class App {
     this.input.clear();
     this.audio.setMenu(false);
     this.game.load(lvl, this.diff);
+    this.renderer.schonen(1.5); // v2.9: neue Welt/Shader – erste Bilder zählen für den Autopiloten nicht
     this.discoverWorld(lvl.world);
     this.ui.hudTasks(this.game.tasks);
     this.ui.hudTime(0, this.game.limit, this.game.par);
@@ -371,10 +372,12 @@ class App {
     G.uCam.value.copy(this.camera.position);
     const c1 = performance.now();
     this.renderer.r.info.reset();
+    this.renderer.probeVor(); // v2.9 Kurzmessung (nur die ersten ~24 Bilder ohne gemerktes Gerät)
     this.renderer.render(this.scene, this.camera);
+    this.renderer.probeNach();
     const c2 = performance.now();
     this.cpuUpd = (this.cpuUpd || 0) * 0.95 + (c1 - c0) * 0.05; this.cpuRen = (this.cpuRen || 0) * 0.95 + (c2 - c1) * 0.05;
-    this.renderer.sample(raw * 1000, now);
+    this.renderer.sample(raw * 1000, now, c2 - c0);
   }
 
   registerSW() {
