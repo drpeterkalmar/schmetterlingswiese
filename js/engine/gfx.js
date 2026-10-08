@@ -42,6 +42,9 @@ export const G = {
   // v2.9 Himmelslicht: SH9-Irradianz des Welthimmels (himmelslicht.js), Anteil gegenüber der alten Halbkugel (0 = bisher)
   uSH: { value: Array.from({ length: 9 }, () => new THREE.Vector3()) },
   uHimmel: { value: 0 },
+  // v2.9 gebackene Baumschatten (schatten.js): R8-Textur über die Welt, x = Weltbreite (m), y = Stärke (0 = aus)
+  uBaumSh: { value: null },
+  uBaumShP: { value: new THREE.Vector4(320, 0, 0, 0) },
 };
 // Wolkenschatten: weiche dunkle Flecken, die mit dem Wind über die Wiese ziehen (nur Boden + Gras, kein Draw-Call)
 const CLOUD_SH = /* glsl */`
@@ -320,11 +323,33 @@ void main(){
   gl_FragColor = vec4(uColor, a * uOpacity);
 }`;
 export function blobShadowMat(color = 0x1a2a10, opacity = 0.34) {
-  return new THREE.ShaderMaterial({
+  const m = new THREE.ShaderMaterial({
     uniforms: { ...G, uColor: { value: new THREE.Color(color) }, uOpacity: { value: opacity } },
     vertexShader: BLOB_V, fragmentShader: BLOB_F, transparent: true, depthWrite: false,
     polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
   });
+  m.userData.keinBloom = true; // v2.9 Bloom-Maske: Schatten glühen nie
+  return m;
+}
+
+// v2.9 gerichteter Kontaktschatten (schatten.js kontaktParameter): weiche Ellipse mit dichterem Kern, Größe/Richtung
+// über Skalierung/Drehung des Quads (PlaneGeometry 2×2 in xz), mit Weltkrümmung wie der Boden
+const KONTAKT_F = /* glsl */`
+uniform vec3 uColor; uniform float uOpacity;
+varying vec2 vUv;
+void main(){
+  float d = length(vUv - 0.5) * 2.0;
+  float a = pow(max(0.0, 1.0 - smoothstep(0.1, 1.0, d)), 1.6) * (0.65 + 0.35 * (1.0 - min(1.0, d)));
+  gl_FragColor = vec4(uColor, a * uOpacity);
+}`;
+export function kontaktMat(color = 0x1a2a10, opacity = 0.4) {
+  const m = new THREE.ShaderMaterial({
+    uniforms: { ...G, uColor: { value: new THREE.Color(color) }, uOpacity: { value: opacity } },
+    vertexShader: BLOB_V, fragmentShader: KONTAKT_F, transparent: true, depthWrite: false,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+  });
+  m.userData.keinBloom = true;
+  return m;
 }
 
 // ---------------------------------------------------------------- Gelände
@@ -342,6 +367,7 @@ ${F_LIGHT}
 ${CLOUD_SH}
 uniform float uTime; uniform float uWaterY;
 varying vec3 vN; varying vec3 vWP; varying vec3 vCol;
+uniform sampler2D uBaumSh; uniform vec4 uBaumShP;
 #ifdef RINGE
 ${GLSL_TERRAIN}
 uniform vec3 uGrassA, uGrassB, uRingC;
@@ -375,6 +401,8 @@ void main(){
   }
 #endif
   vec3 c = toon(alb, N, V, 0.12, 0.0, 0.25);
+  // v2.9 gebackene Baumschatten (nur das Sonnenlicht fehlt dort – genähert als Abdunkeln)
+  if (uBaumShP.y > 0.0) c *= 1.0 - texture2D(uBaumSh, vWP.xz / uBaumShP.x + 0.5).r * uBaumShP.y;
   c *= 1.0 - cloudShade(vWP.xz);
   c = applyFog(c, vWP);
   gl_FragColor = vec4(c, 1.0);
@@ -395,6 +423,7 @@ ${GLSL_TERRAIN}
 uniform float uField; uniform vec3 uCenter; uniform float uWaterY;
 attribute vec4 aOff; // x,z in [0,1), rand, scale
 varying vec3 vWP; varying float vH; varying float vR; varying float vWave; varying vec3 vN;
+uniform sampler2D uBaumSh; uniform vec4 uBaumShP; varying float vBs; // v2.9 Baumschatten am Halmfuß
 #ifdef RINGE
 uniform vec4 uRing; uniform float uBreite; // v2.9: Ring (innen a→b einblenden, außen c→d ausblenden), Büschelbreite
 uniform vec3 uWrapC; // v2.9: Wickel-Mitte, aufs Kachelraster gerastet (grasringe.js wickelMitte)
@@ -452,13 +481,14 @@ void main(){
   else vPat = vec3(0.0);
 #endif
   vN = normalize(vec3(-sa * 0.3 + bend.x * 0.4, 1.0, ca * 0.3 + bend.y * 0.4));
+  vBs = uBaumShP.y > 0.0 ? texture2D(uBaumSh, p / uBaumShP.x + 0.5).r * uBaumShP.y : 0.0;
   gl_Position = projectionMatrix * viewMatrix * bendW(wp);
 }`;
 const GRASS_F = /* glsl */`
 ${F_LIGHT}
 ${CLOUD_SH}
 uniform vec3 uGrassA, uGrassB, uGrassC; uniform vec4 uGold;
-varying vec3 vWP; varying float vH; varying float vR; varying float vWave; varying vec3 vN;
+varying vec3 vWP; varying float vH; varying float vR; varying float vWave; varying vec3 vN; varying float vBs;
 #ifdef DEKO
 varying vec3 vPat; uniform float uDq;
 #endif
@@ -497,6 +527,7 @@ void main(){
   // Durchleuchten gegen die Sonne (goldene Grasspitzen)
   float back = pow(clamp(dot(-V, uSunDir), 0.0, 1.0), 3.0);
   c += uSunCol * tip * back * vH * vH * 0.9;
+  c *= 1.0 - vBs;
   c *= 1.0 - cloudShade(vWP.xz);
   c = applyFog(c, vWP);
   gl_FragColor = vec4(c, 1.0);

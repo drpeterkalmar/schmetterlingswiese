@@ -1,11 +1,13 @@
 // NPCs: Luft-Freunde (Falter, Marienkäfer), Tierbabys (Bär, Capybara, Häschen, Entchen), freche Wespen
 import * as THREE from 'three';
-import { toonMat, blobShadowMat } from '../engine/gfx.js';
+import { G, toonMat, blobShadowMat } from '../engine/gfx.js';
 import { Build, P, petalGeo } from '../engine/geo.js';
 import { wingMask } from '../engine/textures.js';
 import { face, surf } from './characters.js';
 import { height } from '../world/terrain.js';
 import { huelle } from '../engine/huelle.js';
+import { kontaktParameter, KONTAKT_AN } from '../engine/schatten.js';
+const _sd = [0, 1, 0];
 
 const _o = new THREE.Object3D();
 const _c = new THREE.Color();
@@ -369,7 +371,12 @@ export class Animals {
       im.setMatrixAt(a.idx, _o.matrix);
       if (this.shadows) {
         const r = im.userData.shadow * a.scale * (1 - Math.min(0.45, a.hop * 0.8)) * (a.onWater ? 0 : 1);
-        _o.position.set(a.pos.x, gy + 0.04, a.pos.z); _o.rotation.set(0, a.yaw, 0); _o.scale.set(r, 1, r * 1.15); _o.updateMatrix();
+        if (KONTAKT_AN) { // v2.9: zur Schattenseite gestreckt und leicht versetzt (Sonnenstand)
+          const S = G.uSunDir.value; _sd[0] = S.x; _sd[1] = S.y; _sd[2] = S.z;
+          const k = kontaktParameter(_sd, a.hop, 1), L = Math.max(1.15, k.lang);
+          _o.position.set(a.pos.x + k.x * r, gy + 0.04, a.pos.z + k.z * r); _o.rotation.set(0, k.yaw, 0); _o.scale.set(r, 1, r * L);
+        } else { _o.position.set(a.pos.x, gy + 0.04, a.pos.z); _o.rotation.set(0, a.yaw, 0); _o.scale.set(r, 1, r * 1.15); }
+        _o.updateMatrix();
         this.shadows.setMatrixAt(a.si, _o.matrix);
       }
     }

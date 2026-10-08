@@ -180,8 +180,7 @@ class App {
       c.root.rotation.y = yaw;
       c.tilt.rotation.x = -0.12; c.tilt.rotation.z = Math.sin(t * 0.8) * 0.08;
       c.update(dt, t, { speed01: 0.35, landed: false, cheer: false });
-      pl.shadow.position.set(pl.pos.x, height(pl.pos.x, pl.pos.z) + 0.05, pl.pos.z);
-      pl.shadow.material.opacity = 0.3;
+      pl.updateShadow(0.3); // (v2.9: Kontaktschatten gerichtet; ?kontakt=0 wie bisher)
     }
     const aspect = cam.aspect;
     if (this.showcaseView === 'wardrobe') {

@@ -11,6 +11,9 @@ import { Deko } from './deko.js';
 import { DEKO } from '../engine/deko.js';
 import { RINGE, RING_ANZAHL, RING_MAX, RING_VOR, wickelMitte } from './grasringe.js';
 import { himmelsLicht } from '../engine/himmelslicht.js';
+import { backeBaumschatten, KONTAKT_AN } from '../engine/schatten.js';
+// v2.9 Stärke der gebackenen Baumschatten (nachts halb). TODO Heavy-Job am Bild abstimmen.
+export const BAUM_STAERKE = 0.32;
 // v2.9 weiches Himmelslicht (SH9 aus dem Welthimmel), ?himmel=0 = feste Halbkugel wie bis v2.8.
 // Anteil gegenüber der alten Halbkugel: TODO Heavy-Job am Bild abstimmen (Startwert 0,7; 1 = nur Himmelslicht)
 export const HIMMEL_AN = new URLSearchParams(location.search).get('himmel') !== '0';
@@ -60,6 +63,18 @@ export class World {
     const gd = w.gold || [0xffffff, 0]; _c.set(gd[0]); G.uGold.value.set(_c.r, _c.g, _c.b, gd[1]);
     this.himmelsLicht(w);
   }
+  // v2.9: Baumschatten als Bodentextur backen (Gelände + Gras lesen sie; ?kontakt=0 = keine)
+  baumSchatten(w) {
+    if (this.baumTex) { this.baumTex.dispose(); this.baumTex = null; }
+    G.uBaumShP.value.y = 0; G.uBaumSh.value = null;
+    if (!KONTAKT_AN || !this.trees) return;
+    const S = G.uSunDir.value;
+    const { daten, N, W } = backeBaumschatten(Object.values(this.trees.userData).flat(), [S.x, S.y, S.z]);
+    const tex = new THREE.DataTexture(daten, N, N, THREE.RedFormat, THREE.UnsignedByteType);
+    tex.magFilter = THREE.LinearFilter; tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false; tex.needsUpdate = true;
+    this.baumTex = tex; G.uBaumSh.value = tex;
+    G.uBaumShP.value.set(W, BAUM_STAERKE * (w.sky.stars ? 0.5 : 1), 0, 0);
+  }
   // v2.9: Umgebungslicht aus dem Himmel dieser Welt (einmal je Welt, ≈ 1 200 Proben)
   himmelsLicht(w) {
     G.uHimmel.value = HIMMEL_AN ? HIMMEL_ANTEIL : 0;
@@ -108,6 +123,7 @@ export class World {
     const avoid = (x, z) => (avoidPond && avoidPond(x, z)) || (sfC && Math.hypot(x - sfC.x, z - sfC.z) < sfC.R + 4) || Math.hypot(x, z) < 10;
     this.flowers = N.buildFlowers(w, rnd, Math.round(w.flowerN * quality.deco)); g.add(this.flowers);
     this.trees = N.buildTrees(w, rnd, avoid); g.add(this.trees);
+    this.baumSchatten(w);
     // v2.3: Blütenteppiche + Grasbüschel/Klee (Anzahl skaliert mit der Deko-Stufe)
     const avoidWater = (x, z) => (avoidPond && avoidPond(x, z)) || patchAmt(x, z) > 0.3;
     g.add(N.buildCarpet(w, rnd, Math.round(22 * quality.deco), avoidWater));
