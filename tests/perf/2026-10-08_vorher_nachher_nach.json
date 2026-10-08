@@ -1,0 +1,159 @@
+{
+ "datum": "2026-10-08T20:13:43",
+ "stand": "vorher_nachher_nach",
+ "modus": "ab",
+ "runden": 5,
+ "varianten": [
+  {
+   "name": "vorher",
+   "wurzel": "/Users/wohnzimmer/dev/butterfly_vorher",
+   "zusatz": ""
+  },
+  {
+   "name": "nachher",
+   "wurzel": "/Users/wohnzimmer/dev/butterfly-game",
+   "zusatz": ""
+  }
+ ],
+ "profil": {
+  "drossel": 4,
+  "dpr": 2.6,
+  "sek": 10,
+  "start": "open",
+  "vsync": false
+ },
+ "szenen": {
+  "stuntshow_mittel": {
+   "hoch": {
+    "vorher": {
+     "p50": 2.7,
+     "p95": 3.5,
+     "fps": 371,
+     "calls": 71,
+     "tris": 329625,
+     "runden_p95": [
+      3.5,
+      3.5,
+      3.5,
+      3.5,
+      3.5
+     ],
+     "fehler": []
+    },
+    "nachher": {
+     "p50": 2.7,
+     "p95": 3.7,
+     "fps": 365.9,
+     "calls": 70,
+     "tris": 263428,
+     "runden_p95": [
+      3.6,
+      3.7,
+      3.6,
+      3.8,
+      3.8
+     ],
+     "fehler": []
+    }
+   },
+   "quer": {
+    "vorher": {
+     "p50": 2.8,
+     "p95": 3.8,
+     "fps": 343.9,
+     "calls": 83,
+     "tris": 344499,
+     "runden_p95": [
+      3.6,
+      3.7,
+      3.8,
+      3.8,
+      4
+     ],
+     "fehler": []
+    },
+    "nachher": {
+     "p50": 2.8,
+     "p95": 3.9,
+     "fps": 355.4,
+     "calls": 83,
+     "tris": 300776,
+     "runden_p95": [
+      3.9,
+      3.8,
+      3.9,
+      3.9,
+      3.8
+     ],
+     "fehler": []
+    }
+   }
+  },
+  "mission_teich_mittel": {
+   "hoch": {
+    "vorher": {
+     "p50": 3,
+     "p95": 3.9,
+     "fps": 325.1,
+     "calls": 90,
+     "tris": 384048,
+     "runden_p95": [
+      4.1,
+      3.8,
+      3.9,
+      4,
+      3.8
+     ],
+     "fehler": []
+    },
+    "nachher": {
+     "p50": 3.1,
+     "p95": 4.1,
+     "fps": 320.7,
+     "calls": 91,
+     "tris": 308610,
+     "runden_p95": [
+      4.2,
+      4.2,
+      4.1,
+      4,
+      4.1
+     ],
+     "fehler": []
+    }
+   },
+   "quer": {
+    "vorher": {
+     "p50": 3.3,
+     "p95": 4.3,
+     "fps": 298.5,
+     "calls": 112,
+     "tris": 403557,
+     "runden_p95": [
+      4.1,
+      4.3,
+      4.4,
+      4.3,
+      4.3
+     ],
+     "fehler": []
+    },
+    "nachher": {
+     "p50": 3.3,
+     "p95": 4.4,
+     "fps": 295.8,
+     "calls": 111,
+     "tris": 356702,
+     "runden_p95": [
+      4.4,
+      4.3,
+      4.4,
+      4.6,
+      4.4
+     ],
+     "fehler": []
+    }
+   }
+  }
+ }
+}

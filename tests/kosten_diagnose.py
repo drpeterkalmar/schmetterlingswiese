@@ -23,7 +23,8 @@ with Server(REPO) as srv, sync_playwright() as pw:
             try:
                 ctx = b.new_context(**profil(g, 2.6)); pg = ctx.new_page()
                 pg.goto(srv.base + 'index.html?nosw&startprobe=0' + qs); pg.wait_for_function('window.__app && __app.frames > 3', timeout=120000)
-                pg.evaluate(f"__game.progress.create('K'); __game.setQuality({q}); __game.start('1-1', 'leicht'); __game.autopilot(true)")
+                lv = os.environ.get('LEVEL', '1-1')   # LEVEL=menu: Menü-Schaukasten
+                pg.evaluate(f"__game.progress.create('K'); __game.setQuality({q})" + ('' if lv == 'menu' else f"; __game.start('{lv}', 'leicht'); __game.autopilot(true)"))
                 if js: pg.evaluate(js)
                 time.sleep(3)
                 cdp = ctx.new_cdp_session(pg); cdp.send('Emulation.setCPUThrottlingRate', {'rate': 4}); time.sleep(1)

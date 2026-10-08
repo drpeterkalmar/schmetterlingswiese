@@ -1,0 +1,78 @@
+{
+ "datum": "2026-10-08T19:22:03",
+ "stand": "vorher_auto",
+ "wurzel": "/Users/wohnzimmer/dev/butterfly_vorher",
+ "git": "1df00e7",
+ "profil": {
+  "drossel": 4,
+  "dpr": 2.6,
+  "sek": 10,
+  "geraete": "hoch,quer",
+  "gpu": "ANGLE/Metal headless",
+  "start": "open",
+  "vsync": false,
+  "zusatz": ""
+ },
+ "szenen": {
+  "wiese_auto": {
+   "hoch": {
+    "n": 2867,
+    "p50": 3.4,
+    "p95": 4.7,
+    "p99": 5.8,
+    "fps": 286.4,
+    "calls": 85,
+    "callsMax": 94,
+    "tris": 416375,
+    "tex": 9,
+    "zusatz": {
+     "calls": 79,
+     "tris": 453866,
+     "geos": 60,
+     "tex": 9,
+     "tier": 2,
+     "dpr": 1.5,
+     "w": 412,
+     "h": 915,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 284,
+     "cpuUpdateMs": 0.66,
+     "cpuRenderSubmitMs": 1.47
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   },
+   "quer": {
+    "n": 2974,
+    "p50": 3.3,
+    "p95": 4.5,
+    "p99": 5.2,
+    "fps": 297.3,
+    "calls": 101,
+    "callsMax": 116,
+    "tris": 429743,
+    "tex": 9,
+    "zusatz": {
+     "calls": 89,
+     "tris": 462870,
+     "geos": 60,
+     "tex": 9,
+     "tier": 2,
+     "dpr": 1.5,
+     "w": 915,
+     "h": 412,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 283,
+     "cpuUpdateMs": 0.78,
+     "cpuRenderSubmitMs": 1.49
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   }
+  }
+ }
+}

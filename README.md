@@ -46,6 +46,10 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
   Himmel und glitzert, Glühwürmchen blinken mit Lichthof, nachts gibt es Milchstraße und einen Mond mit Mondmeeren,
   Flügel schimmern perlmuttartig, beim Landen und Nektar-Naschen funkelt es. **`?deko=0`** in der URL zeigt das
   Aussehen bis v2.7 (A/B-Vergleich), siehe `DEKO_BERICHT.md`
+- **Schärfer, ruhiger, flüssiger (v2.9):** glattere Kanten am Handy, dichteres Gras direkt vor dir, Figuren nehmen
+  die Farbe des Himmels an (abends violett, im Kirschhain golden), Schatten fallen zur richtigen Seite – auch unter den
+  Bäumen –, nur noch Sonne, Glühwürmchen und Funken leuchten, und der Flug fühlt sich auf jedem Handy gleich an (auch mit
+  120-Hz-Bildschirm). Die Grafik regelt sich selbst und holt Qualität zurück, wenn wieder Luft ist
 - **Tierbabys (v2.4):** Bärenbaby, Capybara, Häschen und Entchen mit Schnauze, Pfoten mit Ballen, Bauchfell und
   Schwänzchen; sie laufen mit echten Beinbewegungen, blinzeln, zucken mit den Ohren, schauen dich an, wenn du nah
   bist, und freuen sich über Besuch mit Hüpfer, ^ ^-Augen und Herzchen
@@ -62,7 +66,7 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
 
 ## Technik
 
-- Statisch, **kein Build nötig**: ES-Module + [three.js](https://threejs.org) r180 lokal in `lib/`
+- Statisch, **kein Build nötig**: ES-Module + [three.js](https://threejs.org) r186 lokal in `lib/` (v2.9, gleiche Version wie Stuntbahn)
 - **100 % prozedural:** Modelle, Texturen, Musik und Klänge entstehen im Code – keine fremden Assets
   (v2.4 geprüft: kein CC0-Tierpaket passt im Stil zu ≥ 3 der 4 Tierbabys, siehe `V24_BERICHT.md`)
 - Eigene Toon-Shader mit Rim-Light, Weltkrümmung, Wind-Gras (instanziert, folgt dem Spieler),
@@ -76,12 +80,25 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
   Texturen; Stückzahl je Qualitätsstufe (Niedrig = aus und Shader wie v2.7), bei Auto-Drosselung halbiert;
   `prefers-reduced-motion` → kein Kamera-Ruckeln, halber Partikelregen, langsamere Schirmchen
 
+- **Technik v2.9** (`TECHNIK_BERICHT.md`): schärfere Kanten auch auf Mittel (stufenlose Auflösung 60–100 % +
+  kantenbewusstes Hochskalieren und Nachschärfen, `js/engine/kern/`), Grafik-Automatik aus dem gemeinsamen Grafik-Kern
+  (misst die echte Arbeit je Bild, regelt auch wieder hoch, merkt sich das Gerät), Gras in 3 Ringen mit Kachel-Culling
+  (nah dichter, fern Grasrauschen), weiches Himmelslicht je Welt, gerichtete Kontaktschatten und gebackene Baumschatten,
+  Bloom nur noch auf Leuchtendem (Sonne, Glühwürmchen, Funken), fester Simulationstakt 60 Hz mit Interpolation (gleicher Flug
+  auf 60/90/120-Hz-Schirmen). Jede Neuerung hat einen URL-Regler zum Vergleich: `?skala=0`, `?ringe=0`, `?cull=0`,
+  `?himmel=0`, `?kontakt=0`, `?bloommaske=0`, `?takt=0`, `?startprobe=0`
+
 ### Entwickeln
 
 ```bash
 python3 -m http.server 8471          # dann http://localhost:8471/
 python3 tools/update_sw.py           # nach Änderungen: Service-Worker-Version (Cache-Busting)
-tests/run_all.sh                     # Headless-Tests (Python-Playwright, Pixel-7-Emulation)
+tests/run_all.sh                     # Node-Tests + Headless-Tests (Python-Playwright, Pixel-7-Emulation)
+BROWSER=open tests/run_all.sh        # dasselbe mit Browser per `open` (macOS-Queue: sonst gedrosselt auf ~8–15 Bilder/s)
+bash tests/node/run.sh               # Node-Tests ohne Browser (~1 s): Autopilot, Gras-Ringe, Licht, Schatten, Takt, r186
+python3 tests/perf_gate.py --ab vorher=../alt:: --ab nachher=   # Mess-Gate Mittelklasse-Android (Grafik-Kern, v2.9)
+python3 tests/technik_abnahme.py --out <ordner> --var a=.::?nosw --var b=.::?nosw&ringe=0 --szenen wiese,teich  # Bild-A/B
+python3 tests/test_autopilot.py / test_culling.py / test_takt.py   # v2.9-Abnahmen im Browser
 python3 tests/flieger.py --diffs leicht,mittel,schwer --rennen   # Test-Flieger im Zeitraffer (alle Level)
 python3 tests/v27_par.py             # par neuer Missionen aus den Flugzeiten
 python3 tests/deko_shots.py <label> [query] [port]   # Deko-Rundgang hoch + quer (v2.8)

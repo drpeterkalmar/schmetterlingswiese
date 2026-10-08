@@ -1,0 +1,374 @@
+{
+ "datum": "2026-10-08T19:20:13",
+ "stand": "nachher_auto",
+ "wurzel": "/Users/wohnzimmer/dev/butterfly-game",
+ "git": "883bdab",
+ "profil": {
+  "drossel": 4,
+  "dpr": 2.6,
+  "sek": 10,
+  "geraete": "hoch,quer",
+  "gpu": "ANGLE/Metal headless",
+  "start": "open",
+  "vsync": false,
+  "zusatz": ""
+ },
+ "szenen": {
+  "menu_mittel": {
+   "hoch": {
+    "n": 3599,
+    "p50": 2.8,
+    "p95": 3.5,
+    "p99": 3.8,
+    "fps": 359.7,
+    "calls": 72,
+    "callsMax": 79,
+    "tris": 242178,
+    "tex": 7,
+    "zusatz": {
+     "calls": 67,
+     "tris": 235193,
+     "geos": 49,
+     "tex": 7,
+     "tier": 1,
+     "dpr": 1.5,
+     "w": 412,
+     "h": 915,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "skala": 1,
+     "rt": [
+      618,
+      1373
+     ],
+     "autopilot": null,
+     "apLog": null,
+     "startProbe": null,
+     "fps": 363,
+     "cpuUpdateMs": 0.16,
+     "cpuRenderSubmitMs": 0.93,
+     "takt": {
+      "aktiv": false,
+      "schritte": 0,
+      "alpha": 0
+     }
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   },
+   "quer": {
+    "n": 3546,
+    "p50": 2.8,
+    "p95": 3.6,
+    "p99": 4,
+    "fps": 354.4,
+    "calls": 90,
+    "callsMax": 94,
+    "tris": 287733,
+    "tex": 7,
+    "zusatz": {
+     "calls": 91,
+     "tris": 286235,
+     "geos": 49,
+     "tex": 7,
+     "tier": 1,
+     "dpr": 1.5,
+     "w": 915,
+     "h": 412,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "skala": 1,
+     "rt": [
+      1373,
+      618
+     ],
+     "autopilot": null,
+     "apLog": null,
+     "startProbe": null,
+     "fps": 351,
+     "cpuUpdateMs": 0.13,
+     "cpuRenderSubmitMs": 0.94,
+     "takt": {
+      "aktiv": false,
+      "schritte": 0,
+      "alpha": 0
+     }
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   }
+  },
+  "wiese_auto": {
+   "hoch": {
+    "n": 2333,
+    "p50": 4,
+    "p95": 6,
+    "p99": 7.4,
+    "fps": 232.9,
+    "calls": 83,
+    "callsMax": 93,
+    "tris": 329851,
+    "tex": 11,
+    "zusatz": {
+     "calls": 77,
+     "tris": 331097,
+     "geos": 61,
+     "tex": 11,
+     "tier": 2,
+     "dpr": 2,
+     "w": 412,
+     "h": 915,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "skala": 1,
+     "rt": [
+      824,
+      1830
+     ],
+     "autopilot": {
+      "skala": 1,
+      "bereich": [
+       0.62,
+       1
+      ],
+      "stufen": {
+       "deko": 1,
+       "stufe": 2
+      },
+      "fps": 291.7,
+      "arbeit": 7.5,
+      "cpu": 2.6,
+      "gpu": 7.5,
+      "engpass": "gpu",
+      "gedeckelt": false,
+      "gesperrtBis": 0,
+      "aenderungen": 5,
+      "t": 17.2
+     },
+     "apLog": [
+      {
+       "t": 4.01,
+       "was": "stufe",
+       "richtung": 1,
+       "skala": 0.76,
+       "fps": 607.1,
+       "arbeit": 2.75
+      },
+      {
+       "t": 7.02,
+       "was": "skala",
+       "richtung": 1,
+       "skala": 0.82,
+       "fps": 267.8,
+       "arbeit": 5.09
+      },
+      {
+       "t": 10.03,
+       "was": "skala",
+       "richtung": 1,
+       "skala": 0.88,
+       "fps": 260.6,
+       "arbeit": 6.01
+      },
+      {
+       "t": 13.04,
+       "was": "skala",
+       "richtung": 1,
+       "skala": 0.94,
+       "fps": 227.2,
+       "arbeit": 6.28
+      },
+      {
+       "t": 16.06,
+       "was": "skala",
+       "richtung": 1,
+       "skala": 1,
+       "fps": 221.3,
+       "arbeit": 6.6
+      }
+     ],
+     "startProbe": {
+      "n": 20,
+      "median": 4.699999988079071,
+      "p90": 11.400000005960464,
+      "min": 3.9000000059604645,
+      "max": 49.3999999910593,
+      "skala": 1,
+      "stufe": 1
+     },
+     "fps": 165,
+     "cpuUpdateMs": 0.57,
+     "cpuRenderSubmitMs": 3.22,
+     "takt": {
+      "aktiv": true,
+      "schritte": 983,
+      "alpha": 0.182
+     }
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   },
+   "quer": {
+    "n": 2149,
+    "p50": 4.3,
+    "p95": 6.4,
+    "p99": 7.7,
+    "fps": 214.6,
+    "calls": 100,
+    "callsMax": 117,
+    "tris": 400658,
+    "tex": 11,
+    "zusatz": {
+     "calls": 87,
+     "tris": 378038,
+     "geos": 61,
+     "tex": 11,
+     "tier": 2,
+     "dpr": 2,
+     "w": 915,
+     "h": 412,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "skala": 1,
+     "rt": [
+      1830,
+      824
+     ],
+     "autopilot": {
+      "skala": 1,
+      "bereich": [
+       0.62,
+       1
+      ],
+      "stufen": {
+       "deko": 1,
+       "stufe": 2
+      },
+      "fps": 293.2,
+      "arbeit": 9.48,
+      "cpu": 2.6,
+      "gpu": 9.48,
+      "engpass": "gpu",
+      "gedeckelt": false,
+      "gesperrtBis": 0,
+      "aenderungen": 5,
+      "t": 17.3
+     },
+     "apLog": [
+      {
+       "t": 4.01,
+       "was": "stufe",
+       "richtung": 1,
+       "skala": 0.76,
+       "fps": 572.4,
+       "arbeit": 3.42
+      },
+      {
+       "t": 7.02,
+       "was": "skala",
+       "richtung": 1,
+       "skala": 0.82,
+       "fps": 265.4,
+       "arbeit": 2.64
+      },
+      {
+       "t": 10.03,
+       "was": "skala",
+       "richtung": 1,
+       "skala": 0.88,
+       "fps": 237.3,
+       "arbeit": 7.33
+      },
+      {
+       "t": 13.05,
+       "was": "skala",
+       "richtung": 1,
+       "skala": 0.94,
+       "fps": 216.8,
+       "arbeit": 8.42
+      },
+      {
+       "t": 16.07,
+       "was": "skala",
+       "richtung": 1,
+       "skala": 1,
+       "fps": 204.4,
+       "arbeit": 9.09
+      }
+     ],
+     "startProbe": {
+      "n": 20,
+      "median": 5.100000008940697,
+      "p90": 11.900000005960464,
+      "min": 4.800000011920929,
+      "max": 48.29999999701977,
+      "skala": 1,
+      "stufe": 1
+     },
+     "fps": 138,
+     "cpuUpdateMs": 0.58,
+     "cpuRenderSubmitMs": 3.58,
+     "takt": {
+      "aktiv": true,
+      "schritte": 978,
+      "alpha": 0.658
+     }
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   }
+  }
+ },
+ "ladegroesse": {
+  "dateien": 43,
+  "roh_mb": 1.5,
+  "gzip_mb": 0.46,
+  "extern": [],
+  "groesste_gzip_kb": [
+   [
+    "lib/three.core.min.js",
+    104
+   ],
+   [
+    "lib/three.module.min.js",
+    92
+   ],
+   [
+    "icons/icon-192.png",
+    25
+   ],
+   [
+    "js/actors/characters.js",
+    21
+   ],
+   [
+    "js/game/game.js",
+    20
+   ],
+   [
+    "js/engine/gfx.js",
+    16
+   ],
+   [
+    "js/ui/ui.js",
+    13
+   ],
+   [
+    "js/game/objectives.js",
+    13
+   ],
+   [
+    "js/world/nature.js",
+    12
+   ],
+   [
+    "js/actors/npcs.js",
+    10
+   ]
+  ]
+ }
+}
