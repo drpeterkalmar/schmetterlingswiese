@@ -1,0 +1,83 @@
+{
+ "_kommentar": "Schmetterlingswiese-Szenen für tests/perf_gate.py (v2.9, Kopie aus dem Stuntbahn-Kern). Stufe fest per __game.setQuality(q) (läuft auf main und auf v2.9 gleich; 0 Niedrig, 1 Mittel, 2 Hoch), außer wiese_auto. Jede Szene legt ein frisches Profil an (Browser-Kontext ist je Szene neu). Missionen fliegen mit dem Test-Autopiloten (__game.autopilot), damit Flug, Ziele und Partikel laufen. Stuntshow: alle 2,5 s eine Zufalls-Einlage. ?startprobe=0: keine Kurzmessung beim Laden (auf main ohne Wirkung).",
+ "bereit": "window.__app && window.__game && window.__app.frames > 3",
+ "info": "() => { const i = __app.renderer.r.info; return { calls: i.render.calls, tris: i.render.triangles, tex: i.memory.textures }; }",
+ "zusatz": "() => __game.info()",
+ "ladeQuery": "?nosw",
+ "ladeNachlauf": 3,
+ "szenen": [
+  {
+   "name": "menu_mittel",
+   "query": "?nosw&startprobe=0",
+   "schritte": [
+    "__game.progress.create('Mess'); __game.setQuality(1)",
+    {"warte": 2.5}
+   ]
+  },
+  {
+   "name": "wiese_mittel",
+   "query": "?nosw&startprobe=0",
+   "schritte": [
+    "__game.progress.create('Mess'); __game.setQuality(1)",
+    "__game.start('1-1', 'leicht'); __game.autopilot(true)",
+    {"warte": 4}
+   ]
+  },
+  {
+   "name": "wiese_hoch",
+   "query": "?nosw&startprobe=0",
+   "schritte": [
+    "__game.progress.create('Mess'); __game.setQuality(2)",
+    "__game.start('1-1', 'leicht'); __game.autopilot(true)",
+    {"warte": 4}
+   ]
+  },
+  {
+   "name": "wiese_niedrig",
+   "query": "?nosw&startprobe=0",
+   "schritte": [
+    "__game.progress.create('Mess'); __game.setQuality(0)",
+    "__game.start('1-1', 'leicht'); __game.autopilot(true)",
+    {"warte": 4}
+   ]
+  },
+  {
+   "name": "stuntshow_mittel",
+   "query": "?nosw&startprobe=0",
+   "schritte": [
+    "__game.progress.create('Mess'); __game.setQuality(1)",
+    "__game.start('1-1', 'leicht')",
+    {"warte": 4},
+    "window.__pgIv = setInterval(() => __game.stunt(null, true), 2500); __game.stunt(null, true)",
+    {"warte": 0.5}
+   ]
+  },
+  {
+   "name": "mission_teich_mittel",
+   "query": "?nosw&startprobe=0",
+   "schritte": [
+    "__game.progress.create('Mess'); __game.setQuality(1)",
+    "__game.start('3-1', 'leicht'); __game.autopilot(true)",
+    {"warte": 4}
+   ]
+  },
+  {
+   "name": "mission_abend_mittel",
+   "query": "?nosw&startprobe=0",
+   "schritte": [
+    "__game.progress.create('Mess'); __game.setQuality(1)",
+    "__game.start('5-1', 'leicht'); __game.autopilot(true)",
+    {"warte": 4}
+   ]
+  },
+  {
+   "name": "wiese_auto",
+   "query": "?nosw",
+   "schritte": [
+    "__game.progress.create('Mess'); __game.setQuality('auto')",
+    "__game.start('1-1', 'leicht'); __game.autopilot(true)",
+    {"warte": 6}
+   ]
+  }
+ ]
+}
