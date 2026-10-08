@@ -233,6 +233,7 @@ export class Deko {
         vertexShader: SHAFT_V, fragmentShader: SHAFT_F, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
       }));
       this.shaft.frustumCulled = false; this.shaft.renderOrder = 5;
+      this.shaft.material.userData.keinBloom = true; // v2.9 Bloom-Maske: Lichtstrahlen glühen nicht (sonst Milchschleier)
       this.group.add(this.shaft);
     }
     // Schirmchen + Staub
@@ -248,6 +249,7 @@ export class Deko {
         vertexShader: FLUFF_V, fragmentShader: FLUFF_F, transparent: true, depthWrite: false,
       }));
       this.fluff.frustumCulled = false; this.fluff.renderOrder = 6;
+      this.fluff.material.userData.keinBloom = true; // v2.9 Bloom-Maske: Schirmchen/Staub glühen nicht
       this.group.add(this.fluff);
     }
     this.setQuality(q, k);

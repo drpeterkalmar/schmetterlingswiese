@@ -2,6 +2,9 @@
 import * as THREE from 'three';
 import { DEF } from './deko.js';
 import { KANTEN_SR, rtGroesse } from './kern/hochskalieren.js';
+// v2.9 Bloom nur auf Glanz (Audit #9): Alpha im Szenen-Ziel = Leucht-Maske (Emission, Sonne, Glühen) statt Helligkeits-
+// Schwelle → die helle Wiese glüht nicht mehr mit. ?bloommaske=0 = Schwelle wie bis v2.8.
+export const BLOOMMASKE = typeof location !== 'undefined' && new URLSearchParams(location.search).get('bloommaske') !== '0';
 
 // Gemeinsame Uniform-Objekte (per Referenz in allen Materialien geteilt)
 export const G = {
@@ -260,7 +263,11 @@ void main(){
   c = mix(c, mix(uFogCol, vec3(1.0), 0.45) * uSkyAmb * 1.1, ef * 0.45);
 #endif
   c = applyFog(c, vWP);
+#ifdef MASKE
+  gl_FragColor = vec4(c, clamp(vCol.a + uEmis, 0.0, 1.0)); // v2.9: Alpha = Leucht-Maske (nur deckende Materialien)
+#else
   gl_FragColor = vec4(c, alpha);
+#endif
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }`;
@@ -278,6 +285,7 @@ export function toonMat(o = {}) {
   if (o.rig) defines.RIG = '';
   if (o.iri) defines.IRI = ''; // v2.8: Perlmutt-Schimmer (Glasflügel)
   if (o.alphaTest) defines.ALPHATEST = o.alphaTest.toFixed(3);
+  if (BLOOMMASKE && !o.transparent) defines.MASKE = '';
   const u = {
     ...G,
     uColor: { value: new THREE.Color(o.color ?? 0xffffff) },
@@ -649,7 +657,12 @@ void main(){
   }
   // Dither gegen Farbstufen
   col += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
+#ifdef MASKE
+  // v2.9: am Himmel glüht nur, was wirklich hell ist (Sonne, Mond, helle Sterne)
+  gl_FragColor = vec4(col, smoothstep(1.0, 2.5, dot(col, vec3(0.2126, 0.7152, 0.0722))));
+#else
   gl_FragColor = vec4(col, 1.0);
+#endif
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }`;
@@ -662,7 +675,7 @@ export function skyMat() {
       uMoonDir: { value: new THREE.Vector3(-0.5, 0.4, -0.6).normalize() }, uMoon: { value: 0 },
       uRainbow: { value: 0 }, uDq: G.uDq, uShootT: { value: -1 }, uShootA: { value: new THREE.Vector3(0, 0.5, 1) }, uShootB: { value: new THREE.Vector3(0.3, 0.4, 1) },
     },
-    vertexShader: DEF + SKY_V, fragmentShader: DEF + SKY_F, side: THREE.BackSide, depthWrite: false,
+    vertexShader: DEF + SKY_V, fragmentShader: (BLOOMMASKE ? '#define MASKE\n' : '') + DEF + SKY_F, side: THREE.BackSide, depthWrite: false,
   });
 }
 
@@ -720,23 +733,38 @@ void main(){
   float d = length(vUv - 0.5) * 2.0;
   float a = pow(max(1.0 - d, 0.0), 2.2) + 0.6 * pow(max(1.0 - d, 0.0), 8.0);
   vec3 c = uColor * vC * a * uIntensity * (1.0 - vFog * 0.8);
+#ifdef MASKE
+  gl_FragColor = vec4(c, clamp(a, 0.0, 1.0)); // v2.9: Leucht-Maske mit weichem Rand (Mischung Farbe 1:1, Alpha addiert)
+#else
   gl_FragColor = vec4(c, 1.0);
+#endif
 }`;
 export function glowMat(color = 0xfff0b0, intensity = 1, pulse = 0.12) {
-  return new THREE.ShaderMaterial({
+  const m = new THREE.ShaderMaterial({
     uniforms: { ...G, uColor: { value: new THREE.Color(color) }, uIntensity: { value: intensity }, uPulse: { value: pulse } },
     vertexShader: GLOW_V, fragmentShader: GLOW_F,
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   });
+  // v2.9 Bloom-Maske: Farbe additiv wie bisher (Faktor 1 statt Alpha 1 = gleich), Alpha = weicher Rand addiert
+  if (BLOOMMASKE) { m.defines = { MASKE: '' }; mischen(m, THREE.OneFactor, THREE.OneFactor, THREE.OneFactor, THREE.OneFactor); m.userData.maskeFertig = true; }
+  return m;
+}
+
+// v2.9 Bloom-Maske: Mischfaktoren getrennt für Farbe und Alpha (Farbe wie bisher, Alpha nach Regel)
+function mischen(m, src, dst, srcA, dstA) {
+  m.blending = THREE.CustomBlending;
+  m.blendEquation = THREE.AddEquation; m.blendEquationAlpha = THREE.AddEquation;
+  m.blendSrc = src; m.blendDst = dst; m.blendSrcAlpha = srcA; m.blendDstAlpha = dstA;
 }
 
 // ---------------------------------------------------------------- Post-Processing
 const FS_V = /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
 const DOWN_F = /* glsl */`
-uniform sampler2D tSrc; uniform vec2 uTexel; varying vec2 vUv;
+uniform sampler2D tSrc; uniform vec2 uTexel; uniform float uMaske; varying vec2 vUv;
+// v2.9: uMaske = 1 → Farbe mit der Leucht-Maske (Alpha) gewichtet (Glüh-Quelle)
+vec3 tap(vec2 o){ vec4 s = texture2D(tSrc, vUv + uTexel * o); return s.rgb * mix(1.0, s.a, uMaske); }
 void main(){
-  vec3 c = texture2D(tSrc, vUv + uTexel * vec2(-1.0, -1.0)).rgb + texture2D(tSrc, vUv + uTexel * vec2(1.0, -1.0)).rgb
-         + texture2D(tSrc, vUv + uTexel * vec2(-1.0, 1.0)).rgb + texture2D(tSrc, vUv + uTexel * vec2(1.0, 1.0)).rgb;
+  vec3 c = tap(vec2(-1.0, -1.0)) + tap(vec2(1.0, -1.0)) + tap(vec2(-1.0, 1.0)) + tap(vec2(1.0, 1.0));
   gl_FragColor = vec4(min(c * 0.25, vec3(16.0)), 1.0);
 }`;
 const BLUR_F = /* glsl */`
@@ -750,7 +778,7 @@ void main(){
   gl_FragColor = vec4(c, 1.0);
 }`;
 const COMP_F = /* glsl */`
-uniform sampler2D tCol, tBlur, tBlur2, tDepth; uniform vec2 uNF; uniform float uBloom, uThresh, uDof, uFocus, uVig, uSat, uUseDepth;
+uniform sampler2D tCol, tBlur, tBloom, tBlur2, tDepth; uniform vec2 uNF; uniform float uBloom, uThresh, uDof, uFocus, uVig, uSat, uUseDepth;
 uniform vec3 uLift, uGain; uniform float uFlash; uniform vec3 uFlashCol;
 varying vec2 vUv;
 ${KANTEN_SR}
@@ -759,13 +787,14 @@ void main(){
   // v2.9: kantenbewusstes Hochskalieren aus der Renderskala (+ Kantenglättung/Schärfen je Stufe; ohne defines = wie bisher)
   vec3 c = kantenSR(tCol, vUv);
   vec3 b = texture2D(tBlur, vUv).rgb;
+  vec3 bb = texture2D(tBloom, vUv).rgb; // v2.9: Glüh-Quelle (ohne Maske = tBlur)
   vec3 b2 = texture2D(tBlur2, vUv).rgb;
   if (uUseDepth > 0.5) {
     float z = linDepth(texture2D(tDepth, vUv).r);
     float dof = smoothstep(uFocus, uFocus * 5.0, z) * uDof;
     c = mix(c, b, dof);
   }
-  vec3 glow = max(b - uThresh, 0.0) * 0.6 + max(b2 - uThresh * 0.8, 0.0) * 0.8;
+  vec3 glow = max(bb - uThresh, 0.0) * 0.6 + max(b2 - uThresh * 0.8, 0.0) * 0.8;
   c += glow * uBloom;
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
   c = mix(vec3(l), c, uSat);
@@ -792,11 +821,11 @@ export class Post {
     this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2));
     this.quad.frustumCulled = false;
     this.scene = new THREE.Scene(); this.scene.add(this.quad);
-    this.mDown = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, uTexel: { value: new THREE.Vector2() } }, vertexShader: FS_V, fragmentShader: DOWN_F, depthTest: false, depthWrite: false });
+    this.mDown = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, uTexel: { value: new THREE.Vector2() }, uMaske: { value: 0 } }, vertexShader: FS_V, fragmentShader: DOWN_F, depthTest: false, depthWrite: false });
     this.mBlur = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, uDir: { value: new THREE.Vector2() } }, vertexShader: FS_V, fragmentShader: BLUR_F, depthTest: false, depthWrite: false });
     this.mComp = new THREE.ShaderMaterial({
       uniforms: {
-        tCol: { value: null }, tBlur: { value: null }, tBlur2: { value: null }, tDepth: { value: null }, uNF: { value: new THREE.Vector2(0.1, 1000) },
+        tCol: { value: null }, tBlur: { value: null }, tBloom: { value: null }, tBlur2: { value: null }, tDepth: { value: null }, uNF: { value: new THREE.Vector2(0.1, 1000) },
         uBloom: { value: 0.4 }, uThresh: { value: 0.9 }, uDof: { value: 0.75 }, uFocus: { value: 26 }, uVig: { value: 0.45 },
         uSat: { value: 1.12 }, uLift: { value: new THREE.Color(0.35, 0.3, 0.55) }, uGain: { value: new THREE.Vector3(1, 1, 1) },
         uFlash: { value: 0 }, uFlashCol: { value: new THREE.Color(1, 0.97, 0.85) }, uUseDepth: { value: 1 },
@@ -805,6 +834,31 @@ export class Post {
       vertexShader: FS_V, fragmentShader: COMP_F, depthTest: false, depthWrite: false,
     });
     this.rtMain = null;
+    // v2.9 Bloom-Maske: Schwelle auf der gewichteten Quelle (TODO Heavy-Job am Bild abstimmen; ohne Maske 0,9)
+    this.maske = BLOOMMASKE; this.schwelle = this.maske ? 0.35 : 0.9;
+    this.mComp.uniforms.uThresh.value = this.schwelle;
+    this._mats = new WeakSet();
+  }
+  // v2.9 Bloom-Maske: Mischregeln je Material einmalig setzen, damit Alpha im Szenen-Ziel die Leucht-Maske bleibt.
+  //   deckend mit MASKE (Toon, Himmel): Alpha = Maske aus dem Shader · deckend sonst: Alpha 0 (Gelände, Gras, Wasser …)
+  //   durchsichtig normal (Schatten, Glas, Ringe): Alpha unverändert · additiv (Glühen, Glühwürmchen): erhöht die Maske
+  //   userData.glueht (Funken der Bursts): erhöhen die Maske nach Deckung · userData.keinBloom: Alpha unverändert
+  maskeVorbereiten(scene) {
+    const S = this._mats;
+    scene.traverseVisible((o) => {
+      const m = o.material; if (!m || Array.isArray(m) || S.has(m)) return;
+      S.add(m);
+      if (m.userData.maskeFertig) return;                  // schon passend gemischt (Glüh-Billboards)
+      const add = m.blending === THREE.AdditiveBlending;
+      if (m.userData.keinBloom) {
+        if (!m.transparent && !add) return mischen(m, THREE.OneFactor, THREE.ZeroFactor, THREE.ZeroFactor, THREE.OneFactor);
+        return mischen(m, THREE.SrcAlphaFactor, add ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor, THREE.ZeroFactor, THREE.OneFactor);
+      }
+      if (add || m.userData.glueht) return;                // Glühen/Funkeln: Standard-Mischung zählt zur Maske
+      if (m.transparent) return mischen(m, THREE.SrcAlphaFactor, THREE.OneMinusSrcAlphaFactor, THREE.ZeroFactor, THREE.OneFactor);
+      const mitMaske = !!(m.defines && 'MASKE' in m.defines) || /#define MASKE/.test(m.fragmentShader || '');
+      mischen(m, THREE.OneFactor, THREE.ZeroFactor, mitMaske ? THREE.OneFactor : THREE.ZeroFactor, THREE.ZeroFactor);
+    });
   }
   // Framebuffer-Vollständigkeit prüfen (manche Handy-GPUs können kein HalfFloat/MSAA-Ziel)
   complete(rt) {
@@ -843,37 +897,47 @@ export class Post {
     this.rw = rw; this.rh = rh; this.skala = skala;
     // 8-Bit-Rückfall: Ziele im sRGB-Format speichern (sonst sichtbare Farbstufen in dunklen Himmeln, z. B. nachts)
     const mk = (ww, hh, o = {}) => { const rt = new THREE.WebGLRenderTarget(ww, hh, { type: this.type, depthBuffer: false, ...o }); if (this.type === THREE.UnsignedByteType) rt.texture.colorSpace = THREE.SRGBColorSpace; return rt; };
-    [this.rtMain, this.rtA, this.rtB, this.rtC, this.rtD].forEach(rt => { if (rt) { if (rt.depthTexture) rt.depthTexture.dispose(); rt.dispose(); } });
+    [this.rtMain, this.rtA, this.rtB, this.rtC, this.rtD, this.rtM, this.rtN].forEach(rt => { if (rt) { if (rt.depthTexture) rt.depthTexture.dispose(); rt.dispose(); } });
+    this.rtM = this.rtN = null;
     const opts = { depthBuffer: true, samples: this.isWebGL2 ? samples : 0 };
     if (useDepth) { opts.depthTexture = new THREE.DepthTexture(rw, rh); opts.depthTexture.type = THREE.UnsignedIntType; }
     this.rtMain = mk(rw, rh, opts);
     // Unschärfe-/Glüh-Stufen aus dem Szenen-Ziel (Renderskala), nicht aus dem Bildschirm
     const qw = Math.max(1, Math.round(rw / 4)), qh = Math.max(1, Math.round(rh / 4));
     this.rtA = mk(qw, qh); this.rtB = mk(qw, qh);
+    // v2.9 Bloom-Maske + Tiefenschärfe (Hoch): eigene gewichtete ¼-Kette fürs Glühen, rtA bleibt die Unschärfe-Quelle
+    if (this.maske && useDepth) { this.rtM = mk(qw, qh); this.rtN = mk(qw, qh); }
     const ew = Math.max(1, Math.round(rw / 12)), eh = Math.max(1, Math.round(rh / 12));
     this.rtC = mk(ew, eh); this.rtD = mk(ew, eh);
     this.w = w; this.h = h;
   }
   pass(mat, target) { this.quad.material = mat; this.r.setRenderTarget(target); this.r.render(this.scene, this.cam); }
   render(scene, camera) {
-    const r = this.r;
+    const r = this.r, M = this.maske;
+    if (M) { this.maskeVorbereiten(scene); this._ca = r.getClearAlpha(); r.setClearAlpha(0); }
     r.setRenderTarget(this.rtMain);
     r.render(scene, camera);
-    // Downsample 1/4 + Blur
-    this.mDown.uniforms.tSrc.value = this.rtMain.texture;
-    this.mDown.uniforms.uTexel.value.set(1.5 / this.rw, 1.5 / this.rh);
-    this.pass(this.mDown, this.rtA);
-    const bu = this.mBlur.uniforms;
-    bu.tSrc.value = this.rtA.texture; bu.uDir.value.set(1 / this.rtA.width, 0); this.pass(this.mBlur, this.rtB);
-    bu.tSrc.value = this.rtB.texture; bu.uDir.value.set(0, 1 / this.rtA.height); this.pass(this.mBlur, this.rtA);
-    // weite Glow-Stufe 1/12
-    this.mDown.uniforms.tSrc.value = this.rtA.texture;
-    this.mDown.uniforms.uTexel.value.set(1.0 / this.rtA.width, 1.0 / this.rtA.height);
+    if (M) r.setClearAlpha(this._ca);
+    // Downsample 1/4 + Blur (v2.9 mit Maske ohne Tiefenschärfe: gleich gewichtet → Glüh-Quelle)
+    const du = this.mDown.uniforms, bu = this.mBlur.uniforms;
+    const viertel = (ziel, hilf, maske) => {
+      du.tSrc.value = this.rtMain.texture; du.uMaske.value = maske;
+      du.uTexel.value.set(1.5 / this.rw, 1.5 / this.rh);
+      this.pass(this.mDown, ziel);
+      bu.tSrc.value = ziel.texture; bu.uDir.value.set(1 / ziel.width, 0); this.pass(this.mBlur, hilf);
+      bu.tSrc.value = hilf.texture; bu.uDir.value.set(0, 1 / ziel.height); this.pass(this.mBlur, ziel);
+    };
+    viertel(this.rtA, this.rtB, M && !this.rtM ? 1 : 0);
+    let glueh = this.rtA;
+    if (M && this.rtM) { viertel(this.rtM, this.rtN, 1); glueh = this.rtM; }
+    // weite Glow-Stufe 1/12 (aus der Glüh-Quelle)
+    du.tSrc.value = glueh.texture; du.uMaske.value = 0;
+    du.uTexel.value.set(1.0 / glueh.width, 1.0 / glueh.height);
     this.pass(this.mDown, this.rtC);
     bu.tSrc.value = this.rtC.texture; bu.uDir.value.set(1.5 / this.rtC.width, 0); this.pass(this.mBlur, this.rtD);
     bu.tSrc.value = this.rtD.texture; bu.uDir.value.set(0, 1.5 / this.rtC.height); this.pass(this.mBlur, this.rtC);
     const cu = this.mComp.uniforms;
-    cu.tCol.value = this.rtMain.texture; cu.tBlur.value = this.rtA.texture; cu.tBlur2.value = this.rtC.texture;
+    cu.tCol.value = this.rtMain.texture; cu.tBlur.value = this.rtA.texture; cu.tBloom.value = glueh.texture; cu.tBlur2.value = this.rtC.texture;
     cu.tDepth.value = this.useDepth ? this.rtMain.depthTexture : null;
     cu.uUseDepth.value = this.useDepth ? 1 : 0;
     cu.uNF.value.set(camera.near, camera.far);
