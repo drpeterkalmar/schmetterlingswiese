@@ -66,4 +66,9 @@ test('Anschluss: Welt setzt uSH und uHimmel, Wolken behalten ihr eigenes Licht',
   const wolke = w.clouds.children[0].material;
   assert.equal(wolke.uniforms.uHimmel.value, 0);
   assert.match(toonMat().fragmentShader, /shIrr\(N\)/);
+  // Gras: Licht von oben/unten vorgerechnet (Heavy-Job) = SH an (0, ±1, 0)
+  const { auswerten } = await import('../../js/engine/himmelslicht.js');
+  const o = auswerten(w.sh, 0, 1, 0), u = auswerten(w.sh, 0, -1, 0);
+  assert.ok(Math.abs(G.uShOben.value.x - o[0]) < 1e-6 && Math.abs(G.uShUnten.value.z - u[2]) < 1e-6);
+  assert.ok(G.uShOben.value.z > G.uShUnten.value.z, 'oben blauer als unten');
 });

@@ -45,6 +45,8 @@ export const G = {
   // v2.9 Himmelslicht: SH9-Irradianz des Welthimmels (himmelslicht.js), Anteil gegenüber der alten Halbkugel (0 = bisher)
   uSH: { value: Array.from({ length: 9 }, () => new THREE.Vector3()) },
   uHimmel: { value: 0 },
+  // Himmelslicht von oben/unten (für das Gras einmal je Welt vorgerechnet statt je Pixel aus uSH)
+  uShOben: { value: new THREE.Vector3() }, uShUnten: { value: new THREE.Vector3() },
   // v2.9 gebackene Baumschatten (schatten.js): R8-Textur über die Welt, x = Weltbreite (m), y = Stärke (0 = aus)
   uBaumSh: { value: null },
   uBaumShP: { value: new THREE.Vector4(320, 0, 0, 0) },
@@ -347,7 +349,9 @@ uniform vec3 uColor; uniform float uOpacity;
 varying vec2 vUv;
 void main(){
   float d = length(vUv - 0.5) * 2.0;
-  float a = pow(max(0.0, 1.0 - smoothstep(0.1, 1.0, d)), 1.6) * (0.65 + 0.35 * (1.0 - min(1.0, d)));
+  // Verlauf wie der alte Blob (blobTex: 1 → 0,55 bei halbem Radius → 0), Rand weich auslaufend – die Vorbau-Fassung fiel
+  // in der Mitte schneller ab (0,35 bei halbem Radius) und wirkte im Bild deutlich blasser als bisher (Heavy-Job-Abnahme)
+  float a = max(0.0, 1.0 - d) * (1.0 + 0.1 * d) * (1.0 - smoothstep(0.8, 1.0, d));
   gl_FragColor = vec4(uColor, a * uOpacity);
 }`;
 export function kontaktMat(color = 0x1a2a10, opacity = 0.4) {
@@ -499,7 +503,7 @@ void main(){
 const GRASS_F = /* glsl */`
 ${F_LIGHT}
 ${CLOUD_SH}
-uniform vec3 uGrassA, uGrassB, uGrassC; uniform vec4 uGold;
+uniform vec3 uGrassA, uGrassB, uGrassC; uniform vec4 uGold; uniform vec3 uShOben, uShUnten;
 varying vec3 vWP; varying float vH; varying float vR; varying float vWave; varying vec3 vN; varying float vBs;
 #ifdef DEKO
 varying vec3 vPat; uniform float uDq;
@@ -534,7 +538,7 @@ void main(){
   vec3 V = normalize(uCam - vWP);
   float ndl = clamp(dot(normalize(vN), uSunDir), 0.0, 1.0);
   vec3 amb = mix(uGndAmb, uSkyAmb, 0.6 + 0.4 * vH);
-  if (uHimmel > 0.0) amb = mix(amb, max(mix(shIrr(vec3(0.0, -1.0, 0.0)), shIrr(vec3(0.0, 1.0, 0.0)), 0.6 + 0.4 * vH), vec3(0.0)), uHimmel);
+  if (uHimmel > 0.0) amb = mix(amb, max(mix(uShUnten, uShOben, 0.6 + 0.4 * vH), vec3(0.0)), uHimmel);
   vec3 c = alb * (amb * 0.9 + uSunCol * (0.62 + 0.38 * ndl) * (0.7 + 0.3 * vH));
   // Durchleuchten gegen die Sonne (goldene Grasspitzen)
   float back = pow(clamp(dot(-V, uSunDir), 0.0, 1.0), 3.0);
@@ -663,7 +667,8 @@ void main(){
   col += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
 #ifdef MASKE
   // v2.9: am Himmel glüht nur, was wirklich hell ist (Sonne, Mond, helle Sterne)
-  gl_FragColor = vec4(col, smoothstep(1.0, 2.5, dot(col, vec3(0.2126, 0.7152, 0.0722))));
+  // (Heavy-Job: + Sonnenscheibe und innerer Sonnenhof – sonst verlor die tiefe Sonne im Kirschhain ihren Lichthof)
+  gl_FragColor = vec4(col, max(smoothstep(1.0, 2.5, dot(col, vec3(0.2126, 0.7152, 0.0722))), max(disk, pow(sd, 32.0) * 0.7)));
 #else
   gl_FragColor = vec4(col, 1.0);
 #endif
@@ -781,6 +786,29 @@ void main(){
   c += texture2D(tSrc, vUv - uDir * 3.2307692308).rgb * 0.0702702703;
   gl_FragColor = vec4(c, 1.0);
 }`;
+// Heavy-Job (Hoch = Bloom-Maske + Tiefenschärfe): EINE Viertel-Kette mit zwei Zielen (MRT) statt zwei Ketten –
+// Ziel 0 = Unschärfe für die Tiefenschärfe (ungewichtet), Ziel 1 = Glüh-Quelle (mit der Leucht-Maske gewichtet).
+// Drei Durchgänge statt sechs (die zweite Kette kostete auf Hoch ≈ 0,3 ms je Bild, gemessen bei CPU ×4, DPR 2,6).
+const DOWN2_F = /* glsl */`
+uniform sampler2D tSrc; uniform vec2 uTexel; in vec2 vUv;
+layout(location = 0) out vec4 oBlur; layout(location = 1) out vec4 oGlueh;
+void main(){
+  vec3 a = vec3(0.0), b = vec3(0.0);
+  vec2 o[4] = vec2[4](vec2(-1.0, -1.0), vec2(1.0, -1.0), vec2(-1.0, 1.0), vec2(1.0, 1.0));
+  for (int i = 0; i < 4; i++) { vec4 s = texture(tSrc, vUv + uTexel * o[i]); a += s.rgb; b += s.rgb * s.a; }
+  oBlur = vec4(min(a * 0.25, vec3(16.0)), 1.0); oGlueh = vec4(min(b * 0.25, vec3(16.0)), 1.0);
+}`;
+const BLUR2_F = /* glsl */`
+uniform sampler2D tSrc, tSrc2; uniform vec2 uDir; in vec2 vUv;
+layout(location = 0) out vec4 oBlur; layout(location = 1) out vec4 oGlueh;
+void main(){
+  const float w0 = 0.2270270270, w1 = 0.3162162162, w2 = 0.0702702703, d1 = 1.3846153846, d2 = 3.2307692308;
+  vec2 u1 = uDir * d1, u2 = uDir * d2;
+  oBlur = vec4(texture(tSrc, vUv).rgb * w0 + (texture(tSrc, vUv + u1).rgb + texture(tSrc, vUv - u1).rgb) * w1
+             + (texture(tSrc, vUv + u2).rgb + texture(tSrc, vUv - u2).rgb) * w2, 1.0);
+  oGlueh = vec4(texture(tSrc2, vUv).rgb * w0 + (texture(tSrc2, vUv + u1).rgb + texture(tSrc2, vUv - u1).rgb) * w1
+              + (texture(tSrc2, vUv + u2).rgb + texture(tSrc2, vUv - u2).rgb) * w2, 1.0);
+}`;
 const COMP_F = /* glsl */`
 uniform sampler2D tCol, tBlur, tBloom, tBlur2, tDepth; uniform vec2 uNF; uniform float uBloom, uThresh, uDof, uFocus, uVig, uSat, uUseDepth;
 uniform vec3 uLift, uGain; uniform float uFlash; uniform vec3 uFlashCol;
@@ -827,6 +855,9 @@ export class Post {
     this.scene = new THREE.Scene(); this.scene.add(this.quad);
     this.mDown = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, uTexel: { value: new THREE.Vector2() }, uMaske: { value: 0 } }, vertexShader: FS_V, fragmentShader: DOWN_F, depthTest: false, depthWrite: false });
     this.mBlur = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, uDir: { value: new THREE.Vector2() } }, vertexShader: FS_V, fragmentShader: BLUR_F, depthTest: false, depthWrite: false });
+    const z = { vertexShader: FS_V, depthTest: false, depthWrite: false, glslVersion: THREE.GLSL3 };
+    this.mDown2 = new THREE.ShaderMaterial({ ...z, uniforms: { tSrc: { value: null }, uTexel: { value: new THREE.Vector2() } }, fragmentShader: DOWN2_F });
+    this.mBlur2 = new THREE.ShaderMaterial({ ...z, uniforms: { tSrc: { value: null }, tSrc2: { value: null }, uDir: { value: new THREE.Vector2() } }, fragmentShader: BLUR2_F });
     this.mComp = new THREE.ShaderMaterial({
       uniforms: {
         tCol: { value: null }, tBlur: { value: null }, tBloom: { value: null }, tBlur2: { value: null }, tDepth: { value: null }, uNF: { value: new THREE.Vector2(0.1, 1000) },
@@ -901,16 +932,17 @@ export class Post {
     this.rw = rw; this.rh = rh; this.skala = skala;
     // 8-Bit-Rückfall: Ziele im sRGB-Format speichern (sonst sichtbare Farbstufen in dunklen Himmeln, z. B. nachts)
     const mk = (ww, hh, o = {}) => { const rt = new THREE.WebGLRenderTarget(ww, hh, { type: this.type, depthBuffer: false, ...o }); if (this.type === THREE.UnsignedByteType) rt.texture.colorSpace = THREE.SRGBColorSpace; return rt; };
-    [this.rtMain, this.rtA, this.rtB, this.rtC, this.rtD, this.rtM, this.rtN].forEach(rt => { if (rt) { if (rt.depthTexture) rt.depthTexture.dispose(); rt.dispose(); } });
-    this.rtM = this.rtN = null;
+    [this.rtMain, this.rtA, this.rtB, this.rtC, this.rtD].forEach(rt => { if (rt) { if (rt.depthTexture) rt.depthTexture.dispose(); rt.dispose(); } });
     const opts = { depthBuffer: true, samples: this.isWebGL2 ? samples : 0 };
     if (useDepth) { opts.depthTexture = new THREE.DepthTexture(rw, rh); opts.depthTexture.type = THREE.UnsignedIntType; }
     this.rtMain = mk(rw, rh, opts);
     // Unschärfe-/Glüh-Stufen aus dem Szenen-Ziel (Renderskala), nicht aus dem Bildschirm
     const qw = Math.max(1, Math.round(rw / 4)), qh = Math.max(1, Math.round(rh / 4));
-    this.rtA = mk(qw, qh); this.rtB = mk(qw, qh);
-    // v2.9 Bloom-Maske + Tiefenschärfe (Hoch): eigene gewichtete ¼-Kette fürs Glühen, rtA bleibt die Unschärfe-Quelle
-    if (this.maske && useDepth) { this.rtM = mk(qw, qh); this.rtN = mk(qw, qh); }
+    // v2.9 Bloom-Maske + Tiefenschärfe (Hoch): rtA/rtB mit zwei Zielen (Unschärfe + gewichtetes Glühen, s. DOWN2_F)
+    this.mrt = !!(this.maske && useDepth && this.isWebGL2);
+    const c2 = this.mrt ? { count: 2 } : {};
+    this.rtA = mk(qw, qh, c2); this.rtB = mk(qw, qh, c2);
+    if (this.mrt && this.type === THREE.UnsignedByteType) for (const rt of [this.rtA, this.rtB]) rt.textures.forEach(t => { t.colorSpace = THREE.SRGBColorSpace; });
     const ew = Math.max(1, Math.round(rw / 12)), eh = Math.max(1, Math.round(rh / 12));
     this.rtC = mk(ew, eh); this.rtD = mk(ew, eh);
     this.w = w; this.h = h;
@@ -931,17 +963,24 @@ export class Post {
       bu.tSrc.value = ziel.texture; bu.uDir.value.set(1 / ziel.width, 0); this.pass(this.mBlur, hilf);
       bu.tSrc.value = hilf.texture; bu.uDir.value.set(0, 1 / ziel.height); this.pass(this.mBlur, ziel);
     };
-    viertel(this.rtA, this.rtB, M && !this.rtM ? 1 : 0);
-    let glueh = this.rtA;
-    if (M && this.rtM) { viertel(this.rtM, this.rtN, 1); glueh = this.rtM; }
+    let glueh = this.rtA.texture;
+    if (this.mrt) {
+      const d2 = this.mDown2.uniforms, b2 = this.mBlur2.uniforms, A = this.rtA, B = this.rtB;
+      d2.tSrc.value = this.rtMain.texture; d2.uTexel.value.set(1.5 / this.rw, 1.5 / this.rh);
+      this.pass(this.mDown2, A);
+      b2.tSrc.value = A.textures[0]; b2.tSrc2.value = A.textures[1]; b2.uDir.value.set(1 / A.width, 0); this.pass(this.mBlur2, B);
+      b2.tSrc.value = B.textures[0]; b2.tSrc2.value = B.textures[1]; b2.uDir.value.set(0, 1 / A.height); this.pass(this.mBlur2, A);
+      glueh = A.textures[1];
+    } else viertel(this.rtA, this.rtB, M ? 1 : 0);
+    const gw = this.rtA.width, gh = this.rtA.height;
     // weite Glow-Stufe 1/12 (aus der Glüh-Quelle)
-    du.tSrc.value = glueh.texture; du.uMaske.value = 0;
-    du.uTexel.value.set(1.0 / glueh.width, 1.0 / glueh.height);
+    du.tSrc.value = glueh; du.uMaske.value = 0;
+    du.uTexel.value.set(1.0 / gw, 1.0 / gh);
     this.pass(this.mDown, this.rtC);
     bu.tSrc.value = this.rtC.texture; bu.uDir.value.set(1.5 / this.rtC.width, 0); this.pass(this.mBlur, this.rtD);
     bu.tSrc.value = this.rtD.texture; bu.uDir.value.set(0, 1.5 / this.rtC.height); this.pass(this.mBlur, this.rtC);
     const cu = this.mComp.uniforms;
-    cu.tCol.value = this.rtMain.texture; cu.tBlur.value = this.rtA.texture; cu.tBloom.value = glueh.texture; cu.tBlur2.value = this.rtC.texture;
+    cu.tCol.value = this.rtMain.texture; cu.tBlur.value = this.rtA.texture; cu.tBloom.value = glueh; cu.tBlur2.value = this.rtC.texture;
     cu.tDepth.value = this.useDepth ? this.rtMain.depthTexture : null;
     cu.uUseDepth.value = this.useDepth ? 1 : 0;
     cu.uNF.value.set(camera.near, camera.far);

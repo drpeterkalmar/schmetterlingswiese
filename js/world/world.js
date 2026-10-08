@@ -10,7 +10,7 @@ import { Life } from './life.js';
 import { Deko } from './deko.js';
 import { DEKO } from '../engine/deko.js';
 import { RINGE, RING_ANZAHL, RING_MAX, RING_VOR, wickelMitte } from './grasringe.js';
-import { himmelsLicht } from '../engine/himmelslicht.js';
+import { himmelsLicht, auswerten } from '../engine/himmelslicht.js';
 import { backeBaumschatten, KONTAKT_AN } from '../engine/schatten.js';
 // v2.9 Stärke der gebackenen Baumschatten (nachts halb). TODO Heavy-Job am Bild abstimmen.
 export const BAUM_STAERKE = 0.32;
@@ -88,6 +88,8 @@ export class World {
       alt: { himmel: rgb(G.uSkyAmb.value), boden: rgb(G.uGndAmb.value) },
     });
     sh.forEach((c, i) => G.uSH.value[i].set(c[0], c[1], c[2]));
+    const o = auswerten(sh, 0, 1, 0), u = auswerten(sh, 0, -1, 0);
+    G.uShOben.value.set(o[0], o[1], o[2]); G.uShUnten.value.set(u[0], u[1], u[2]);
     this.sh = sh;
   }
 
