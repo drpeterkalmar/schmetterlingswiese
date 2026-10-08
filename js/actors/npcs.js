@@ -5,6 +5,7 @@ import { Build, P, petalGeo } from '../engine/geo.js';
 import { wingMask } from '../engine/textures.js';
 import { face, surf } from './characters.js';
 import { height } from '../world/terrain.js';
+import { huelle } from '../engine/huelle.js';
 
 const _o = new THREE.Object3D();
 const _c = new THREE.Color();
@@ -66,7 +67,7 @@ export class Flyers {
       if (it.isB) { this.bBody.setMatrixAt(it.idx, _o.matrix); this.bWing.setMatrixAt(it.idx, _o.matrix); }
       else { this.lBody.setMatrixAt(it.idx, _o.matrix); this.lWing.setMatrixAt(it.idx, _o.matrix); }
     }
-    [this.bBody, this.bWing, this.lBody, this.lWing].forEach(m => { m.instanceMatrix.needsUpdate = true; });
+    [this.bBody, this.bWing, this.lBody, this.lWing].forEach(m => { m.instanceMatrix.needsUpdate = true; huelle(m); });
   }
 }
 
@@ -372,8 +373,8 @@ export class Animals {
         this.shadows.setMatrixAt(a.si, _o.matrix);
       }
     }
-    for (const k in this.meshes) { const g = this.meshes[k].geometry; this.meshes[k].instanceMatrix.needsUpdate = true; g.attributes.aAnim.needsUpdate = true; g.attributes.aAnim2.needsUpdate = true; }
-    if (this.shadows) this.shadows.instanceMatrix.needsUpdate = true;
+    for (const k in this.meshes) { const g = this.meshes[k].geometry; this.meshes[k].instanceMatrix.needsUpdate = true; g.attributes.aAnim.needsUpdate = true; g.attributes.aAnim2.needsUpdate = true; huelle(this.meshes[k]); }
+    if (this.shadows) { this.shadows.instanceMatrix.needsUpdate = true; huelle(this.shadows); }
   }
 }
 
@@ -429,5 +430,6 @@ export class Wasps {
       this.body.setMatrixAt(i, _o.matrix); this.wing.setMatrixAt(i, _o.matrix);
     }
     this.body.instanceMatrix.needsUpdate = true; this.wing.instanceMatrix.needsUpdate = true;
+    huelle(this.body); huelle(this.wing);
   }
 }

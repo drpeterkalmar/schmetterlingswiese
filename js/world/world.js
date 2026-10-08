@@ -9,6 +9,11 @@ import { Ambient } from './particles.js';
 import { Life } from './life.js';
 import { Deko } from './deko.js';
 import { DEKO } from '../engine/deko.js';
+import { RINGE, RING_ANZAHL, RING_MAX, RING_VOR, wickelMitte } from './grasringe.js';
+// v2.9 Gras in Ringen mit Kachel-Culling (?ringe=0 = ein Feld wie bis v2.8)
+export const RINGE_AN = new URLSearchParams(location.search).get('ringe') !== '0';
+const _fr = new THREE.Frustum(), _pm = new THREE.Matrix4();
+const ebenenAus = (fr) => fr.planes.map((p) => [p.normal.x, p.normal.y, p.normal.z, p.constant]);
 
 export class World {
   constructor(scene) {
@@ -57,10 +62,19 @@ export class World {
     this.applyPalette(w);
     const rnd = rng(hashStr(seedStr));
     const g = this.group = new THREE.Group();
-    this.terrain = buildTerrain(w); g.add(this.terrain);
+    this.terrain = buildTerrain(w, { ringe: RINGE_AN }); g.add(this.terrain);
     this.far = buildFar(w, hashStr(w.id)); g.add(this.far);
-    this.grass = N.buildGrass(quality.grassMax, 64, rng(99)); g.add(this.grass);
-    this.grass.userData.setCount(quality.grass);
+    if (RINGE_AN) {
+      // v2.9: Nahring (volle Halme, dicht) + Mittelring (halbe Dichte, breiter); fern nur Grasrauschen im Gelände
+      this.grass = null;
+      this.ringe = [N.buildGrassRing(RINGE.nah, RING_MAX[0], rng(99)), N.buildGrassRing(RINGE.mitte, RING_MAX[1], rng(98))];
+      this.ringe.forEach((m, i) => { g.add(m); m.userData.setCount(RING_ANZAHL[quality.id][i]); });
+      this.grassC = new THREE.Vector3(); // Feldmitte wie bisher (Wiesenblüten der Deko folgen ihr)
+    } else {
+      this.ringe = null;
+      this.grass = N.buildGrass(quality.grassMax, 64, rng(99)); g.add(this.grass);
+      this.grass.userData.setCount(quality.grass);
+    }
     // v2.8: Wiesenblüten, Lichtstrahlen, Schirmchen (nur mit Deko; Stückzahl je Qualitätsstufe)
     this.deko = DEKO ? new Deko(w, quality, quality.dekoK ?? 1) : null;
     if (this.deko) g.add(this.deko.group);
@@ -118,6 +132,20 @@ export class World {
       const dx = focus.x - cam.position.x, dz = focus.z - cam.position.z, l = Math.hypot(dx, dz) || 1;
       c.set(focus.x + dx / l * 9, focus.y, focus.z + dz / l * 9);
       if (this.deko) this.deko.update(dt, cam, focus, c);
+    } else if (this.ringe) {
+      // v2.9: Ringmitte näher an der Figur (Kamera liegt im Nahring), Kacheln gegen den Sichtkegel prüfen
+      const dx = focus.x - cam.position.x, dz = focus.z - cam.position.z, l = Math.hypot(dx, dz) || 1;
+      const rc = G.uRingC.value.set(focus.x + dx / l * RING_VOR, focus.y, focus.z + dz / l * RING_VOR);
+      cam.updateMatrixWorld();
+      _fr.setFromProjectionMatrix(_pm.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse));
+      const eb = ebenenAus(_fr), c2 = [rc.x, rc.z];
+      for (const m of this.ringe) {
+        const u = m.material.uniforms, R = m.userData.ring;
+        u.uCenter.value.copy(rc); u.uWrapC.value.set(wickelMitte(rc.x, R), 0, wickelMitte(rc.z, R));
+        m.userData.cull(c2, eb);
+      }
+      this.grassC.set(focus.x + dx / l * 9, focus.y, focus.z + dz / l * 9);
+      if (this.deko) this.deko.update(dt, cam, focus, this.grassC);
     }
     if (this.clouds) this.clouds.userData.update(dt);
     if (this.pond) this.pond.userData.update(dt, G.uTime.value);
@@ -144,6 +172,7 @@ export class World {
 
   setQuality(q, k = 1) {
     if (this.grass) this.grass.userData.setCount(q.grass);
+    if (this.ringe) this.ringe.forEach((m, i) => m.userData.setCount(RING_ANZAHL[q.id][i]));
     if (this.ambient) this.ambient.setCount(q.particles);
     if (this.deko) this.deko.setQuality(q, k);
     G.uDq.value = DEKO && q.id > 0 ? k : 0;

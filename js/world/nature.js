@@ -4,6 +4,7 @@ import { G, toonMat, grassMat, glowMat } from '../engine/gfx.js';
 import { DEF } from '../engine/deko.js';
 import { Build, P, petalGeo, clumpGeo, rng } from '../engine/geo.js';
 import { height, pond } from './terrain.js';
+import { baueHalme, sichtbareKacheln, verdichte, mengenSchluessel } from './grasringe.js';
 
 const _o = new THREE.Object3D();
 const _c = new THREE.Color();
@@ -26,6 +27,37 @@ export function buildGrass(count, field = 48, rnd = Math.random) {
   m.frustumCulled = false;
   m.userData.setCount = (n) => { g.instanceCount = Math.min(n, count); };
   m.userData.max = count;
+  return m;
+}
+
+// v2.9 Gras-Ring (grasringe.js): Halme nach Kacheln sortiert, je Bild nur die sichtbaren Kacheln im Instanz-Puffer
+export function buildGrassRing(R, max, rnd = Math.random) {
+  const blade = clumpGeo(0.12);
+  const g = new THREE.InstancedBufferGeometry();
+  g.index = blade.index;
+  g.attributes.position = blade.attributes.position;
+  g.attributes.normal = blade.attributes.normal;
+  const halme = baueHalme(max, R.kacheln, rnd);
+  const ziel = new Float32Array(max * 4);
+  const attr = new THREE.InstancedBufferAttribute(ziel, 4).setUsage(THREE.DynamicDrawUsage);
+  g.setAttribute('aOff', attr);
+  g.instanceCount = 0;
+  const m = new THREE.Mesh(g, grassMat(R.feld, R));
+  m.frustumCulled = false; // Culling je Kachel (unten), der Mesh selbst wird immer gezeichnet
+  m.userData.anteil = 1; m.userData.max = max; m.userData.key = ''; m.userData.ring = R;
+  m.userData.setCount = (n) => { m.userData.anteil = Math.min(1, n / max); };
+  // c = [x, z] Ringmitte, ebenen = Sichtkegel ([nx, ny, nz, c] je Ebene) oder null
+  m.userData.cull = (c, ebenen) => {
+    const k = sichtbareKacheln(R, c, ebenen, height);
+    const key = mengenSchluessel(k, m.userData.anteil);
+    m.userData.kacheln = k.length;
+    if (key === m.userData.key) return false;
+    m.userData.key = key;
+    const n = verdichte(halme, k, m.userData.anteil, ziel);
+    g.instanceCount = n;
+    attr.clearUpdateRanges(); if (n) { attr.addUpdateRange(0, n * 4); attr.needsUpdate = true; }
+    return true;
+  };
   return m;
 }
 

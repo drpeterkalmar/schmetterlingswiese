@@ -37,6 +37,8 @@ export const G = {
   uNight: { value: 0 },
   uSkyZen: { value: new THREE.Color(0.4, 0.6, 0.9) },
   uSkyHor: { value: new THREE.Color(0.85, 0.92, 1) },
+  // v2.9 Gras-Ringe: Ringmitte (xz) fürs Grasrauschen im Gelände jenseits der Halme
+  uRingC: { value: new THREE.Vector3() },
 };
 // Wolkenschatten: weiche dunkle Flecken, die mit dem Wind über die Wiese ziehen (nur Boden + Gras, kein Draw-Call)
 const CLOUD_SH = /* glsl */`
@@ -329,6 +331,10 @@ ${F_LIGHT}
 ${CLOUD_SH}
 uniform float uTime; uniform float uWaterY;
 varying vec3 vN; varying vec3 vWP; varying vec3 vCol;
+#ifdef RINGE
+${GLSL_TERRAIN}
+uniform vec3 uGrassA, uGrassB, uRingC;
+#endif
 float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
   float a = fract(sin(dot(i, vec2(127.1,311.7)))*43758.5453), b = fract(sin(dot(i+vec2(1,0), vec2(127.1,311.7)))*43758.5453);
   float c = fract(sin(dot(i+vec2(0,1), vec2(127.1,311.7)))*43758.5453), d = fract(sin(dot(i+vec2(1,1), vec2(127.1,311.7)))*43758.5453);
@@ -341,6 +347,22 @@ void main(){
   // nasser Uferstreifen
   float wet = 1.0 - smoothstep(uWaterY + 0.05, uWaterY + 0.6, vWP.y);
   alb = mix(alb, alb * vec3(0.62, 0.66, 0.7), wet * 0.8);
+#ifdef RINGE
+  // v2.9 Fernring: keine Halme mehr, dafür Grasrauschen – Farbe Richtung Gras, feine Büschel-Flecken; Amplitude sinkt,
+  // wenn das Muster kleiner als ein Pixel wird (kein Flimmern). Nicht auf Sand/Pfad, Ufer, Wasser, Randhügeln.
+  // TODO Heavy-Job: Stärke (0,35/0,16) und Frequenzen am Bild abstimmen (Übergang am Ring-Rand 24–31 m)
+  {
+    float dG = length(vWP.xz - uRingC.xz);
+    float fG = smoothstep(22.0, 32.0, dG) * (1.0 - smoothstep(uEdge.x + 25.0, uEdge.x + 50.0, length(vWP.xz)));
+    fG *= (1.0 - wet) * smoothstep(uWaterY + 0.45, uWaterY + 0.95, vWP.y) * (1.0 - clamp(patchAmt(vWP.xz) * 1.4, 0.0, 1.0));
+    vec2 q = vWP.xz * vec2(2.3, 1.7);
+    float aa = 1.0 - smoothstep(0.25, 0.7, max(fwidth(q.x), fwidth(q.y)));
+    float gn = n2(q) * 0.6 + n2(q * 2.1 + 7.3) * 0.4;
+    vec3 gc = mix(uGrassA, uGrassB, 0.55 + 0.35 * n2(vWP.xz * 0.21));
+    alb = mix(alb, gc, 0.35 * fG);
+    alb *= 1.0 + 0.16 * fG * aa * (gn - 0.5) * 2.0;
+  }
+#endif
   vec3 c = toon(alb, N, V, 0.12, 0.0, 0.25);
   c *= 1.0 - cloudShade(vWP.xz);
   c = applyFog(c, vWP);
@@ -348,8 +370,11 @@ void main(){
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }`;
-export function terrainMat() {
-  return new THREE.ShaderMaterial({ uniforms: G, vertexShader: TERRAIN_V, fragmentShader: TERRAIN_F, vertexColors: true });
+// o.ringe (v2.9): Grasrauschen jenseits der Gras-Ringe
+export function terrainMat(o = {}) {
+  const m = new THREE.ShaderMaterial({ uniforms: G, vertexShader: TERRAIN_V, fragmentShader: TERRAIN_F, vertexColors: true });
+  if (o.ringe) m.defines = { RINGE: '' };
+  return m;
 }
 
 // ---------------------------------------------------------------- Gras (instanziert, folgt dem Spieler)
@@ -359,6 +384,10 @@ ${GLSL_TERRAIN}
 uniform float uField; uniform vec3 uCenter; uniform float uWaterY;
 attribute vec4 aOff; // x,z in [0,1), rand, scale
 varying vec3 vWP; varying float vH; varying float vR; varying float vWave; varying vec3 vN;
+#ifdef RINGE
+uniform vec4 uRing; uniform float uBreite; // v2.9: Ring (innen a→b einblenden, außen c→d ausblenden), Büschelbreite
+uniform vec3 uWrapC; // v2.9: Wickel-Mitte, aufs Kachelraster gerastet (grasringe.js wickelMitte)
+#endif
 #ifdef DEKO
 varying vec3 vPat; // v2.8: Farbmuster je Halm (Fleck, Goldlicht, Büschel) – im Vertex- statt Pixel-Shader
 uniform float uDq;
@@ -366,10 +395,19 @@ uniform float uDq;
 void main(){
   vec2 base = aOff.xy * uField;
   vec2 c = uCenter.xz;
+#ifdef RINGE
+  vec2 p = mod(base - uWrapC.xz + uField * 0.5, uField) - uField * 0.5 + uWrapC.xz;
+#else
   vec2 p = mod(base - c + uField * 0.5, uField) - uField * 0.5 + c;
+#endif
   float gh = terrainH(p);
   float dist = length(p - uCam.xz);
+#ifdef RINGE
+  float dc = length(p - c);
+  float s = aOff.w * smoothstep(uRing.x, uRing.y, dc) * (1.0 - smoothstep(uRing.z, uRing.w, dc));
+#else
   float s = aOff.w * (1.0 - smoothstep(uField * 0.30, uField * 0.48, length(p - c)));
+#endif
   s *= smoothstep(uWaterY + 0.45, uWaterY + 0.95, gh);
   s *= 1.0 - smoothstep(uEdge.x + 25.0, uEdge.x + 50.0, length(p));
   s *= smoothstep(0.8, 3.2, length(p - uCam.xz)); // keine Riesenhalme direkt vor der Kamera
@@ -377,6 +415,9 @@ void main(){
   float ang = aOff.z * 6.2831;
   float ca = cos(ang), sa = sin(ang);
   vec3 lp = position * vec3(1.0 + aOff.z * 0.6, s, 1.0);
+#ifdef RINGE
+  lp.xz *= uBreite;
+#endif
   lp.xz = vec2(lp.x * ca - lp.z * sa, lp.x * sa + lp.z * ca);
   float t = position.y; // 0..1 Blatthöhe
   // Wind: große wandernde Wellen + Flattern
@@ -450,11 +491,16 @@ void main(){
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }`;
-export function grassMat(field) {
-  return new THREE.ShaderMaterial({
-    uniforms: { ...G, uField: { value: field }, uCenter: { value: new THREE.Vector3() } },
+// ring (v2.9): { rIn: [a, b], rOut: [c, d], breite } → Gras-Ring statt Feld mit fester Ausblendung
+export function grassMat(field, ring = null) {
+  const m = new THREE.ShaderMaterial({
+    uniforms: { ...G, uField: { value: field }, uCenter: { value: new THREE.Vector3() },
+      uRing: { value: new THREE.Vector4(...(ring ? [...ring.rIn, ...ring.rOut] : [-1, 0, 19, 31])) }, uBreite: { value: ring ? ring.breite : 1 },
+      uWrapC: { value: new THREE.Vector3() } },
     vertexShader: DEF + GRASS_V, fragmentShader: DEF + GRASS_F, side: THREE.DoubleSide,
   });
+  if (ring) m.defines = { RINGE: '' };
+  return m;
 }
 
 // ---------------------------------------------------------------- Himmel
