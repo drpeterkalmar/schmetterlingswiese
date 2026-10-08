@@ -39,6 +39,9 @@ export const G = {
   uSkyHor: { value: new THREE.Color(0.85, 0.92, 1) },
   // v2.9 Gras-Ringe: Ringmitte (xz) fürs Grasrauschen im Gelände jenseits der Halme
   uRingC: { value: new THREE.Vector3() },
+  // v2.9 Himmelslicht: SH9-Irradianz des Welthimmels (himmelslicht.js), Anteil gegenüber der alten Halbkugel (0 = bisher)
+  uSH: { value: Array.from({ length: 9 }, () => new THREE.Vector3()) },
+  uHimmel: { value: 0 },
 };
 // Wolkenschatten: weiche dunkle Flecken, die mit dem Wind über die Wiese ziehen (nur Boden + Gras, kein Draw-Call)
 const CLOUD_SH = /* glsl */`
@@ -78,6 +81,13 @@ float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx
 
 export const F_LIGHT = /* glsl */`
 uniform vec3 uSunDir, uSunCol, uSkyAmb, uGndAmb, uRim, uFogCol, uFogSun; uniform vec4 uFog; uniform vec3 uCam;
+uniform vec3 uSH[9]; uniform float uHimmel;
+// v2.9 weiches Himmelslicht: Irradianz aus SH9 (Basis wie himmelslicht.js shBasis)
+vec3 shIrr(vec3 n){
+  return uSH[0] * 0.282095 + uSH[1] * (0.488603 * n.y) + uSH[2] * (0.488603 * n.z) + uSH[3] * (0.488603 * n.x)
+       + uSH[4] * (1.092548 * n.x * n.y) + uSH[5] * (1.092548 * n.y * n.z) + uSH[6] * (0.315392 * (3.0 * n.z * n.z - 1.0))
+       + uSH[7] * (1.092548 * n.x * n.z) + uSH[8] * (0.546274 * (n.x * n.x - n.y * n.y));
+}
 vec3 applyFog(vec3 col, vec3 wp){
   vec3 dv = wp - uCam; float dist = length(dv);
   float f = clamp((dist - uFog.x) / (uFog.y - uFog.x), 0.0, 1.0);
@@ -90,6 +100,7 @@ vec3 toon(vec3 alb, vec3 N, vec3 V, float rimAmt, float gloss, float soft){
   float l = smoothstep(-0.08 - soft, 0.12 + soft, ndl);
   l *= 0.82 + 0.18 * max(ndl, 0.0);
   vec3 amb = mix(uGndAmb, uSkyAmb, N.y * 0.5 + 0.5);
+  if (uHimmel > 0.0) amb = mix(amb, max(shIrr(N), vec3(0.0)), uHimmel);
   vec3 c = alb * (amb + uSunCol * l);
   float fres = pow(1.0 - clamp(dot(N, V), 0.0, 1.0), 3.0);
   float back = clamp(dot(-V, uSunDir) * 0.5 + 0.5, 0.0, 1.0);
@@ -481,6 +492,7 @@ void main(){
   vec3 V = normalize(uCam - vWP);
   float ndl = clamp(dot(normalize(vN), uSunDir), 0.0, 1.0);
   vec3 amb = mix(uGndAmb, uSkyAmb, 0.6 + 0.4 * vH);
+  if (uHimmel > 0.0) amb = mix(amb, max(mix(shIrr(vec3(0.0, -1.0, 0.0)), shIrr(vec3(0.0, 1.0, 0.0)), 0.6 + 0.4 * vH), vec3(0.0)), uHimmel);
   vec3 c = alb * (amb * 0.9 + uSunCol * (0.62 + 0.38 * ndl) * (0.7 + 0.3 * vH));
   // Durchleuchten gegen die Sonne (goldene Grasspitzen)
   float back = pow(clamp(dot(-V, uSunDir), 0.0, 1.0), 3.0);

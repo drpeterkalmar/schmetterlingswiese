@@ -10,6 +10,12 @@ import { Life } from './life.js';
 import { Deko } from './deko.js';
 import { DEKO } from '../engine/deko.js';
 import { RINGE, RING_ANZAHL, RING_MAX, RING_VOR, wickelMitte } from './grasringe.js';
+import { himmelsLicht } from '../engine/himmelslicht.js';
+// v2.9 weiches Himmelslicht (SH9 aus dem Welthimmel), ?himmel=0 = feste Halbkugel wie bis v2.8.
+// Anteil gegenüber der alten Halbkugel: TODO Heavy-Job am Bild abstimmen (Startwert 0,7; 1 = nur Himmelslicht)
+export const HIMMEL_AN = new URLSearchParams(location.search).get('himmel') !== '0';
+export const HIMMEL_ANTEIL = 0.7;
+const rgb = (c) => [c.r, c.g, c.b];
 // v2.9 Gras in Ringen mit Kachel-Culling (?ringe=0 = ein Feld wie bis v2.8)
 export const RINGE_AN = new URLSearchParams(location.search).get('ringe') !== '0';
 const _fr = new THREE.Frustum(), _pm = new THREE.Matrix4();
@@ -52,6 +58,22 @@ export class World {
     // v2.3: Regenbogen, goldene Graslichter, Sternschnuppen
     su.uRainbow.value = w.sky.rainbow || 0; su.uShootT.value = -1;
     const gd = w.gold || [0xffffff, 0]; _c.set(gd[0]); G.uGold.value.set(_c.r, _c.g, _c.b, gd[1]);
+    this.himmelsLicht(w);
+  }
+  // v2.9: Umgebungslicht aus dem Himmel dieser Welt (einmal je Welt, ≈ 1 200 Proben)
+  himmelsLicht(w) {
+    G.uHimmel.value = HIMMEL_AN ? HIMMEL_ANTEIL : 0;
+    if (!HIMMEL_AN) return;
+    const boden = [0, 0, 0];
+    for (const h of w.ground) { _c.set(h); boden[0] += _c.r / w.ground.length; boden[1] += _c.g / w.ground.length; boden[2] += _c.b / w.ground.length; }
+    const S = G.uSunDir.value;
+    const sh = himmelsLicht({
+      zenit: rgb(_c.set(w.sky.zenith)), horizont: rgb(_c.set(w.sky.horizon)), glow: rgb(_c.set(w.sky.glow)),
+      sonne: [S.x, S.y, S.z], sonnenFarbe: rgb(G.uSunCol.value), boden,
+      alt: { himmel: rgb(G.uSkyAmb.value), boden: rgb(G.uGndAmb.value) },
+    });
+    sh.forEach((c, i) => G.uSH.value[i].set(c[0], c[1], c[2]));
+    this.sh = sh;
   }
 
   build(w, quality, seedStr = w.id) {

@@ -578,6 +578,7 @@ export function buildClouds(world, rnd, n) {
   const k = world.amb.k;
   mat.uniforms.uGndAmb = { value: new THREE.Color(0xf2dcf2).lerp(new THREE.Color(world.sky.horizon), 0.18).multiplyScalar(0.92 * k / 0.62) };
   mat.uniforms.uSkyAmb = { value: new THREE.Color(0xffffff).lerp(new THREE.Color(world.sky.horizon), 0.2).multiplyScalar(0.95 * k / 0.62) };
+  mat.uniforms.uHimmel = { value: 0 }; // v2.9: Wolken behalten ihr eigenes, abgestimmtes Umgebungslicht
   const shapes = [];
   for (let s = 0; s < 3; s++) {
     const b = new Build();
@@ -625,6 +626,7 @@ export function buildClouds(world, rnd, n) {
     // deckend: halbtransparent zeigten sich die überlappenden Kugeln als Kreise (Befund Vision, v2.3)
     const hm = toonMat({ vc: true, rim: 0.4, soft: 1.4, cloud: true });
     hm.uniforms.uColor.value.set(world.cloud || 0xffffff); hm.uniforms.uFog = mat.uniforms.uFog; hm.uniforms.uGndAmb = mat.uniforms.uGndAmb; hm.uniforms.uSkyAmb = mat.uniforms.uSkyAmb;
+    hm.uniforms.uHimmel = mat.uniforms.uHimmel;
     const pts = [];
     for (let i = 0; i < Math.max(3, Math.round(n * 0.5)); i++) {
       // weit draußen und hoch → kleine, dünne Schleier am mittleren Himmel (näher/größer wirkten sie kantig und wuchtig)
