@@ -1,0 +1,143 @@
+{
+ "datum": "2026-10-08T16:33:30",
+ "stand": "ab_e2",
+ "modus": "ab",
+ "runden": 3,
+ "varianten": [
+  {
+   "name": "ohne",
+   "wurzel": "/Users/wohnzimmer/dev/butterfly-game",
+   "zusatz": "&skala=0"
+  },
+  {
+   "name": "mit",
+   "wurzel": "/Users/wohnzimmer/dev/butterfly-game",
+   "zusatz": ""
+  }
+ ],
+ "profil": {
+  "drossel": 4,
+  "dpr": 2.6,
+  "sek": 10,
+  "start": "open",
+  "vsync": false
+ },
+ "szenen": {
+  "wiese_mittel": {
+   "hoch": {
+    "ohne": {
+     "p50": 3.3,
+     "p95": 4.6,
+     "fps": 294.7,
+     "calls": 86,
+     "tris": 273180,
+     "runden_p95": [
+      4.6,
+      4.3,
+      5.1
+     ],
+     "fehler": []
+    },
+    "mit": {
+     "p50": 3.8,
+     "p95": 4.9,
+     "fps": 258,
+     "calls": 86,
+     "tris": 273362,
+     "runden_p95": [
+      4.9,
+      5.8,
+      4.3
+     ],
+     "fehler": []
+    }
+   },
+   "quer": {
+    "ohne": {
+     "p50": 3.5,
+     "p95": 5.1,
+     "fps": 271.5,
+     "calls": 105,
+     "tris": 325268,
+     "runden_p95": [
+      5.1,
+      4.5,
+      5.3
+     ],
+     "fehler": []
+    },
+    "mit": {
+     "p50": 3.4,
+     "p95": 4.5,
+     "fps": 288.4,
+     "calls": 104,
+     "tris": 325904,
+     "runden_p95": [
+      4.5,
+      4.5,
+      5
+     ],
+     "fehler": []
+    }
+   }
+  },
+  "wiese_hoch": {
+   "hoch": {
+    "ohne": {
+     "p50": 6.4,
+     "p95": 8.1,
+     "fps": 155.9,
+     "calls": 85,
+     "tris": 364198,
+     "runden_p95": [
+      8.1,
+      8.1,
+      8
+     ],
+     "fehler": []
+    },
+    "mit": {
+     "p50": 6.6,
+     "p95": 8.4,
+     "fps": 151.8,
+     "calls": 86,
+     "tris": 364553,
+     "runden_p95": [
+      8.4,
+      8.4,
+      8.2
+     ],
+     "fehler": []
+    }
+   },
+   "quer": {
+    "ohne": {
+     "p50": 7.1,
+     "p95": 8.6,
+     "fps": 141.9,
+     "calls": 103,
+     "tris": 446213,
+     "runden_p95": [
+      8.6,
+      8.6,
+      8.8
+     ],
+     "fehler": []
+    },
+    "mit": {
+     "p50": 7.1,
+     "p95": 8.8,
+     "fps": 140.5,
+     "calls": 103,
+     "tris": 446854,
+     "runden_p95": [
+      8.7,
+      8.9,
+      8.8
+     ],
+     "fehler": []
+    }
+   }
+  }
+ }
+}
