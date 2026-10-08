@@ -396,8 +396,8 @@ class App {
       this.audio.setFlight(playing && !pl.landed ? THREE.MathUtils.clamp(pl.speed / FLIGHT_NORM, 0, 1) : 0.15, this.world.windBoost || 0);
     }
   }
-  // v2.9 fester Takt: Spiel, Flug, Spur und Effekt-Partikel in 60-Hz-Schritten (Zeitlupe skaliert die Schrittweite wie
-  // bisher dt); gezeichnet wird zwischen den letzten beiden Schritten (Darstellung, nach dem Zeichnen zurückgesetzt)
+  // v2.9 fester Takt: Spiel, Flug und Spur in 60-Hz-Schritten (Zeitlupe skaliert die Schrittweite wie bisher dt);
+  // gezeichnet wird zwischen den letzten beiden Schritten (Darstellung, nach dem Zeichnen zurückgesetzt)
   taktSchritte(raw, dt) {
     const T = this.takt, h = T.h, D = this.darst, c = this.player.critter;
     if (!this._taktAktiv) { this._taktAktiv = true; T.zuruecksetzen(); D.vergessen(); }
@@ -415,9 +415,11 @@ class App {
       this._discT += h;
       if (this._discT > 0.5) { this._discT = 0; this.proximityDiscover(); }
       this.trailUpdate(gdt);
-      this.bursts.update(gdt);
       if (this.mode !== 'game') break; // Level mitten im Bild verlassen
     }
+    // Effekt-Partikel: ausgelöst wird im festen Takt (Spiel, Spur), bewegt je Bild mit der echten Bildzeit – sonst
+    // ruckeln sie auf 120-Hz-Schirmen in 60-Hz-Sprüngen (Heavy-Job; Bewegung ist reine Optik, Puffer 1× je Bild hoch)
+    this.bursts.update(dt * this.timeScale);
     if (n > 0) D.merkeNachher();
     D.anwenden(T.alpha);
     G.uTime.value = this.t - h * (1 - T.alpha); // Shader-Zeit passend zur interpolierten Darstellung
