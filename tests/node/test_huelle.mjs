@@ -22,8 +22,15 @@ test('Hüllkugel umfasst alle Instanzen + Rand, folgt der Bewegung, Culling grei
   assert.equal(sicht(cam, im), false, 'Blick weg → nicht zeichnen');
   // Instanz wandert hinter die Kamera → nach huelle() wieder sichtbar
   im.setMatrixAt(0, m.makeTranslation(0, 2, -120));
-  huelle(im);
+  const t0 = performance.now();
+  huelle(im, undefined, t0 + 10);
+  assert.equal(sicht(cam, im), false, 'innerhalb von 50 ms: alte Kugel (gedrosselt)');
+  huelle(im, undefined, t0 + 200);
   assert.equal(sicht(cam, im), true, 'Kugel folgt der Bewegung');
+  // Instanzzahl ändert sich → sofort neu
+  im.setMatrixAt(2, m.makeTranslation(0, 2, -300)); im.count = 3;
+  im.count = 2; huelle(im, undefined, t0 + 205);
+  assert.ok(im.boundingSphere.distanceToPoint(new THREE.Vector3(3, 0, 40)) > 0, 'neue Anzahl → sofort neu gerechnet');
 });
 
 test('leere Gruppe (count 0) bekommt eine gültige kleine Kugel', () => {

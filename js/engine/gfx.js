@@ -396,12 +396,16 @@ void main(){
   // v2.9 Fernring: keine Halme mehr, dafür Grasrauschen – Farbe Richtung Gras, feine Büschel-Flecken; Amplitude sinkt,
   // wenn das Muster kleiner als ein Pixel wird (kein Flimmern). Nicht auf Sand/Pfad, Ufer, Wasser, Randhügeln.
   // TODO Heavy-Job: Stärke (0,35/0,16) und Frequenzen am Bild abstimmen (Übergang am Ring-Rand 24–31 m)
-  {
-    float dG = length(vWP.xz - uRingC.xz);
-    float fG = smoothstep(22.0, 32.0, dG) * (1.0 - smoothstep(uEdge.x + 25.0, uEdge.x + 50.0, length(vWP.xz)));
-    fG *= (1.0 - wet) * smoothstep(uWaterY + 0.45, uWaterY + 0.95, vWP.y) * (1.0 - clamp(patchAmt(vWP.xz) * 1.4, 0.0, 1.0));
+  // (Heavy-Job: früh aussteigen – im Nahbereich, der den größten Teil des Bodens im Bild ausmacht, ist fG = 0;
+  // vorher rechnete jeder Bodenpixel das Rauschen und multiplizierte mit 0 → auf Hoch ≈ 0,26 ms je Bild)
+  vec2 fwG = fwidth(vWP.xz) * vec2(2.3, 1.7); // Ableitungen vor der Verzweigung (in ungleichmäßigem Kontrollfluss undefiniert)
+  float dG = length(vWP.xz - uRingC.xz);
+  float fG = smoothstep(22.0, 32.0, dG) * (1.0 - smoothstep(uEdge.x + 25.0, uEdge.x + 50.0, length(vWP.xz)));
+  fG *= (1.0 - wet) * smoothstep(uWaterY + 0.45, uWaterY + 0.95, vWP.y);
+  if (fG > 0.002) fG *= 1.0 - clamp(patchAmt(vWP.xz) * 1.4, 0.0, 1.0);
+  if (fG > 0.002) {
     vec2 q = vWP.xz * vec2(2.3, 1.7);
-    float aa = 1.0 - smoothstep(0.25, 0.7, max(fwidth(q.x), fwidth(q.y)));
+    float aa = 1.0 - smoothstep(0.25, 0.7, max(fwG.x, fwG.y));
     float gn = n2(q) * 0.6 + n2(q * 2.1 + 7.3) * 0.4;
     vec3 gc = mix(uGrassA, uGrassB, 0.55 + 0.35 * n2(vWP.xz * 0.21));
     alb = mix(alb, gc, 0.35 * fG);

@@ -114,7 +114,7 @@ test('Ring-Aufbau: Kamera liegt im Nahring, Ringe überlappen, Dichte nah ≥ 1,
   for (const R of Object.values(RINGE)) assert.ok(R.feld / 2 > R.rOut[1], 'Naht des Feldes liegt außerhalb des Rings');
   const alt = [4500, 8000, 16000];
   for (const q of [0, 1]) assert.ok(RING_ANZAHL[q][0] / RINGE.nah.feld ** 2 >= 1.55 * alt[q] / 64 ** 2, 'Stufe ' + q);
-  assert.ok(RING_ANZAHL[2][0] / RINGE.nah.feld ** 2 >= 1.99 * alt[2] / 64 ** 2, 'Hoch nah doppelt so dicht');
+  assert.ok(RING_ANZAHL[2][0] / RINGE.nah.feld ** 2 >= 1.4 * alt[2] / 64 ** 2, 'Hoch nah 1,4× so dicht (Heavy-Job: 2× kostete 11 %)');
   for (const q of [0, 1, 2]) assert.ok(RING_ANZAHL[q][1] / RINGE.mitte.feld ** 2 <= 0.55 * alt[q] / 64 ** 2, 'Mitte halbe Dichte, Stufe ' + q);
   for (const q of [0, 1, 2]) assert.ok(RING_ANZAHL[q][0] <= RING_MAX[0] && RING_ANZAHL[q][1] <= RING_MAX[1]);
 });
@@ -142,4 +142,18 @@ test('Shader-Schalter: Ring-Material (RINGE, uRing, uBreite) und Gelände-Grasra
   // ohne Sichtkegel fallen nur die Kacheln außerhalb des Rings weg (Ecken des Fensters)
   assert.ok(g.geometry.instanceCount > 300 && g.geometry.instanceCount < 450, g.geometry.instanceCount);
   assert.equal(g.userData.cull([0, 0], null), false, 'gleiche Menge → nicht neu kopieren');
+});
+
+test('Höhen-Merker: gleiche Kacheln wie ohne Merker, auch beim Weiterfliegen', async () => {
+  const { sichtbareKacheln, RINGE, KACHEL_RAND } = await import('../../js/world/grasringe.js');
+  const hoehe = (x, z) => 2 * Math.sin(x * 0.07) + 1.5 * Math.cos(z * 0.05 + x * 0.02);
+  const ebenen = [[0.7, 0, 0.7, 5], [-0.7, 0, 0.7, 5], [0, 1, 0, 20], [0, -1, 0, 20]];
+  for (const R of [RINGE.nah, RINGE.mitte]) {
+    const hb = new Map();
+    for (let i = 0; i < 60; i++) {
+      const c = [i * 1.7 - 40, Math.sin(i) * 30];
+      assert.deepEqual(sichtbareKacheln(R, c, ebenen, hoehe, KACHEL_RAND, hb), sichtbareKacheln(R, c, ebenen, hoehe));
+    }
+    assert.ok(hb.size > R.kacheln * R.kacheln, 'Merker füllt sich');
+  }
 });

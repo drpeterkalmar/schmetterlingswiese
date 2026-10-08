@@ -2,8 +2,8 @@
 // tests/node/test_grasringe.mjs). Bis v2.8: EIN Halmfeld (64 m, folgt der Kamera) mit frustumCulled = false → jeder Halm
 // lief jedes Bild durch den Vertex-Shader, auch hinter der Kamera.
 // Jetzt:
-//   • nah   – volle Halme, doppelt so dicht wie bisher, Feld 34 m, Radius bis 16 m um die Ringmitte
-//   • Mitte – halbe Dichte, breitere Büschel, Feld 64 m, 12–31 m (Überblendung 12–16 m mit dem Nahring)
+//   • nah   – volle Halme, 1,4–1,6× so dicht wie bisher, Feld 40 m, Radius bis 16 m um die Ringmitte
+//   • Mitte – knapp halbe Dichte, breitere Büschel, Feld 80 m, 12–31 m (Überblendung 12–16 m mit dem Nahring)
 //   • fern  – keine Halme, nur Grasrauschen im Gelände-Shader (gfx.js TERRAIN_F, #ifdef RINGE)
 // Kachel-Culling: Jedes Feld ist in Kacheln geteilt (Halme sind je Kachel sortiert, innerhalb der Kachel zufällig). Je Bild
 // werden die Kacheln gegen den Sichtkegel und den Ring geprüft; ändert sich die sichtbare Menge, werden die Halme der
@@ -15,11 +15,13 @@ export const RINGE = {
   mitte: { feld: 80, kacheln: 10, rIn: [12, 16], rOut: [24, 31], breite: 1.7 },
 };
 // Halme je Stufe [nah, Mitte] (bis v2.8: ein Feld 64 m mit 4 500 / 8 000 / 16 000 → 1,1 / 2,0 / 3,9 je m²).
-// Nah: Hoch doppelte, Niedrig/Mittel 1,6-fache Dichte; Mitte halbe Dichte. Gezeichnet wird nur, was in Ring UND
+// Nah: Hoch 1,4-fache, Niedrig/Mittel 1,6-fache Dichte; Mitte knapp halbe Dichte. Gezeichnet wird nur, was in Ring UND
 // Sichtkegel liegt: im Mittel-Profil ≈ 45 % (hoch) bis 75 % (quer) der bisherigen Halmzahl, nah trotzdem dichter.
-// TODO Heavy-Job: mit perf_gate/Bild abstimmen (Hoch darf nah noch dichter werden, wenn Luft ist).
-export const RING_ANZAHL = [[2800, 3500], [5000, 6250], [12500, 12500]];
-export const RING_MAX = [12500, 12500];
+// Heavy-Job (Messung CPU ×4, DPR 2,6, quer): Hoch mit 12 500/12 500 war 0,6 ms (+11 %) langsamer als das alte Feld –
+// das doppelt dichte Nahgras kostet auf Hoch (DPR 2 + MSAA 4) vor allem Pixel. Mit 9 000/11 000 gleich schnell wie
+// vorher, nah immer noch 1,4× so dicht wie bis v2.8. Niedrig/Mittel (1,6× nah) lagen im Messrauschen.
+export const RING_ANZAHL = [[2800, 3500], [5000, 6250], [9000, 11000]];
+export const RING_MAX = [9000, 11000];
 // Ringmitte: so weit vor der Figur (bisher Feldmitte 9 m davor; die Kamera muss im Nahring liegen)
 export const RING_VOR = 5;
 
@@ -66,21 +68,35 @@ export const KACHEL_RAND = { seite: 1.6, oben: 1.3, unten: 1.2, gelaende: 0.6 };
 
 // Sichtbare Kacheln eines Rings: Mitte c = [cx, cz], hoehe(x, z) = Gelände, ebenen = Sichtkegel (oder null = alle).
 // Konservativ: lieber eine Kachel zu viel (Eigenschaftstest: kein sichtbarer Halm fehlt).
-export function sichtbareKacheln(R, c, ebenen, hoehe, rand = KACHEL_RAND) {
-  const F = R.feld, T = R.kacheln, k = F / T, rK = k * Math.SQRT1_2, out = [];
-  const mx = wickelMitte(c[0], R), mz = wickelMitte(c[1], R);
-  for (let j = 0; j < T; j++) for (let i = 0; i < T; i++) {
-    const wx = wickeln((i + 0.5) * k, mx, F), wz = wickeln((j + 0.5) * k, mz, F);
-    const d = Math.hypot(wx - c[0], wz - c[1]);
-    if (d - rK > R.rOut[1]) continue;                 // ganz außerhalb des Rings (Ecken des Feldes)
-    if (R.rIn[1] > 0 && d + rK < R.rIn[0]) continue;  // ganz im Loch (Mittelring: dort steht der Nahring)
-    if (ebenen) {
-      const h = k * 0.5, x0 = wx - h, x1 = wx + h, z0 = wz - h, z1 = wz + h;
-      const hs = [hoehe(wx, wz), hoehe(x0, z0), hoehe(x1, z0), hoehe(x0, z1), hoehe(x1, z1)];
-      const y0 = Math.min(...hs) - rand.gelaende - rand.unten, y1 = Math.max(...hs) + rand.gelaende + rand.oben;
-      if (!quaderSichtbar(ebenen, x0 - rand.seite, y0, z0 - rand.seite, x1 + rand.seite, y1, z1 + rand.seite)) continue;
+// hb = optionaler Merker (Map) für die Geländehöhen je Kachel: die Kachelmitten liegen auf einem festen Weltraster
+// (wickelMitte), die 5 Höhen-Stichproben je Kachel ändern sich also nie – bis zum Heavy-Job-Messen kosteten sie 90 % der
+// Culling-Zeit (164 Kacheln × 5 × height() ≈ 0,3 ms je Bild bei CPU ×4). Je Welt ein neuer Merker (Gelände wechselt).
+// out = optionale Liste zum Wiederverwenden (je Bild keine neue Liste)
+export function sichtbareKacheln(R, c, ebenen, hoehe, rand = KACHEL_RAND, hb = null, out = []) {
+  const F = R.feld, T = R.kacheln, k = F / T, rK = k * Math.SQRT1_2, h = k * 0.5;
+  const aussen = R.rOut[1] + rK, aussen2 = aussen * aussen, loch = R.rIn[1] > 0 ? Math.max(0, R.rIn[0] - rK) : 0, loch2 = loch * loch;
+  const cx = c[0], cz = c[1], rs = rand.seite, ru = rand.gelaende + rand.unten, ro = rand.gelaende + rand.oben;
+  out.length = 0;
+  const mx = wickelMitte(cx, R), mz = wickelMitte(cz, R);
+  for (let j = 0; j < T; j++) {
+    const wz = wickeln((j + 0.5) * k, mz, F), dz = wz - cz;
+    for (let i = 0; i < T; i++) {
+      const wx = wickeln((i + 0.5) * k, mx, F), dx = wx - cx, d2 = dx * dx + dz * dz;
+      if (d2 > aussen2) continue;                       // ganz außerhalb des Rings (Ecken des Feldes)
+      if (loch > 0 && d2 < loch2) continue;             // ganz im Loch (Mittelring: dort steht der Nahring)
+      if (ebenen) {
+        const x0 = wx - h, x1 = wx + h, z0 = wz - h, z1 = wz + h;
+        const key = hb ? Math.round(wx / k - 0.5) * 65536 + Math.round(wz / k - 0.5) : 0;
+        let lohi = hb ? hb.get(key) : null;
+        if (!lohi) {
+          const a = hoehe(wx, wz), b = hoehe(x0, z0), e = hoehe(x1, z0), f = hoehe(x0, z1), g = hoehe(x1, z1);
+          lohi = [Math.min(a, b, e, f, g), Math.max(a, b, e, f, g)];
+          if (hb) hb.set(key, lohi);
+        }
+        if (!quaderSichtbar(ebenen, x0 - rs, lohi[0] - ru, z0 - rs, x1 + rs, lohi[1] + ro, z1 + rs)) continue;
+      }
+      out.push(j * T + i);
     }
-    out.push(j * T + i);
   }
   return out;
 }
@@ -99,3 +115,13 @@ export function verdichte(halme, kacheln, anteil, ziel) {
 
 // Schlüssel der sichtbaren Menge (Neu-Kopieren nur bei Änderung)
 export const mengenSchluessel = (kacheln, anteil) => kacheln.join(',') + '|' + anteil.toFixed(4);
+// Gleiche Menge wie beim letzten Mal? (ohne Text-Schlüssel je Bild; alt = { k: Int16Array, n, anteil })
+export function gleicheMenge(alt, kacheln, anteil) {
+  if (alt.n !== kacheln.length || alt.anteil !== anteil) return false;
+  for (let i = 0; i < kacheln.length; i++) if (alt.k[i] !== kacheln[i]) return false;
+  return true;
+}
+export function merkeMenge(alt, kacheln, anteil) {
+  if (!alt.k || alt.k.length < kacheln.length) alt.k = new Int16Array(Math.max(64, kacheln.length * 2));
+  alt.k.set(kacheln); alt.n = kacheln.length; alt.anteil = anteil;
+}

@@ -4,7 +4,7 @@ import { G, toonMat, grassMat, glowMat } from '../engine/gfx.js';
 import { DEF } from '../engine/deko.js';
 import { Build, P, petalGeo, clumpGeo, rng } from '../engine/geo.js';
 import { height, pond } from './terrain.js';
-import { baueHalme, sichtbareKacheln, verdichte, mengenSchluessel } from './grasringe.js';
+import { baueHalme, sichtbareKacheln, verdichte, gleicheMenge, merkeMenge } from './grasringe.js';
 
 const _o = new THREE.Object3D();
 const _c = new THREE.Color();
@@ -44,15 +44,16 @@ export function buildGrassRing(R, max, rnd = Math.random) {
   g.instanceCount = 0;
   const m = new THREE.Mesh(g, grassMat(R.feld, R));
   m.frustumCulled = false; // Culling je Kachel (unten), der Mesh selbst wird immer gezeichnet
-  m.userData.anteil = 1; m.userData.max = max; m.userData.key = ''; m.userData.ring = R;
+  m.userData.anteil = 1; m.userData.max = max; m.userData.ring = R;
+  const hoehenMerker = new Map(); // Geländehöhen je Kachel (Ring wird je Welt neu gebaut → Merker passt zum Gelände)
   m.userData.setCount = (n) => { m.userData.anteil = Math.min(1, n / max); };
   // c = [x, z] Ringmitte, ebenen = Sichtkegel ([nx, ny, nz, c] je Ebene) oder null
+  const liste = [], letzte = { k: null, n: -1, anteil: -1 };
   m.userData.cull = (c, ebenen) => {
-    const k = sichtbareKacheln(R, c, ebenen, height);
-    const key = mengenSchluessel(k, m.userData.anteil);
+    const k = sichtbareKacheln(R, c, ebenen, height, undefined, hoehenMerker, liste);
     m.userData.kacheln = k.length;
-    if (key === m.userData.key) return false;
-    m.userData.key = key;
+    if (gleicheMenge(letzte, k, m.userData.anteil)) return false;
+    merkeMenge(letzte, k, m.userData.anteil);
     const n = verdichte(halme, k, m.userData.anteil, ziel);
     g.instanceCount = n;
     attr.clearUpdateRanges(); if (n) { attr.addUpdateRange(0, n * 4); attr.needsUpdate = true; }
