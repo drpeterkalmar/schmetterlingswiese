@@ -8,6 +8,7 @@ import { sunflowerGeo } from '../world/nature.js';
 import { HeightField, seatWorld } from './seat.js';
 import { rivalOf } from './levels.js';
 import { DEKO } from '../engine/deko.js';
+import { huelle } from '../engine/huelle.js';
 
 const _o = new THREE.Object3D();
 const _c = new THREE.Color();
@@ -103,6 +104,7 @@ class Pool {
   flush() {
     this.mesh.instanceMatrix.needsUpdate = true; if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
     if (this.glow) { this.glow.instanceMatrix.needsUpdate = true; if (this.glow.instanceColor) this.glow.instanceColor.needsUpdate = true; }
+    huelle(this.mesh); huelle(this.glow); // v2.9: Hüllkugel neu (Instanzen bewegen sich)
   }
   dispose() {
     this.scene.remove(this.mesh); this.mesh.material.dispose();
@@ -476,6 +478,7 @@ class LandTask extends Task {
     if (this.honey) {
       for (const s of this.spots) if (s.seat.kind === 'sun') this.honey.setMatrixAt(s.seat.hi, this.flowerMatrix(s.seat, t, s.seat.M));
       this.honey.instanceMatrix.needsUpdate = true;
+      huelle(this.honey);
     }
     const occ = g.player.landed ? g.player.landSpot : null;
     this.spots.forEach((s, i) => {
@@ -494,6 +497,7 @@ class LandTask extends Task {
         _o.scale.set(k, hide ? 0.0001 : 1, k); _o.updateMatrix(); this.cring.setMatrixAt(i, _o.matrix);
       });
       this.cring.instanceMatrix.needsUpdate = true;
+      huelle(this.cring);
     }
   }
   target() {

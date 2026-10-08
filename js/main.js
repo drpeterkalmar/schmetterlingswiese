@@ -16,6 +16,9 @@ import { Input } from './input.js';
 import { UI } from './ui/ui.js';
 import { STUNTS, FINALES } from './game/stunts.js';
 import { DEKO } from './engine/deko.js';
+import { Takt, Darstellung } from './engine/takt.js';
+// v2.9 fester Simulationstakt im Spiel (60 Hz + Interpolation der Darstellung); ?takt=0 = variables dt wie bis v2.8
+const TAKT_AN = new URLSearchParams(location.search).get('takt') !== '0';
 
 export const VERSION = '2.8.0';
 
@@ -50,6 +53,9 @@ class App {
     this.stuntOverride = new URLSearchParams(location.search).get('stunt'); // ?stunt=<n|id> (A/B, Tests)
     this.finaleOverride = new URLSearchParams(location.search).get('finale'); // ?finale=<n|id>: Sieger-Einlage erzwingen
     this.timeScale = 1; this.realDt = 0; // Zeitlupe der Sieger-Einlage (nur Spielgeschehen, nicht Musik/Wind)
+    // v2.9 fester Takt: Kamera, Figur (Wurzel + Neigung) und Schatten werden zwischen den Schritten interpoliert
+    this.takt = new Takt(); this._taktAktiv = false; this._darstC = null;
+    this.darst = new Darstellung(THREE.Vector3, THREE.Quaternion).hinzu(this.camera, { fov: true }).hinzu(null).hinzu(null).hinzu(this.player.shadow);
     this.applySettings();
     this.renderer.onTier = (q) => { this.world.setQuality(q, this.renderer.dekoK); this.ui.onQuality && this.ui.onQuality(q); };
     this.bindGlobal();
@@ -151,7 +157,7 @@ class App {
   // ------------------------------------------------------------ Menü-Schaukasten
   menuWorld(wid) {
     const w = WORLDS.find(x => x.id === wid) || WORLDS[0];
-    if (!this.world.def || this.world.def.id !== w.id) { this.world.build(w, this.qualityForBuild(), 'menu-' + w.id); this.world.seed = 'menu'; }
+    if (!this.world.def || this.world.def.id !== w.id) { this.world.build(w, this.qualityForBuild(), 'menu-' + w.id); this.world.seed = 'menu'; this.renderer.schonen(1.5); }
     this.game.clear();
     this.player.landables = []; this.player.colliders = [];
     const x = 6, z = 14;
@@ -180,8 +186,7 @@ class App {
       c.root.rotation.y = yaw;
       c.tilt.rotation.x = -0.12; c.tilt.rotation.z = Math.sin(t * 0.8) * 0.08;
       c.update(dt, t, { speed01: 0.35, landed: false, cheer: false });
-      pl.shadow.position.set(pl.pos.x, height(pl.pos.x, pl.pos.z) + 0.05, pl.pos.z);
-      pl.shadow.material.opacity = 0.3;
+      pl.updateShadow(0.3); // (v2.9: Kontaktschatten gerichtet; ?kontakt=0 wie bisher)
     }
     const aspect = cam.aspect;
     if (this.showcaseView === 'wardrobe') {
@@ -221,6 +226,7 @@ class App {
     this.input.clear();
     this.audio.setMenu(false);
     this.game.load(lvl, this.diff);
+    this.renderer.schonen(1.5); // v2.9: neue Welt/Shader – erste Bilder zählen für den Autopiloten nicht
     this.discoverWorld(lvl.world);
     this.ui.hudTasks(this.game.tasks);
     this.ui.hudTime(0, this.game.limit, this.game.par);
@@ -344,37 +350,78 @@ class App {
     if (this._fpsAcc > 1) { this.fps = Math.round(this._fpsN / this._fpsAcc); this._fpsAcc = 0; this._fpsN = 0; }
     const c0 = performance.now();
     if (!window.__freeze) {
-      this.t += dt;
-      G.uTime.value = this.t;
-      if (this.autopilot && this.mode === 'game') this.autoSteer();
-      this.input.update(dt);
-      this.realDt = dt;
-      const gdt = this.mode === 'game' ? dt * this.timeScale : dt;
-      if (this.mode === 'game') {
-        this.game.update(gdt, this.t, this.input);
-        this._discT += dt;
-        if (this._discT > 0.5) { this._discT = 0; this.proximityDiscover(); }
-        this.showBtnUpdate();
-      } else this.showcaseUpdate(dt, this.t);
-      this.trailUpdate(gdt);
-      this.bursts.update(gdt);
-      this.focus.copy(this.player.pos);
-      G.uWind.value.z = this.world.windBoost || 0;
-      this.world.update(dt, this.camera, this.focus);
-      G.uPlayer.value.copy(this.player.pos);
-      if ((this.frames & 3) === 0 && this.audio.ctx) {
-        const pl = this.player;
-        const playing = this.mode === 'game' && (this.game.state === 'play' || this.game.state === 'won');
-        this.audio.setFlight(playing && !pl.landed ? THREE.MathUtils.clamp(pl.speed / FLIGHT_NORM, 0, 1) : 0.15, this.world.windBoost || 0);
+      if (TAKT_AN && this.mode === 'game') this.taktSchritte(raw, dt);
+      else {
+        if (this._taktAktiv) { this._taktAktiv = false; this.darst.vergessen(); this.takt.zuruecksetzen(); }
+        this.t += dt;
+        G.uTime.value = this.t;
+        if (this.autopilot && this.mode === 'game') this.autoSteer();
+        this.input.update(dt);
+        this.realDt = dt;
+        const gdt = this.mode === 'game' ? dt * this.timeScale : dt;
+        if (this.mode === 'game') {
+          this.game.update(gdt, this.t, this.input);
+          this._discT += dt;
+          if (this._discT > 0.5) { this._discT = 0; this.proximityDiscover(); }
+          this.showBtnUpdate();
+        } else this.showcaseUpdate(dt, this.t);
+        this.trailUpdate(gdt);
+        this.bursts.update(gdt);
+        this.focus.copy(this.player.pos);
+        this.nachSim(dt);
       }
     }
     G.uCam.value.copy(this.camera.position);
     const c1 = performance.now();
     this.renderer.r.info.reset();
+    this.renderer.probeVor(); // v2.9 Kurzmessung (nur die ersten ~24 Bilder ohne gemerktes Gerät)
     this.renderer.render(this.scene, this.camera);
+    this.renderer.probeNach();
+    if (this._taktAktiv) this.darst.zurueck(); // v2.9: Simulationszustand wiederherstellen (Glättung liest ihn weiter)
     const c2 = performance.now();
     this.cpuUpd = (this.cpuUpd || 0) * 0.95 + (c1 - c0) * 0.05; this.cpuRen = (this.cpuRen || 0) * 0.95 + (c2 - c1) * 0.05;
-    this.renderer.sample(raw * 1000, now);
+    this.renderer.sample(raw * 1000, now, c2 - c0);
+  }
+
+  // Welt, Wind, Gras-Druck, Flugklang – nach der Simulation, je Bild
+  nachSim(dt) {
+    G.uWind.value.z = this.world.windBoost || 0;
+    this.world.update(dt, this.camera, this.focus);
+    G.uPlayer.value.copy(this.focus);
+    if ((this.frames & 3) === 0 && this.audio.ctx) {
+      const pl = this.player;
+      const playing = this.mode === 'game' && (this.game.state === 'play' || this.game.state === 'won');
+      this.audio.setFlight(playing && !pl.landed ? THREE.MathUtils.clamp(pl.speed / FLIGHT_NORM, 0, 1) : 0.15, this.world.windBoost || 0);
+    }
+  }
+  // v2.9 fester Takt: Spiel, Flug, Spur und Effekt-Partikel in 60-Hz-Schritten (Zeitlupe skaliert die Schrittweite wie
+  // bisher dt); gezeichnet wird zwischen den letzten beiden Schritten (Darstellung, nach dem Zeichnen zurückgesetzt)
+  taktSchritte(raw, dt) {
+    const T = this.takt, h = T.h, D = this.darst, c = this.player.critter;
+    if (!this._taktAktiv) { this._taktAktiv = true; T.zuruecksetzen(); D.vergessen(); }
+    if (c !== this._darstC) { this._darstC = c; D.setze(c ? c.root : null, 1); D.setze(c ? c.tilt : null, 2); D.vergessen(); }
+    const n = T.schritte(raw);
+    for (let i = 0; i < n; i++) {
+      D.merkeVorher();
+      this.t += h;
+      G.uTime.value = this.t;
+      if (this.autopilot) this.autoSteer();
+      this.input.update(h);
+      this.realDt = h;
+      const gdt = h * this.timeScale;
+      this.game.update(gdt, this.t, this.input);
+      this._discT += h;
+      if (this._discT > 0.5) { this._discT = 0; this.proximityDiscover(); }
+      this.trailUpdate(gdt);
+      this.bursts.update(gdt);
+      if (this.mode !== 'game') break; // Level mitten im Bild verlassen
+    }
+    if (n > 0) D.merkeNachher();
+    D.anwenden(T.alpha);
+    G.uTime.value = this.t - h * (1 - T.alpha); // Shader-Zeit passend zur interpolierten Darstellung
+    if (this.mode === 'game') this.showBtnUpdate();
+    this.focus.copy(c && D.bereit ? c.root.position : this.player.pos);
+    this.nachSim(dt);
   }
 
   registerSW() {
@@ -411,7 +458,8 @@ window.__game = {
     player: { x: app.player.pos.x, y: app.player.pos.y, z: app.player.pos.z, landed: app.player.landed, stunt: app.player.stunt && app.player.stunt.type, yaw: app.player.yaw } }),
   ac: () => app.audio.state,
   audio: app.audio, haptics: app.haptics, progress: app.progress, player: app.player, camera: app.camera, scene: app.scene, input: app.input,
-  info: () => ({ ...app.renderer.info(), fps: app.fps, cpuUpdateMs: +(app.cpuUpd || 0).toFixed(2), cpuRenderSubmitMs: +(app.cpuRen || 0).toFixed(2) }),
+  info: () => ({ ...app.renderer.info(), fps: app.fps, cpuUpdateMs: +(app.cpuUpd || 0).toFixed(2), cpuRenderSubmitMs: +(app.cpuRen || 0).toFixed(2),
+    takt: TAKT_AN ? { aktiv: app._taktAktiv, schritte: app.takt.schritteGesamt, alpha: +app.takt.alpha.toFixed(3) } : null }),
   freeze: (on = true) => { window.__freeze = on ? 1 : undefined; },
   start: (id, diff) => { if (diff) app.setDiff(diff); app.startLevel(id); },
   step: () => app.game.debugStep(),

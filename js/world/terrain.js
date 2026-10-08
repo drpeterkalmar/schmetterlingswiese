@@ -39,7 +39,7 @@ export function setTerrain(t) {
 export function pond() { return POND; }
 
 // Gelände-Mesh mit radialer Auflösung (innen fein, außen grob)
-export function buildTerrain(world) {
+export function buildTerrain(world, o = {}) {
   const R = 260, rings = 96, segs = 160;
   const pos = [], col = [], idx = [];
   const cA = new THREE.Color(world.ground[0]), cB = new THREE.Color(world.ground[1]), cC = new THREE.Color(world.ground[2]);
@@ -74,7 +74,7 @@ export function buildTerrain(world) {
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
   g.setIndex(idx);
   g.computeVertexNormals();
-  const m = new THREE.Mesh(g, terrainMat());
+  const m = new THREE.Mesh(g, terrainMat({ ringe: o.ringe }));
   m.frustumCulled = false;
   return m;
 }

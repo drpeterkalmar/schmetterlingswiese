@@ -9,6 +9,20 @@ import { Ambient } from './particles.js';
 import { Life } from './life.js';
 import { Deko } from './deko.js';
 import { DEKO } from '../engine/deko.js';
+import { RINGE, RING_ANZAHL, RING_MAX, RING_VOR, wickelMitte } from './grasringe.js';
+import { himmelsLicht } from '../engine/himmelslicht.js';
+import { backeBaumschatten, KONTAKT_AN } from '../engine/schatten.js';
+// v2.9 Stärke der gebackenen Baumschatten (nachts halb). TODO Heavy-Job am Bild abstimmen.
+export const BAUM_STAERKE = 0.32;
+// v2.9 weiches Himmelslicht (SH9 aus dem Welthimmel), ?himmel=0 = feste Halbkugel wie bis v2.8.
+// Anteil gegenüber der alten Halbkugel: TODO Heavy-Job am Bild abstimmen (Startwert 0,7; 1 = nur Himmelslicht)
+export const HIMMEL_AN = new URLSearchParams(location.search).get('himmel') !== '0';
+export const HIMMEL_ANTEIL = 0.7;
+const rgb = (c) => [c.r, c.g, c.b];
+// v2.9 Gras in Ringen mit Kachel-Culling (?ringe=0 = ein Feld wie bis v2.8)
+export const RINGE_AN = new URLSearchParams(location.search).get('ringe') !== '0';
+const _fr = new THREE.Frustum(), _pm = new THREE.Matrix4();
+const ebenenAus = (fr) => fr.planes.map((p) => [p.normal.x, p.normal.y, p.normal.z, p.constant]);
 
 export class World {
   constructor(scene) {
@@ -47,6 +61,34 @@ export class World {
     // v2.3: Regenbogen, goldene Graslichter, Sternschnuppen
     su.uRainbow.value = w.sky.rainbow || 0; su.uShootT.value = -1;
     const gd = w.gold || [0xffffff, 0]; _c.set(gd[0]); G.uGold.value.set(_c.r, _c.g, _c.b, gd[1]);
+    this.himmelsLicht(w);
+  }
+  // v2.9: Baumschatten als Bodentextur backen (Gelände + Gras lesen sie; ?kontakt=0 = keine)
+  baumSchatten(w) {
+    if (this.baumTex) { this.baumTex.dispose(); this.baumTex = null; }
+    G.uBaumShP.value.y = 0; G.uBaumSh.value = null;
+    if (!KONTAKT_AN || !this.trees) return;
+    const S = G.uSunDir.value;
+    const { daten, N, W } = backeBaumschatten(Object.values(this.trees.userData).flat(), [S.x, S.y, S.z]);
+    const tex = new THREE.DataTexture(daten, N, N, THREE.RedFormat, THREE.UnsignedByteType);
+    tex.magFilter = THREE.LinearFilter; tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false; tex.needsUpdate = true;
+    this.baumTex = tex; G.uBaumSh.value = tex;
+    G.uBaumShP.value.set(W, BAUM_STAERKE * (w.sky.stars ? 0.5 : 1), 0, 0);
+  }
+  // v2.9: Umgebungslicht aus dem Himmel dieser Welt (einmal je Welt, ≈ 1 200 Proben)
+  himmelsLicht(w) {
+    G.uHimmel.value = HIMMEL_AN ? HIMMEL_ANTEIL : 0;
+    if (!HIMMEL_AN) return;
+    const boden = [0, 0, 0];
+    for (const h of w.ground) { _c.set(h); boden[0] += _c.r / w.ground.length; boden[1] += _c.g / w.ground.length; boden[2] += _c.b / w.ground.length; }
+    const S = G.uSunDir.value;
+    const sh = himmelsLicht({
+      zenit: rgb(_c.set(w.sky.zenith)), horizont: rgb(_c.set(w.sky.horizon)), glow: rgb(_c.set(w.sky.glow)),
+      sonne: [S.x, S.y, S.z], sonnenFarbe: rgb(G.uSunCol.value), boden,
+      alt: { himmel: rgb(G.uSkyAmb.value), boden: rgb(G.uGndAmb.value) },
+    });
+    sh.forEach((c, i) => G.uSH.value[i].set(c[0], c[1], c[2]));
+    this.sh = sh;
   }
 
   build(w, quality, seedStr = w.id) {
@@ -57,10 +99,19 @@ export class World {
     this.applyPalette(w);
     const rnd = rng(hashStr(seedStr));
     const g = this.group = new THREE.Group();
-    this.terrain = buildTerrain(w); g.add(this.terrain);
+    this.terrain = buildTerrain(w, { ringe: RINGE_AN }); g.add(this.terrain);
     this.far = buildFar(w, hashStr(w.id)); g.add(this.far);
-    this.grass = N.buildGrass(quality.grassMax, 64, rng(99)); g.add(this.grass);
-    this.grass.userData.setCount(quality.grass);
+    if (RINGE_AN) {
+      // v2.9: Nahring (volle Halme, dicht) + Mittelring (halbe Dichte, breiter); fern nur Grasrauschen im Gelände
+      this.grass = null;
+      this.ringe = [N.buildGrassRing(RINGE.nah, RING_MAX[0], rng(99)), N.buildGrassRing(RINGE.mitte, RING_MAX[1], rng(98))];
+      this.ringe.forEach((m, i) => { g.add(m); m.userData.setCount(RING_ANZAHL[quality.id][i]); });
+      this.grassC = new THREE.Vector3(); // Feldmitte wie bisher (Wiesenblüten der Deko folgen ihr)
+    } else {
+      this.ringe = null;
+      this.grass = N.buildGrass(quality.grassMax, 64, rng(99)); g.add(this.grass);
+      this.grass.userData.setCount(quality.grass);
+    }
     // v2.8: Wiesenblüten, Lichtstrahlen, Schirmchen (nur mit Deko; Stückzahl je Qualitätsstufe)
     this.deko = DEKO ? new Deko(w, quality, quality.dekoK ?? 1) : null;
     if (this.deko) g.add(this.deko.group);
@@ -72,6 +123,7 @@ export class World {
     const avoid = (x, z) => (avoidPond && avoidPond(x, z)) || (sfC && Math.hypot(x - sfC.x, z - sfC.z) < sfC.R + 4) || Math.hypot(x, z) < 10;
     this.flowers = N.buildFlowers(w, rnd, Math.round(w.flowerN * quality.deco)); g.add(this.flowers);
     this.trees = N.buildTrees(w, rnd, avoid); g.add(this.trees);
+    this.baumSchatten(w);
     // v2.3: Blütenteppiche + Grasbüschel/Klee (Anzahl skaliert mit der Deko-Stufe)
     const avoidWater = (x, z) => (avoidPond && avoidPond(x, z)) || patchAmt(x, z) > 0.3;
     g.add(N.buildCarpet(w, rnd, Math.round(22 * quality.deco), avoidWater));
@@ -118,6 +170,20 @@ export class World {
       const dx = focus.x - cam.position.x, dz = focus.z - cam.position.z, l = Math.hypot(dx, dz) || 1;
       c.set(focus.x + dx / l * 9, focus.y, focus.z + dz / l * 9);
       if (this.deko) this.deko.update(dt, cam, focus, c);
+    } else if (this.ringe) {
+      // v2.9: Ringmitte näher an der Figur (Kamera liegt im Nahring), Kacheln gegen den Sichtkegel prüfen
+      const dx = focus.x - cam.position.x, dz = focus.z - cam.position.z, l = Math.hypot(dx, dz) || 1;
+      const rc = G.uRingC.value.set(focus.x + dx / l * RING_VOR, focus.y, focus.z + dz / l * RING_VOR);
+      cam.updateMatrixWorld();
+      _fr.setFromProjectionMatrix(_pm.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse));
+      const eb = ebenenAus(_fr), c2 = [rc.x, rc.z];
+      for (const m of this.ringe) {
+        const u = m.material.uniforms, R = m.userData.ring;
+        u.uCenter.value.copy(rc); u.uWrapC.value.set(wickelMitte(rc.x, R), 0, wickelMitte(rc.z, R));
+        m.userData.cull(c2, eb);
+      }
+      this.grassC.set(focus.x + dx / l * 9, focus.y, focus.z + dz / l * 9);
+      if (this.deko) this.deko.update(dt, cam, focus, this.grassC);
     }
     if (this.clouds) this.clouds.userData.update(dt);
     if (this.pond) this.pond.userData.update(dt, G.uTime.value);
@@ -144,6 +210,7 @@ export class World {
 
   setQuality(q, k = 1) {
     if (this.grass) this.grass.userData.setCount(q.grass);
+    if (this.ringe) this.ringe.forEach((m, i) => m.userData.setCount(RING_ANZAHL[q.id][i]));
     if (this.ambient) this.ambient.setCount(q.particles);
     if (this.deko) this.deko.setQuality(q, k);
     G.uDq.value = DEKO && q.id > 0 ? k : 0;

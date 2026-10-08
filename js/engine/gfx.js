@@ -1,6 +1,10 @@
 // Grafik-Kern: gemeinsame Uniforms, Toon-Shader, Himmel, Post-Processing.
 import * as THREE from 'three';
 import { DEF } from './deko.js';
+import { KANTEN_SR, rtGroesse } from './kern/hochskalieren.js';
+// v2.9 Bloom nur auf Glanz (Audit #9): Alpha im Szenen-Ziel = Leucht-Maske (Emission, Sonne, Glühen) statt Helligkeits-
+// Schwelle → die helle Wiese glüht nicht mehr mit. ?bloommaske=0 = Schwelle wie bis v2.8.
+export const BLOOMMASKE = typeof location !== 'undefined' && new URLSearchParams(location.search).get('bloommaske') !== '0';
 
 // Gemeinsame Uniform-Objekte (per Referenz in allen Materialien geteilt)
 export const G = {
@@ -36,6 +40,14 @@ export const G = {
   uNight: { value: 0 },
   uSkyZen: { value: new THREE.Color(0.4, 0.6, 0.9) },
   uSkyHor: { value: new THREE.Color(0.85, 0.92, 1) },
+  // v2.9 Gras-Ringe: Ringmitte (xz) fürs Grasrauschen im Gelände jenseits der Halme
+  uRingC: { value: new THREE.Vector3() },
+  // v2.9 Himmelslicht: SH9-Irradianz des Welthimmels (himmelslicht.js), Anteil gegenüber der alten Halbkugel (0 = bisher)
+  uSH: { value: Array.from({ length: 9 }, () => new THREE.Vector3()) },
+  uHimmel: { value: 0 },
+  // v2.9 gebackene Baumschatten (schatten.js): R8-Textur über die Welt, x = Weltbreite (m), y = Stärke (0 = aus)
+  uBaumSh: { value: null },
+  uBaumShP: { value: new THREE.Vector4(320, 0, 0, 0) },
 };
 // Wolkenschatten: weiche dunkle Flecken, die mit dem Wind über die Wiese ziehen (nur Boden + Gras, kein Draw-Call)
 const CLOUD_SH = /* glsl */`
@@ -75,6 +87,13 @@ float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx
 
 export const F_LIGHT = /* glsl */`
 uniform vec3 uSunDir, uSunCol, uSkyAmb, uGndAmb, uRim, uFogCol, uFogSun; uniform vec4 uFog; uniform vec3 uCam;
+uniform vec3 uSH[9]; uniform float uHimmel;
+// v2.9 weiches Himmelslicht: Irradianz aus SH9 (Basis wie himmelslicht.js shBasis)
+vec3 shIrr(vec3 n){
+  return uSH[0] * 0.282095 + uSH[1] * (0.488603 * n.y) + uSH[2] * (0.488603 * n.z) + uSH[3] * (0.488603 * n.x)
+       + uSH[4] * (1.092548 * n.x * n.y) + uSH[5] * (1.092548 * n.y * n.z) + uSH[6] * (0.315392 * (3.0 * n.z * n.z - 1.0))
+       + uSH[7] * (1.092548 * n.x * n.z) + uSH[8] * (0.546274 * (n.x * n.x - n.y * n.y));
+}
 vec3 applyFog(vec3 col, vec3 wp){
   vec3 dv = wp - uCam; float dist = length(dv);
   float f = clamp((dist - uFog.x) / (uFog.y - uFog.x), 0.0, 1.0);
@@ -87,6 +106,7 @@ vec3 toon(vec3 alb, vec3 N, vec3 V, float rimAmt, float gloss, float soft){
   float l = smoothstep(-0.08 - soft, 0.12 + soft, ndl);
   l *= 0.82 + 0.18 * max(ndl, 0.0);
   vec3 amb = mix(uGndAmb, uSkyAmb, N.y * 0.5 + 0.5);
+  if (uHimmel > 0.0) amb = mix(amb, max(shIrr(N), vec3(0.0)), uHimmel);
   vec3 c = alb * (amb + uSunCol * l);
   float fres = pow(1.0 - clamp(dot(N, V), 0.0, 1.0), 3.0);
   float back = clamp(dot(-V, uSunDir) * 0.5 + 0.5, 0.0, 1.0);
@@ -243,7 +263,11 @@ void main(){
   c = mix(c, mix(uFogCol, vec3(1.0), 0.45) * uSkyAmb * 1.1, ef * 0.45);
 #endif
   c = applyFog(c, vWP);
+#ifdef MASKE
+  gl_FragColor = vec4(c, clamp(vCol.a + uEmis, 0.0, 1.0)); // v2.9: Alpha = Leucht-Maske (nur deckende Materialien)
+#else
   gl_FragColor = vec4(c, alpha);
+#endif
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }`;
@@ -261,6 +285,7 @@ export function toonMat(o = {}) {
   if (o.rig) defines.RIG = '';
   if (o.iri) defines.IRI = ''; // v2.8: Perlmutt-Schimmer (Glasflügel)
   if (o.alphaTest) defines.ALPHATEST = o.alphaTest.toFixed(3);
+  if (BLOOMMASKE && !o.transparent) defines.MASKE = '';
   const u = {
     ...G,
     uColor: { value: new THREE.Color(o.color ?? 0xffffff) },
@@ -306,11 +331,33 @@ void main(){
   gl_FragColor = vec4(uColor, a * uOpacity);
 }`;
 export function blobShadowMat(color = 0x1a2a10, opacity = 0.34) {
-  return new THREE.ShaderMaterial({
+  const m = new THREE.ShaderMaterial({
     uniforms: { ...G, uColor: { value: new THREE.Color(color) }, uOpacity: { value: opacity } },
     vertexShader: BLOB_V, fragmentShader: BLOB_F, transparent: true, depthWrite: false,
     polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
   });
+  m.userData.keinBloom = true; // v2.9 Bloom-Maske: Schatten glühen nie
+  return m;
+}
+
+// v2.9 gerichteter Kontaktschatten (schatten.js kontaktParameter): weiche Ellipse mit dichterem Kern, Größe/Richtung
+// über Skalierung/Drehung des Quads (PlaneGeometry 2×2 in xz), mit Weltkrümmung wie der Boden
+const KONTAKT_F = /* glsl */`
+uniform vec3 uColor; uniform float uOpacity;
+varying vec2 vUv;
+void main(){
+  float d = length(vUv - 0.5) * 2.0;
+  float a = pow(max(0.0, 1.0 - smoothstep(0.1, 1.0, d)), 1.6) * (0.65 + 0.35 * (1.0 - min(1.0, d)));
+  gl_FragColor = vec4(uColor, a * uOpacity);
+}`;
+export function kontaktMat(color = 0x1a2a10, opacity = 0.4) {
+  const m = new THREE.ShaderMaterial({
+    uniforms: { ...G, uColor: { value: new THREE.Color(color) }, uOpacity: { value: opacity } },
+    vertexShader: BLOB_V, fragmentShader: KONTAKT_F, transparent: true, depthWrite: false,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+  });
+  m.userData.keinBloom = true;
+  return m;
 }
 
 // ---------------------------------------------------------------- Gelände
@@ -328,6 +375,11 @@ ${F_LIGHT}
 ${CLOUD_SH}
 uniform float uTime; uniform float uWaterY;
 varying vec3 vN; varying vec3 vWP; varying vec3 vCol;
+uniform sampler2D uBaumSh; uniform vec4 uBaumShP;
+#ifdef RINGE
+${GLSL_TERRAIN}
+uniform vec3 uGrassA, uGrassB, uRingC;
+#endif
 float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
   float a = fract(sin(dot(i, vec2(127.1,311.7)))*43758.5453), b = fract(sin(dot(i+vec2(1,0), vec2(127.1,311.7)))*43758.5453);
   float c = fract(sin(dot(i+vec2(0,1), vec2(127.1,311.7)))*43758.5453), d = fract(sin(dot(i+vec2(1,1), vec2(127.1,311.7)))*43758.5453);
@@ -340,15 +392,36 @@ void main(){
   // nasser Uferstreifen
   float wet = 1.0 - smoothstep(uWaterY + 0.05, uWaterY + 0.6, vWP.y);
   alb = mix(alb, alb * vec3(0.62, 0.66, 0.7), wet * 0.8);
+#ifdef RINGE
+  // v2.9 Fernring: keine Halme mehr, dafür Grasrauschen – Farbe Richtung Gras, feine Büschel-Flecken; Amplitude sinkt,
+  // wenn das Muster kleiner als ein Pixel wird (kein Flimmern). Nicht auf Sand/Pfad, Ufer, Wasser, Randhügeln.
+  // TODO Heavy-Job: Stärke (0,35/0,16) und Frequenzen am Bild abstimmen (Übergang am Ring-Rand 24–31 m)
+  {
+    float dG = length(vWP.xz - uRingC.xz);
+    float fG = smoothstep(22.0, 32.0, dG) * (1.0 - smoothstep(uEdge.x + 25.0, uEdge.x + 50.0, length(vWP.xz)));
+    fG *= (1.0 - wet) * smoothstep(uWaterY + 0.45, uWaterY + 0.95, vWP.y) * (1.0 - clamp(patchAmt(vWP.xz) * 1.4, 0.0, 1.0));
+    vec2 q = vWP.xz * vec2(2.3, 1.7);
+    float aa = 1.0 - smoothstep(0.25, 0.7, max(fwidth(q.x), fwidth(q.y)));
+    float gn = n2(q) * 0.6 + n2(q * 2.1 + 7.3) * 0.4;
+    vec3 gc = mix(uGrassA, uGrassB, 0.55 + 0.35 * n2(vWP.xz * 0.21));
+    alb = mix(alb, gc, 0.35 * fG);
+    alb *= 1.0 + 0.16 * fG * aa * (gn - 0.5) * 2.0;
+  }
+#endif
   vec3 c = toon(alb, N, V, 0.12, 0.0, 0.25);
+  // v2.9 gebackene Baumschatten (nur das Sonnenlicht fehlt dort – genähert als Abdunkeln)
+  if (uBaumShP.y > 0.0) c *= 1.0 - texture2D(uBaumSh, vWP.xz / uBaumShP.x + 0.5).r * uBaumShP.y;
   c *= 1.0 - cloudShade(vWP.xz);
   c = applyFog(c, vWP);
   gl_FragColor = vec4(c, 1.0);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }`;
-export function terrainMat() {
-  return new THREE.ShaderMaterial({ uniforms: G, vertexShader: TERRAIN_V, fragmentShader: TERRAIN_F, vertexColors: true });
+// o.ringe (v2.9): Grasrauschen jenseits der Gras-Ringe
+export function terrainMat(o = {}) {
+  const m = new THREE.ShaderMaterial({ uniforms: G, vertexShader: TERRAIN_V, fragmentShader: TERRAIN_F, vertexColors: true });
+  if (o.ringe) m.defines = { RINGE: '' };
+  return m;
 }
 
 // ---------------------------------------------------------------- Gras (instanziert, folgt dem Spieler)
@@ -358,6 +431,11 @@ ${GLSL_TERRAIN}
 uniform float uField; uniform vec3 uCenter; uniform float uWaterY;
 attribute vec4 aOff; // x,z in [0,1), rand, scale
 varying vec3 vWP; varying float vH; varying float vR; varying float vWave; varying vec3 vN;
+uniform sampler2D uBaumSh; uniform vec4 uBaumShP; varying float vBs; // v2.9 Baumschatten am Halmfuß
+#ifdef RINGE
+uniform vec4 uRing; uniform float uBreite; // v2.9: Ring (innen a→b einblenden, außen c→d ausblenden), Büschelbreite
+uniform vec3 uWrapC; // v2.9: Wickel-Mitte, aufs Kachelraster gerastet (grasringe.js wickelMitte)
+#endif
 #ifdef DEKO
 varying vec3 vPat; // v2.8: Farbmuster je Halm (Fleck, Goldlicht, Büschel) – im Vertex- statt Pixel-Shader
 uniform float uDq;
@@ -365,10 +443,19 @@ uniform float uDq;
 void main(){
   vec2 base = aOff.xy * uField;
   vec2 c = uCenter.xz;
+#ifdef RINGE
+  vec2 p = mod(base - uWrapC.xz + uField * 0.5, uField) - uField * 0.5 + uWrapC.xz;
+#else
   vec2 p = mod(base - c + uField * 0.5, uField) - uField * 0.5 + c;
+#endif
   float gh = terrainH(p);
   float dist = length(p - uCam.xz);
+#ifdef RINGE
+  float dc = length(p - c);
+  float s = aOff.w * smoothstep(uRing.x, uRing.y, dc) * (1.0 - smoothstep(uRing.z, uRing.w, dc));
+#else
   float s = aOff.w * (1.0 - smoothstep(uField * 0.30, uField * 0.48, length(p - c)));
+#endif
   s *= smoothstep(uWaterY + 0.45, uWaterY + 0.95, gh);
   s *= 1.0 - smoothstep(uEdge.x + 25.0, uEdge.x + 50.0, length(p));
   s *= smoothstep(0.8, 3.2, length(p - uCam.xz)); // keine Riesenhalme direkt vor der Kamera
@@ -376,6 +463,9 @@ void main(){
   float ang = aOff.z * 6.2831;
   float ca = cos(ang), sa = sin(ang);
   vec3 lp = position * vec3(1.0 + aOff.z * 0.6, s, 1.0);
+#ifdef RINGE
+  lp.xz *= uBreite;
+#endif
   lp.xz = vec2(lp.x * ca - lp.z * sa, lp.x * sa + lp.z * ca);
   float t = position.y; // 0..1 Blatthöhe
   // Wind: große wandernde Wellen + Flattern
@@ -399,13 +489,14 @@ void main(){
   else vPat = vec3(0.0);
 #endif
   vN = normalize(vec3(-sa * 0.3 + bend.x * 0.4, 1.0, ca * 0.3 + bend.y * 0.4));
+  vBs = uBaumShP.y > 0.0 ? texture2D(uBaumSh, p / uBaumShP.x + 0.5).r * uBaumShP.y : 0.0;
   gl_Position = projectionMatrix * viewMatrix * bendW(wp);
 }`;
 const GRASS_F = /* glsl */`
 ${F_LIGHT}
 ${CLOUD_SH}
 uniform vec3 uGrassA, uGrassB, uGrassC; uniform vec4 uGold;
-varying vec3 vWP; varying float vH; varying float vR; varying float vWave; varying vec3 vN;
+varying vec3 vWP; varying float vH; varying float vR; varying float vWave; varying vec3 vN; varying float vBs;
 #ifdef DEKO
 varying vec3 vPat; uniform float uDq;
 #endif
@@ -439,21 +530,28 @@ void main(){
   vec3 V = normalize(uCam - vWP);
   float ndl = clamp(dot(normalize(vN), uSunDir), 0.0, 1.0);
   vec3 amb = mix(uGndAmb, uSkyAmb, 0.6 + 0.4 * vH);
+  if (uHimmel > 0.0) amb = mix(amb, max(mix(shIrr(vec3(0.0, -1.0, 0.0)), shIrr(vec3(0.0, 1.0, 0.0)), 0.6 + 0.4 * vH), vec3(0.0)), uHimmel);
   vec3 c = alb * (amb * 0.9 + uSunCol * (0.62 + 0.38 * ndl) * (0.7 + 0.3 * vH));
   // Durchleuchten gegen die Sonne (goldene Grasspitzen)
   float back = pow(clamp(dot(-V, uSunDir), 0.0, 1.0), 3.0);
   c += uSunCol * tip * back * vH * vH * 0.9;
+  c *= 1.0 - vBs;
   c *= 1.0 - cloudShade(vWP.xz);
   c = applyFog(c, vWP);
   gl_FragColor = vec4(c, 1.0);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }`;
-export function grassMat(field) {
-  return new THREE.ShaderMaterial({
-    uniforms: { ...G, uField: { value: field }, uCenter: { value: new THREE.Vector3() } },
+// ring (v2.9): { rIn: [a, b], rOut: [c, d], breite } → Gras-Ring statt Feld mit fester Ausblendung
+export function grassMat(field, ring = null) {
+  const m = new THREE.ShaderMaterial({
+    uniforms: { ...G, uField: { value: field }, uCenter: { value: new THREE.Vector3() },
+      uRing: { value: new THREE.Vector4(...(ring ? [...ring.rIn, ...ring.rOut] : [-1, 0, 19, 31])) }, uBreite: { value: ring ? ring.breite : 1 },
+      uWrapC: { value: new THREE.Vector3() } },
     vertexShader: DEF + GRASS_V, fragmentShader: DEF + GRASS_F, side: THREE.DoubleSide,
   });
+  if (ring) m.defines = { RINGE: '' };
+  return m;
 }
 
 // ---------------------------------------------------------------- Himmel
@@ -559,7 +657,12 @@ void main(){
   }
   // Dither gegen Farbstufen
   col += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
+#ifdef MASKE
+  // v2.9: am Himmel glüht nur, was wirklich hell ist (Sonne, Mond, helle Sterne)
+  gl_FragColor = vec4(col, smoothstep(1.0, 2.5, dot(col, vec3(0.2126, 0.7152, 0.0722))));
+#else
   gl_FragColor = vec4(col, 1.0);
+#endif
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }`;
@@ -572,7 +675,7 @@ export function skyMat() {
       uMoonDir: { value: new THREE.Vector3(-0.5, 0.4, -0.6).normalize() }, uMoon: { value: 0 },
       uRainbow: { value: 0 }, uDq: G.uDq, uShootT: { value: -1 }, uShootA: { value: new THREE.Vector3(0, 0.5, 1) }, uShootB: { value: new THREE.Vector3(0.3, 0.4, 1) },
     },
-    vertexShader: DEF + SKY_V, fragmentShader: DEF + SKY_F, side: THREE.BackSide, depthWrite: false,
+    vertexShader: DEF + SKY_V, fragmentShader: (BLOOMMASKE ? '#define MASKE\n' : '') + DEF + SKY_F, side: THREE.BackSide, depthWrite: false,
   });
 }
 
@@ -630,23 +733,38 @@ void main(){
   float d = length(vUv - 0.5) * 2.0;
   float a = pow(max(1.0 - d, 0.0), 2.2) + 0.6 * pow(max(1.0 - d, 0.0), 8.0);
   vec3 c = uColor * vC * a * uIntensity * (1.0 - vFog * 0.8);
+#ifdef MASKE
+  gl_FragColor = vec4(c, clamp(a, 0.0, 1.0)); // v2.9: Leucht-Maske mit weichem Rand (Mischung Farbe 1:1, Alpha addiert)
+#else
   gl_FragColor = vec4(c, 1.0);
+#endif
 }`;
 export function glowMat(color = 0xfff0b0, intensity = 1, pulse = 0.12) {
-  return new THREE.ShaderMaterial({
+  const m = new THREE.ShaderMaterial({
     uniforms: { ...G, uColor: { value: new THREE.Color(color) }, uIntensity: { value: intensity }, uPulse: { value: pulse } },
     vertexShader: GLOW_V, fragmentShader: GLOW_F,
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   });
+  // v2.9 Bloom-Maske: Farbe additiv wie bisher (Faktor 1 statt Alpha 1 = gleich), Alpha = weicher Rand addiert
+  if (BLOOMMASKE) { m.defines = { MASKE: '' }; mischen(m, THREE.OneFactor, THREE.OneFactor, THREE.OneFactor, THREE.OneFactor); m.userData.maskeFertig = true; }
+  return m;
+}
+
+// v2.9 Bloom-Maske: Mischfaktoren getrennt für Farbe und Alpha (Farbe wie bisher, Alpha nach Regel)
+function mischen(m, src, dst, srcA, dstA) {
+  m.blending = THREE.CustomBlending;
+  m.blendEquation = THREE.AddEquation; m.blendEquationAlpha = THREE.AddEquation;
+  m.blendSrc = src; m.blendDst = dst; m.blendSrcAlpha = srcA; m.blendDstAlpha = dstA;
 }
 
 // ---------------------------------------------------------------- Post-Processing
 const FS_V = /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
 const DOWN_F = /* glsl */`
-uniform sampler2D tSrc; uniform vec2 uTexel; varying vec2 vUv;
+uniform sampler2D tSrc; uniform vec2 uTexel; uniform float uMaske; varying vec2 vUv;
+// v2.9: uMaske = 1 → Farbe mit der Leucht-Maske (Alpha) gewichtet (Glüh-Quelle)
+vec3 tap(vec2 o){ vec4 s = texture2D(tSrc, vUv + uTexel * o); return s.rgb * mix(1.0, s.a, uMaske); }
 void main(){
-  vec3 c = texture2D(tSrc, vUv + uTexel * vec2(-1.0, -1.0)).rgb + texture2D(tSrc, vUv + uTexel * vec2(1.0, -1.0)).rgb
-         + texture2D(tSrc, vUv + uTexel * vec2(-1.0, 1.0)).rgb + texture2D(tSrc, vUv + uTexel * vec2(1.0, 1.0)).rgb;
+  vec3 c = tap(vec2(-1.0, -1.0)) + tap(vec2(1.0, -1.0)) + tap(vec2(-1.0, 1.0)) + tap(vec2(1.0, 1.0));
   gl_FragColor = vec4(min(c * 0.25, vec3(16.0)), 1.0);
 }`;
 const BLUR_F = /* glsl */`
@@ -660,20 +778,23 @@ void main(){
   gl_FragColor = vec4(c, 1.0);
 }`;
 const COMP_F = /* glsl */`
-uniform sampler2D tCol, tBlur, tBlur2, tDepth; uniform vec2 uNF; uniform float uBloom, uThresh, uDof, uFocus, uVig, uSat, uUseDepth;
+uniform sampler2D tCol, tBlur, tBloom, tBlur2, tDepth; uniform vec2 uNF; uniform float uBloom, uThresh, uDof, uFocus, uVig, uSat, uUseDepth;
 uniform vec3 uLift, uGain; uniform float uFlash; uniform vec3 uFlashCol;
 varying vec2 vUv;
+${KANTEN_SR}
 float linDepth(float d){ float z = d * 2.0 - 1.0; return 2.0 * uNF.x * uNF.y / (uNF.y + uNF.x - z * (uNF.y - uNF.x)); }
 void main(){
-  vec3 c = texture2D(tCol, vUv).rgb;
+  // v2.9: kantenbewusstes Hochskalieren aus der Renderskala (+ Kantenglättung/Schärfen je Stufe; ohne defines = wie bisher)
+  vec3 c = kantenSR(tCol, vUv);
   vec3 b = texture2D(tBlur, vUv).rgb;
+  vec3 bb = texture2D(tBloom, vUv).rgb; // v2.9: Glüh-Quelle (ohne Maske = tBlur)
   vec3 b2 = texture2D(tBlur2, vUv).rgb;
   if (uUseDepth > 0.5) {
     float z = linDepth(texture2D(tDepth, vUv).r);
     float dof = smoothstep(uFocus, uFocus * 5.0, z) * uDof;
     c = mix(c, b, dof);
   }
-  vec3 glow = max(b - uThresh, 0.0) * 0.6 + max(b2 - uThresh * 0.8, 0.0) * 0.8;
+  vec3 glow = max(bb - uThresh, 0.0) * 0.6 + max(b2 - uThresh * 0.8, 0.0) * 0.8;
   c += glow * uBloom;
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
   c = mix(vec3(l), c, uSat);
@@ -700,18 +821,44 @@ export class Post {
     this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2));
     this.quad.frustumCulled = false;
     this.scene = new THREE.Scene(); this.scene.add(this.quad);
-    this.mDown = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, uTexel: { value: new THREE.Vector2() } }, vertexShader: FS_V, fragmentShader: DOWN_F, depthTest: false, depthWrite: false });
+    this.mDown = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, uTexel: { value: new THREE.Vector2() }, uMaske: { value: 0 } }, vertexShader: FS_V, fragmentShader: DOWN_F, depthTest: false, depthWrite: false });
     this.mBlur = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, uDir: { value: new THREE.Vector2() } }, vertexShader: FS_V, fragmentShader: BLUR_F, depthTest: false, depthWrite: false });
     this.mComp = new THREE.ShaderMaterial({
       uniforms: {
-        tCol: { value: null }, tBlur: { value: null }, tBlur2: { value: null }, tDepth: { value: null }, uNF: { value: new THREE.Vector2(0.1, 1000) },
+        tCol: { value: null }, tBlur: { value: null }, tBloom: { value: null }, tBlur2: { value: null }, tDepth: { value: null }, uNF: { value: new THREE.Vector2(0.1, 1000) },
         uBloom: { value: 0.4 }, uThresh: { value: 0.9 }, uDof: { value: 0.75 }, uFocus: { value: 26 }, uVig: { value: 0.45 },
         uSat: { value: 1.12 }, uLift: { value: new THREE.Color(0.35, 0.3, 0.55) }, uGain: { value: new THREE.Vector3(1, 1, 1) },
         uFlash: { value: 0 }, uFlashCol: { value: new THREE.Color(1, 0.97, 0.85) }, uUseDepth: { value: 1 },
+        uSrcTexel: { value: new THREE.Vector2(1, 1) }, uSharp: { value: 0 },
       },
       vertexShader: FS_V, fragmentShader: COMP_F, depthTest: false, depthWrite: false,
     });
     this.rtMain = null;
+    // v2.9 Bloom-Maske: Schwelle auf der gewichteten Quelle (TODO Heavy-Job am Bild abstimmen; ohne Maske 0,9)
+    this.maske = BLOOMMASKE; this.schwelle = this.maske ? 0.35 : 0.9;
+    this.mComp.uniforms.uThresh.value = this.schwelle;
+    this._mats = new WeakSet();
+  }
+  // v2.9 Bloom-Maske: Mischregeln je Material einmalig setzen, damit Alpha im Szenen-Ziel die Leucht-Maske bleibt.
+  //   deckend mit MASKE (Toon, Himmel): Alpha = Maske aus dem Shader · deckend sonst: Alpha 0 (Gelände, Gras, Wasser …)
+  //   durchsichtig normal (Schatten, Glas, Ringe): Alpha unverändert · additiv (Glühen, Glühwürmchen): erhöht die Maske
+  //   userData.glueht (Funken der Bursts): erhöhen die Maske nach Deckung · userData.keinBloom: Alpha unverändert
+  maskeVorbereiten(scene) {
+    const S = this._mats;
+    scene.traverseVisible((o) => {
+      const m = o.material; if (!m || Array.isArray(m) || S.has(m)) return;
+      S.add(m);
+      if (m.userData.maskeFertig) return;                  // schon passend gemischt (Glüh-Billboards)
+      const add = m.blending === THREE.AdditiveBlending;
+      if (m.userData.keinBloom) {
+        if (!m.transparent && !add) return mischen(m, THREE.OneFactor, THREE.ZeroFactor, THREE.ZeroFactor, THREE.OneFactor);
+        return mischen(m, THREE.SrcAlphaFactor, add ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor, THREE.ZeroFactor, THREE.OneFactor);
+      }
+      if (add || m.userData.glueht) return;                // Glühen/Funkeln: Standard-Mischung zählt zur Maske
+      if (m.transparent) return mischen(m, THREE.SrcAlphaFactor, THREE.OneMinusSrcAlphaFactor, THREE.ZeroFactor, THREE.OneFactor);
+      const mitMaske = !!(m.defines && 'MASKE' in m.defines) || /#define MASKE/.test(m.fragmentShader || '');
+      mischen(m, THREE.OneFactor, THREE.ZeroFactor, mitMaske ? THREE.OneFactor : THREE.ZeroFactor, THREE.ZeroFactor);
+    });
   }
   // Framebuffer-Vollständigkeit prüfen (manche Handy-GPUs können kein HalfFloat/MSAA-Ziel)
   complete(rt) {
@@ -721,9 +868,11 @@ export class Post {
     r.setRenderTarget(null);
     return ok;
   }
-  setup(w, h, samples, useDepth) {
+  // v2.9: skala = Renderskala des Szenen-Ziels (0,6–1; Endbild bleibt in voller Größe w×h), endbild = { aa, sharp } oder null
+  setup(w, h, samples, useDepth, skala = 1, endbild = null) {
+    this.endbild(endbild);
     for (let attempt = 0; attempt < 4; attempt++) {
-      this.build(w, h, samples, useDepth);
+      this.build(w, h, samples, useDepth, skala);
       if (this.complete(this.rtMain) && this.complete(this.rtA)) return true;
       // Rückfall-Kette: ohne MSAA → ohne Tiefentextur → 8-Bit-Ziele
       if (samples) samples = 0; else if (useDepth) useDepth = false; else if (this.type !== THREE.UnsignedByteType) this.type = THREE.UnsignedByteType; else break;
@@ -732,43 +881,67 @@ export class Post {
     this.failed = true;
     return false;
   }
-  build(w, h, samples, useDepth) {
+  // Kantenglättung/Schärfen im Endbild (defines AA/SHARP → Shader neu übersetzen nur bei Änderung)
+  endbild(e) {
+    const m = this.mComp, aa = !!(e && e.aa), sh = !!(e && e.sharp > 0);
+    m.uniforms.uSharp.value = e ? e.sharp || 0 : 0;
+    const key = (aa ? 'A' : '') + (sh ? 'S' : '');
+    if (key === this._eb) return;
+    this._eb = key;
+    m.defines = {}; if (aa) m.defines.AA = ''; if (sh) m.defines.SHARP = '';
+    m.needsUpdate = true;
+  }
+  build(w, h, samples, useDepth, skala = 1) {
     this.samples = samples; this.useDepth = useDepth;
+    const [rw, rh] = rtGroesse(w, h, skala);
+    this.rw = rw; this.rh = rh; this.skala = skala;
     // 8-Bit-Rückfall: Ziele im sRGB-Format speichern (sonst sichtbare Farbstufen in dunklen Himmeln, z. B. nachts)
     const mk = (ww, hh, o = {}) => { const rt = new THREE.WebGLRenderTarget(ww, hh, { type: this.type, depthBuffer: false, ...o }); if (this.type === THREE.UnsignedByteType) rt.texture.colorSpace = THREE.SRGBColorSpace; return rt; };
-    [this.rtMain, this.rtA, this.rtB, this.rtC, this.rtD].forEach(rt => { if (rt) { if (rt.depthTexture) rt.depthTexture.dispose(); rt.dispose(); } });
+    [this.rtMain, this.rtA, this.rtB, this.rtC, this.rtD, this.rtM, this.rtN].forEach(rt => { if (rt) { if (rt.depthTexture) rt.depthTexture.dispose(); rt.dispose(); } });
+    this.rtM = this.rtN = null;
     const opts = { depthBuffer: true, samples: this.isWebGL2 ? samples : 0 };
-    if (useDepth) { opts.depthTexture = new THREE.DepthTexture(w, h); opts.depthTexture.type = THREE.UnsignedIntType; }
-    this.rtMain = mk(w, h, opts);
-    const qw = Math.max(1, Math.round(w / 4)), qh = Math.max(1, Math.round(h / 4));
+    if (useDepth) { opts.depthTexture = new THREE.DepthTexture(rw, rh); opts.depthTexture.type = THREE.UnsignedIntType; }
+    this.rtMain = mk(rw, rh, opts);
+    // Unschärfe-/Glüh-Stufen aus dem Szenen-Ziel (Renderskala), nicht aus dem Bildschirm
+    const qw = Math.max(1, Math.round(rw / 4)), qh = Math.max(1, Math.round(rh / 4));
     this.rtA = mk(qw, qh); this.rtB = mk(qw, qh);
-    const ew = Math.max(1, Math.round(w / 12)), eh = Math.max(1, Math.round(h / 12));
+    // v2.9 Bloom-Maske + Tiefenschärfe (Hoch): eigene gewichtete ¼-Kette fürs Glühen, rtA bleibt die Unschärfe-Quelle
+    if (this.maske && useDepth) { this.rtM = mk(qw, qh); this.rtN = mk(qw, qh); }
+    const ew = Math.max(1, Math.round(rw / 12)), eh = Math.max(1, Math.round(rh / 12));
     this.rtC = mk(ew, eh); this.rtD = mk(ew, eh);
     this.w = w; this.h = h;
   }
   pass(mat, target) { this.quad.material = mat; this.r.setRenderTarget(target); this.r.render(this.scene, this.cam); }
   render(scene, camera) {
-    const r = this.r;
+    const r = this.r, M = this.maske;
+    if (M) { this.maskeVorbereiten(scene); this._ca = r.getClearAlpha(); r.setClearAlpha(0); }
     r.setRenderTarget(this.rtMain);
     r.render(scene, camera);
-    // Downsample 1/4 + Blur
-    this.mDown.uniforms.tSrc.value = this.rtMain.texture;
-    this.mDown.uniforms.uTexel.value.set(1.5 / this.w, 1.5 / this.h);
-    this.pass(this.mDown, this.rtA);
-    const bu = this.mBlur.uniforms;
-    bu.tSrc.value = this.rtA.texture; bu.uDir.value.set(1 / this.rtA.width, 0); this.pass(this.mBlur, this.rtB);
-    bu.tSrc.value = this.rtB.texture; bu.uDir.value.set(0, 1 / this.rtA.height); this.pass(this.mBlur, this.rtA);
-    // weite Glow-Stufe 1/12
-    this.mDown.uniforms.tSrc.value = this.rtA.texture;
-    this.mDown.uniforms.uTexel.value.set(1.0 / this.rtA.width, 1.0 / this.rtA.height);
+    if (M) r.setClearAlpha(this._ca);
+    // Downsample 1/4 + Blur (v2.9 mit Maske ohne Tiefenschärfe: gleich gewichtet → Glüh-Quelle)
+    const du = this.mDown.uniforms, bu = this.mBlur.uniforms;
+    const viertel = (ziel, hilf, maske) => {
+      du.tSrc.value = this.rtMain.texture; du.uMaske.value = maske;
+      du.uTexel.value.set(1.5 / this.rw, 1.5 / this.rh);
+      this.pass(this.mDown, ziel);
+      bu.tSrc.value = ziel.texture; bu.uDir.value.set(1 / ziel.width, 0); this.pass(this.mBlur, hilf);
+      bu.tSrc.value = hilf.texture; bu.uDir.value.set(0, 1 / ziel.height); this.pass(this.mBlur, ziel);
+    };
+    viertel(this.rtA, this.rtB, M && !this.rtM ? 1 : 0);
+    let glueh = this.rtA;
+    if (M && this.rtM) { viertel(this.rtM, this.rtN, 1); glueh = this.rtM; }
+    // weite Glow-Stufe 1/12 (aus der Glüh-Quelle)
+    du.tSrc.value = glueh.texture; du.uMaske.value = 0;
+    du.uTexel.value.set(1.0 / glueh.width, 1.0 / glueh.height);
     this.pass(this.mDown, this.rtC);
     bu.tSrc.value = this.rtC.texture; bu.uDir.value.set(1.5 / this.rtC.width, 0); this.pass(this.mBlur, this.rtD);
     bu.tSrc.value = this.rtD.texture; bu.uDir.value.set(0, 1.5 / this.rtC.height); this.pass(this.mBlur, this.rtC);
     const cu = this.mComp.uniforms;
-    cu.tCol.value = this.rtMain.texture; cu.tBlur.value = this.rtA.texture; cu.tBlur2.value = this.rtC.texture;
+    cu.tCol.value = this.rtMain.texture; cu.tBlur.value = this.rtA.texture; cu.tBloom.value = glueh.texture; cu.tBlur2.value = this.rtC.texture;
     cu.tDepth.value = this.useDepth ? this.rtMain.depthTexture : null;
     cu.uUseDepth.value = this.useDepth ? 1 : 0;
     cu.uNF.value.set(camera.near, camera.far);
+    cu.uSrcTexel.value.set(1 / this.rw, 1 / this.rh);
     this.pass(this.mComp, null);
   }
 }

@@ -4,6 +4,10 @@ import { Critter } from './characters.js';
 import { height, pond } from '../world/terrain.js';
 import { blobTex } from '../engine/textures.js';
 import { RM } from '../engine/deko.js';
+import { G, kontaktMat } from '../engine/gfx.js';
+import { kontaktParameter, KONTAKT_AN } from '../engine/schatten.js';
+// v2.9 gerichteter Kontaktschatten nach Sonnenstand (?kontakt=0 = runder Blob wie bis v2.8)
+const _sd = [0, 1, 0];
 import { showOffset, showOrient, showLift, liftAt, showBounds } from '../game/stunts.js';
 
 const TAU = Math.PI * 2;
@@ -31,10 +35,17 @@ export class Player {
     this.bounds = 108;
     this.critter = null;
     this.frozen = false;
-    // Blob-Schatten
-    const sm = new THREE.MeshBasicMaterial({ map: blobTex(), transparent: true, depthWrite: false, color: 0x1a2a10, opacity: 0.35 });
-    this.shadow = new THREE.Mesh(new THREE.CircleGeometry(0.9, 20), sm);
-    this.shadow.rotation.x = -Math.PI / 2; this.shadow.renderOrder = 1;
+    // Blob-Schatten (v2.9: gerichteter Kontaktschatten, Quad 2×2 in xz, Größe/Richtung je Bild)
+    if (KONTAKT_AN) {
+      const g = new THREE.PlaneGeometry(2, 2); g.rotateX(-Math.PI / 2);
+      this.shadow = new THREE.Mesh(g, kontaktMat(0x1a2a10, 0.4));
+    } else {
+      const sm = new THREE.MeshBasicMaterial({ map: blobTex(), transparent: true, depthWrite: false, color: 0x1a2a10, opacity: 0.35 });
+      sm.userData.keinBloom = true;
+      this.shadow = new THREE.Mesh(new THREE.CircleGeometry(0.9, 20), sm);
+      this.shadow.rotation.x = -Math.PI / 2;
+    }
+    this.shadow.renderOrder = 1;
     scene.add(this.shadow);
     // Kamera-Zustand
     this.camPos = new THREE.Vector3(); this.camLook = new THREE.Vector3(); this.orbit = 0; this.shakeT = 0; this.fovKick = 0;
@@ -305,13 +316,26 @@ export class Player {
       }
       c.update(dt, t, { speed01: THREE.MathUtils.clamp(this.speed / 10, 0, 1), landed: this.landed, climb: this.landed ? 0 : this.pitch, flapBoost: Math.max(0, climb), cheer: this.cheer });
     }
-    // Schatten
+    this.updateShadow();
+  }
+  // Schatten unter der Figur; alpha = feste Deckkraft (Menü-Schaukasten), sonst nach Höhe
+  updateShadow(alpha = null) {
     const sgh = height(this.pos.x, this.pos.z);
     const hh = Math.max(0, this.pos.y - sgh);
+    if (KONTAKT_AN) {
+      const S = G.uSunDir.value; _sd[0] = S.x; _sd[1] = S.y; _sd[2] = S.z;
+      const k = kontaktParameter(_sd, hh, 1);
+      const x = this.pos.x + k.x, z = this.pos.z + k.z;
+      this.shadow.position.set(x, Math.max(height(x, z) + 0.05, -0.0) + 0.03, z);
+      this.shadow.rotation.y = k.yaw;
+      this.shadow.scale.set(k.breite * 0.9, 1, k.laenge * 0.9);
+      this.shadow.material.uniforms.uOpacity.value = alpha ?? k.alpha;
+      return;
+    }
     this.shadow.position.set(this.pos.x, Math.max(sgh + 0.05, -0.0) + 0.03, this.pos.z);
     const ss = THREE.MathUtils.clamp(1.1 - hh * 0.03, 0.35, 1.1);
     this.shadow.scale.set(ss, ss, 1);
-    this.shadow.material.opacity = THREE.MathUtils.clamp(0.4 - hh * 0.012, 0.05, 0.4);
+    this.shadow.material.opacity = alpha ?? THREE.MathUtils.clamp(0.4 - hh * 0.012, 0.05, 0.4);
   }
   land(spot) {
     this.landed = true; this.landSpot = spot; this.landing = null; this.landT = 0;

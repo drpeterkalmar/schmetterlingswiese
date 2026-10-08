@@ -175,6 +175,7 @@ export class Bursts {
       uniforms: { uBend: G.uBend, uCam: G.uCam, uPx: PX }, vertexShader: B_V, fragmentShader: B_F,
       transparent: true, depthWrite: false,
     });
+    mat.userData.glueht = true; // v2.9 Bloom-Maske: Funken/Sterne der Effekte glühen (nach Deckung)
     this.points = new THREE.Points(g, mat);
     this.points.frustumCulled = false;
     this.points.renderOrder = 10;
