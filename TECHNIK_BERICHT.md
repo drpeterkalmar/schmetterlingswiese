@@ -217,7 +217,10 @@ gearbeitet.
   verbundenen Browser anders (Testumgebung, nicht das Spiel).
 - Neu: `tests/test_autopilot.py`, `tests/test_culling.py`, `tests/test_takt.py` – alle grün.
 - Live geprüft nach jeder Etappe (`tests/test_live.py`: Build live = lokal, HTTP 200, Level gewonnen, offline startbar,
-  0 Fehler). LIVE_PLATZHALTER
+  0 Fehler). Abschluss: https://drpeterkalmar.github.io/schmetterlingswiese/ – **Version 2.9.0, Build c9283444f7**,
+  HTTP 200, Build live = lokal, Level gewonnen, offline neu gestartet, 0 Fehler; zusätzlich live mit allen Reglern aus
+  (Wiese, Mittel), Abend auf Hoch und Teich auf Niedrig – je 0 Fehler, 60 Bilder/s. Branch
+  `vorbau/schmetterlingswiese-v29-technik` gelöscht.
 
 ## 9. Offen, Grenzen, ehrlich
 - **Kein echtes Handy gemessen** und das Takt-Gefühl auf 120 Hz nicht am Gerät geprüft.
