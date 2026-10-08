@@ -67,6 +67,9 @@ export class Darstellung {
       e.o.position.copy(e.p1);
       if (!e.nurPos) e.o.rotation.set(e.e1[0], e.e1[1], e.e1[2]); // Euler exakt (Glättung liest rotation.x/z)
       if (e.fov) { e.o.fov = e.f1; e.o.updateProjectionMatrix(); }
+      // Matrizen auch zurück: zwischen zwei Bildern liest das Spiel (Zielanzeige, Projektionen) camera.matrixWorld –
+      // sie soll wie bis v2.8 zum Simulationszustand passen, nicht zum gezeichneten Zwischenstand
+      if (e.o.updateMatrixWorld) e.o.updateMatrixWorld();
     }
   }
   vergessen() { this.bereit = false; }

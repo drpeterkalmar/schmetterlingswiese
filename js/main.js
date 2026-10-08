@@ -349,6 +349,8 @@ class App {
     this._fpsAcc += raw; this._fpsN++;
     if (this._fpsAcc > 1) { this.fps = Math.round(this._fpsN / this._fpsAcc); this._fpsAcc = 0; this._fpsN = 0; }
     const c0 = performance.now();
+    // v2.9 Test-Haken (tests/test_autopilot.py): künstliche Arbeit je Bild in ms
+    if (this.testLast > 0) { const tE = c0 + this.testLast; while (performance.now() < tE); }
     if (!window.__freeze) {
       if (TAKT_AN && this.mode === 'game') this.taktSchritte(raw, dt);
       else {

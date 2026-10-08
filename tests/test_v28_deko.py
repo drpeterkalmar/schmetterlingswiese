@@ -47,7 +47,7 @@ with sync_playwright() as pw:
         if s.ev("__app.game.state") == 'won': break
         s.ev("__game.step()"); time.sleep(0.1)
     ok('Level mit Deko gewonnen', s.ev("__app.game.state") == 'won')
-    ext = [u for u in reqs if not u.startswith('http://localhost')]
+    ext = [u for u in reqs if not u.startswith(('http://localhost', BASE))]
     ok('keine externen Requests', not ext, ext[:3])
     ok('keine Fehler (Deko an)', not s.errors, s.errors[:3])
     s.close()

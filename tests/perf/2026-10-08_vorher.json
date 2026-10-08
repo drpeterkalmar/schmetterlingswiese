@@ -1,0 +1,546 @@
+{
+ "datum": "2026-10-08T15:00:29",
+ "stand": "vorher",
+ "wurzel": "/Users/wohnzimmer/dev/butterfly_vorher",
+ "git": "1df00e7",
+ "profil": {
+  "drossel": 4,
+  "dpr": 2.6,
+  "sek": 10,
+  "geraete": "hoch,quer",
+  "gpu": "ANGLE/Metal headless",
+  "start": "open",
+  "vsync": false,
+  "zusatz": ""
+ },
+ "szenen": {
+  "menu_mittel": {
+   "hoch": {
+    "n": 3817,
+    "p50": 2.6,
+    "p95": 3.4,
+    "p99": 3.7,
+    "fps": 381.5,
+    "calls": 70,
+    "callsMax": 78,
+    "tris": 317283,
+    "tex": 7,
+    "zusatz": {
+     "calls": 67,
+     "tris": 308088,
+     "geos": 48,
+     "tex": 7,
+     "tier": 1,
+     "dpr": 1.5,
+     "w": 412,
+     "h": 915,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 378,
+     "cpuUpdateMs": 0.14,
+     "cpuRenderSubmitMs": 0.9
+    },
+    "boot_s": 2.2,
+    "fehler": []
+   },
+   "quer": {
+    "n": 3756,
+    "p50": 2.7,
+    "p95": 3.4,
+    "p99": 3.6,
+    "fps": 375.3,
+    "calls": 90,
+    "callsMax": 94,
+    "tris": 328646,
+    "tex": 7,
+    "zusatz": {
+     "calls": 90,
+     "tris": 332564,
+     "geos": 48,
+     "tex": 7,
+     "tier": 1,
+     "dpr": 1.5,
+     "w": 915,
+     "h": 412,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 379,
+     "cpuUpdateMs": 0.23,
+     "cpuRenderSubmitMs": 1.07
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   }
+  },
+  "wiese_mittel": {
+   "hoch": {
+    "n": 3417,
+    "p50": 2.9,
+    "p95": 3.7,
+    "p99": 4.3,
+    "fps": 341.5,
+    "calls": 89,
+    "callsMax": 102,
+    "tris": 351945,
+    "tex": 8,
+    "zusatz": {
+     "calls": 84,
+     "tris": 346974,
+     "geos": 60,
+     "tex": 8,
+     "tier": 1,
+     "dpr": 1.5,
+     "w": 412,
+     "h": 915,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 329,
+     "cpuUpdateMs": 0.52,
+     "cpuRenderSubmitMs": 1.05
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   },
+   "quer": {
+    "n": 3229,
+    "p50": 3.1,
+    "p95": 4,
+    "p99": 4.5,
+    "fps": 322.6,
+    "calls": 105,
+    "callsMax": 125,
+    "tris": 371680,
+    "tex": 8,
+    "zusatz": {
+     "calls": 91,
+     "tris": 351338,
+     "geos": 60,
+     "tex": 8,
+     "tier": 1,
+     "dpr": 1.5,
+     "w": 915,
+     "h": 412,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 329,
+     "cpuUpdateMs": 0.42,
+     "cpuRenderSubmitMs": 1.36
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   }
+  },
+  "wiese_hoch": {
+   "hoch": {
+    "n": 1989,
+    "p50": 4.8,
+    "p95": 6.6,
+    "p99": 8.2,
+    "fps": 198.7,
+    "calls": 86,
+    "callsMax": 101,
+    "tris": 497037,
+    "tex": 9,
+    "zusatz": {
+     "calls": 79,
+     "tris": 487952,
+     "geos": 60,
+     "tex": 9,
+     "tier": 2,
+     "dpr": 2,
+     "w": 412,
+     "h": 915,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 208,
+     "cpuUpdateMs": 0.73,
+     "cpuRenderSubmitMs": 3.78
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   },
+   "quer": {
+    "n": 1882,
+    "p50": 5.3,
+    "p95": 7,
+    "p99": 8.3,
+    "fps": 188,
+    "calls": 102,
+    "callsMax": 126,
+    "tris": 519458,
+    "tex": 9,
+    "zusatz": {
+     "calls": 90,
+     "tris": 502332,
+     "geos": 60,
+     "tex": 9,
+     "tier": 2,
+     "dpr": 2,
+     "w": 915,
+     "h": 412,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 193,
+     "cpuUpdateMs": 0.78,
+     "cpuRenderSubmitMs": 3.77
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   }
+  },
+  "wiese_niedrig": {
+   "hoch": {
+    "n": 4392,
+    "p50": 2.3,
+    "p95": 3.1,
+    "p99": 3.6,
+    "fps": 439,
+    "calls": 76,
+    "callsMax": 87,
+    "tris": 253956,
+    "tex": 8,
+    "zusatz": {
+     "calls": 72,
+     "tris": 248726,
+     "geos": 58,
+     "tex": 8,
+     "tier": 0,
+     "dpr": 1,
+     "w": 412,
+     "h": 915,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 440,
+     "cpuUpdateMs": 0.4,
+     "cpuRenderSubmitMs": 0.94
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   },
+   "quer": {
+    "n": 4261,
+    "p50": 2.3,
+    "p95": 3.3,
+    "p99": 3.8,
+    "fps": 425.9,
+    "calls": 91,
+    "callsMax": 107,
+    "tris": 266645,
+    "tex": 8,
+    "zusatz": {
+     "calls": 82,
+     "tris": 255138,
+     "geos": 58,
+     "tex": 8,
+     "tier": 0,
+     "dpr": 1,
+     "w": 915,
+     "h": 412,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 445,
+     "cpuUpdateMs": 0.38,
+     "cpuRenderSubmitMs": 1.01
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   }
+  },
+  "stuntshow_mittel": {
+   "hoch": {
+    "n": 3821,
+    "p50": 2.6,
+    "p95": 3.4,
+    "p99": 3.9,
+    "fps": 381.9,
+    "calls": 72,
+    "callsMax": 82,
+    "tris": 330995,
+    "tex": 8,
+    "zusatz": {
+     "calls": 62,
+     "tris": 317854,
+     "geos": 59,
+     "tex": 8,
+     "tier": 1,
+     "dpr": 1.5,
+     "w": 412,
+     "h": 915,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 392,
+     "cpuUpdateMs": 0.39,
+     "cpuRenderSubmitMs": 0.85
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   },
+   "quer": {
+    "n": 3530,
+    "p50": 2.8,
+    "p95": 3.7,
+    "p99": 4.2,
+    "fps": 352.9,
+    "calls": 88,
+    "callsMax": 100,
+    "tris": 349365,
+    "tex": 8,
+    "zusatz": {
+     "calls": 73,
+     "tris": 332650,
+     "geos": 59,
+     "tex": 8,
+     "tier": 1,
+     "dpr": 1.5,
+     "w": 915,
+     "h": 412,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 368,
+     "cpuUpdateMs": 0.51,
+     "cpuRenderSubmitMs": 1.05
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   }
+  },
+  "mission_teich_mittel": {
+   "hoch": {
+    "n": 3287,
+    "p50": 3,
+    "p95": 3.9,
+    "p99": 4.5,
+    "fps": 328.5,
+    "calls": 93,
+    "callsMax": 103,
+    "tris": 386066,
+    "tex": 8,
+    "zusatz": {
+     "calls": 93,
+     "tris": 386702,
+     "geos": 68,
+     "tex": 8,
+     "tier": 1,
+     "dpr": 1.5,
+     "w": 412,
+     "h": 915,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 307,
+     "cpuUpdateMs": 0.24,
+     "cpuRenderSubmitMs": 1.25
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   },
+   "quer": {
+    "n": 3111,
+    "p50": 3.2,
+    "p95": 4.1,
+    "p99": 4.5,
+    "fps": 310.9,
+    "calls": 112,
+    "callsMax": 127,
+    "tris": 406451,
+    "tex": 8,
+    "zusatz": {
+     "calls": 120,
+     "tris": 411742,
+     "geos": 69,
+     "tex": 8,
+     "tier": 1,
+     "dpr": 1.5,
+     "w": 915,
+     "h": 412,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 285,
+     "cpuUpdateMs": 0.54,
+     "cpuRenderSubmitMs": 1.47
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   }
+  },
+  "mission_abend_mittel": {
+   "hoch": {
+    "n": 3690,
+    "p50": 2.7,
+    "p95": 3.5,
+    "p99": 4,
+    "fps": 368.7,
+    "calls": 71,
+    "callsMax": 78,
+    "tris": 309676,
+    "tex": 8,
+    "zusatz": {
+     "calls": 68,
+     "tris": 304756,
+     "geos": 56,
+     "tex": 8,
+     "tier": 1,
+     "dpr": 1.5,
+     "w": 412,
+     "h": 915,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 387,
+     "cpuUpdateMs": 0.52,
+     "cpuRenderSubmitMs": 1.24
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   },
+   "quer": {
+    "n": 3329,
+    "p50": 3,
+    "p95": 3.8,
+    "p99": 4.6,
+    "fps": 332.7,
+    "calls": 86,
+    "callsMax": 97,
+    "tris": 325208,
+    "tex": 8,
+    "zusatz": {
+     "calls": 76,
+     "tris": 316208,
+     "geos": 56,
+     "tex": 8,
+     "tier": 1,
+     "dpr": 1.5,
+     "w": 915,
+     "h": 412,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 363,
+     "cpuUpdateMs": 0.47,
+     "cpuRenderSubmitMs": 1.09
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   }
+  },
+  "wiese_auto": {
+   "hoch": {
+    "n": 2933,
+    "p50": 3.3,
+    "p95": 4.7,
+    "p99": 5.4,
+    "fps": 293.1,
+    "calls": 87,
+    "callsMax": 97,
+    "tris": 411812,
+    "tex": 9,
+    "zusatz": {
+     "calls": 81,
+     "tris": 453870,
+     "geos": 60,
+     "tex": 9,
+     "tier": 2,
+     "dpr": 1.5,
+     "w": 412,
+     "h": 915,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 279,
+     "cpuUpdateMs": 0.74,
+     "cpuRenderSubmitMs": 1.6
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   },
+   "quer": {
+    "n": 2926,
+    "p50": 3.4,
+    "p95": 4.5,
+    "p99": 5.3,
+    "fps": 292.4,
+    "calls": 100,
+    "callsMax": 115,
+    "tris": 430521,
+    "tex": 9,
+    "zusatz": {
+     "calls": 86,
+     "tris": 461094,
+     "geos": 60,
+     "tex": 9,
+     "tier": 2,
+     "dpr": 1.5,
+     "w": 915,
+     "h": 412,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "fps": 277,
+     "cpuUpdateMs": 0.79,
+     "cpuRenderSubmitMs": 1.8
+    },
+    "boot_s": 0.2,
+    "fehler": []
+   }
+  }
+ },
+ "ladegroesse": {
+  "dateien": 34,
+  "roh_mb": 1.37,
+  "gzip_mb": 0.41,
+  "extern": [],
+  "groesste_gzip_kb": [
+   [
+    "lib/three.core.min.js",
+    100
+   ],
+   [
+    "lib/three.module.min.js",
+    79
+   ],
+   [
+    "icons/icon-192.png",
+    25
+   ],
+   [
+    "js/actors/characters.js",
+    21
+   ],
+   [
+    "js/game/game.js",
+    20
+   ],
+   [
+    "js/ui/ui.js",
+    13
+   ],
+   [
+    "js/game/objectives.js",
+    13
+   ],
+   [
+    "js/world/nature.js",
+    12
+   ],
+   [
+    "js/engine/gfx.js",
+    11
+   ],
+   [
+    "js/actors/npcs.js",
+    10
+   ]
+  ]
+ }
+}

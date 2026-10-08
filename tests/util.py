@@ -21,7 +21,13 @@ _gl_checked = False
 
 class Session:
     def __init__(self, pw, device=PIXEL7, dpr=None, storage=None):
-        self.b = pw.chromium.launch(args=ARGS)
+        # v2.9: BROWSER=open → Browser per `open` + CDP (wie tests/perf_gate.py): ohne die von der Queue geerbte macOS-
+        # Zeitgeber-Drosselung (sonst ~8–15 Bilder/s headless). Standard bleibt der Kindprozess.
+        if os.environ.get('BROWSER') == 'open' and sys.platform == 'darwin':
+            from perf_gate import OffenerBrowser
+            self.b = OffenerBrowser(pw, ARGS)
+        else:
+            self.b = pw.chromium.launch(args=ARGS)
         opts = dict(device)
         if dpr: opts['device_scale_factor'] = dpr
         if storage: opts['storage_state'] = storage
@@ -33,7 +39,7 @@ class Session:
     def open(self, q='?nosw'):
         for attempt in range(2):
             try:
-                self.pg.goto(BASE + 'index.html' + q)
+                self.pg.goto(BASE + 'index.html' + q + os.environ.get('QZUSATZ', ''))   # v2.9: QZUSATZ='&takt=0' u. ä. (A/B)
                 self.pg.wait_for_function("window.__game && window.__app && window.__app.frames > 3", timeout=150000)
                 self._check_gl()
                 return

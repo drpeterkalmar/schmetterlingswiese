@@ -1,5 +1,5 @@
 // Service-Worker: offline spielbar, sauberes Cache-Busting über Inhalts-Hash (tools/update_sw.py)
-const VERSION = 'b1ed664dc6';
+const VERSION = '7c0a14f538';
 const CACHE = 'schmetterlingswiese-' + VERSION;
 const ASSETS = [
   './',
@@ -19,7 +19,15 @@ const ASSETS = [
   'js/engine/deko.js',
   'js/engine/geo.js',
   'js/engine/gfx.js',
+  'js/engine/himmelslicht.js',
+  'js/engine/huelle.js',
+  'js/engine/kern/autopilot.js',
+  'js/engine/kern/hochskalieren.js',
+  'js/engine/kern/startprobe.js',
+  'js/engine/qualitaet.js',
   'js/engine/renderer.js',
+  'js/engine/schatten.js',
+  'js/engine/takt.js',
   'js/engine/textures.js',
   'js/game/game.js',
   'js/game/levels.js',
@@ -32,6 +40,7 @@ const ASSETS = [
   'js/main.js',
   'js/ui/ui.js',
   'js/world/deko.js',
+  'js/world/grasringe.js',
   'js/world/life.js',
   'js/world/nature.js',
   'js/world/particles.js',
