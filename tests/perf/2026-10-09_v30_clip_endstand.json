@@ -1,6 +1,6 @@
 {
- "datum": "2026-10-09T17:42:31",
- "stand": "v30_kunstflug_clip",
+ "datum": "2026-10-09T18:12:58",
+ "stand": "v30_clip_endstand",
  "wurzel": "/Users/wohnzimmer/dev/butterfly-game",
  "git": "a809e35",
  "profil": {
@@ -14,21 +14,21 @@
   "zusatz": ""
  },
  "szenen": {
-  "kunstflug_mittel": {
+  "flugshow_clip": {
    "hoch": {
-    "n": 3325,
-    "p50": 2.9,
-    "p95": 4,
-    "p99": 4.7,
-    "fps": 332.3,
-    "calls": 85,
-    "callsMax": 90,
-    "tris": 285567,
+    "n": 4637,
+    "p50": 2.1,
+    "p95": 3.4,
+    "p99": 4.1,
+    "fps": 463.5,
+    "calls": 78,
+    "callsMax": 123,
+    "tris": 256055,
     "tex": 8,
     "zusatz": {
-     "calls": 81,
-     "tris": 268710,
-     "geos": 60,
+     "calls": 75,
+     "tris": 250043,
+     "geos": 61,
      "tex": 8,
      "tier": 1,
      "dpr": 1.5,
@@ -45,37 +45,37 @@
      "autopilot": null,
      "apLog": null,
      "startProbe": null,
-     "fps": 335,
-     "cpuUpdateMs": 0.3,
-     "cpuRenderSubmitMs": 1.09,
+     "fps": 539,
+     "cpuUpdateMs": 0.21,
+     "cpuRenderSubmitMs": 1.17,
      "takt": {
       "aktiv": true,
-      "schritte": 953,
-      "alpha": 0.45
+      "schritte": 887,
+      "alpha": 0.246
      }
     },
     "boot_s": 0.2,
     "fehler": [],
     "runden_p95": [
-     4,
-     4.2,
-     4
+     3.4,
+     3.5,
+     3.4
     ]
    },
    "quer": {
-    "n": 3204,
-    "p50": 3.1,
-    "p95": 4.2,
-    "p99": 4.9,
-    "fps": 320.2,
-    "calls": 111,
-    "callsMax": 117,
-    "tris": 324358,
+    "n": 4284,
+    "p50": 2.3,
+    "p95": 3.7,
+    "p99": 4.4,
+    "fps": 428.2,
+    "calls": 107,
+    "callsMax": 164,
+    "tris": 310656,
     "tex": 8,
     "zusatz": {
-     "calls": 111,
-     "tris": 327951,
-     "geos": 60,
+     "calls": 92,
+     "tris": 290715,
+     "geos": 61,
      "tex": 8,
      "tier": 1,
      "dpr": 1.5,
@@ -92,21 +92,21 @@
      "autopilot": null,
      "apLog": null,
      "startProbe": null,
-     "fps": 321,
-     "cpuUpdateMs": 0.39,
-     "cpuRenderSubmitMs": 1.37,
+     "fps": 540,
+     "cpuUpdateMs": 0.12,
+     "cpuRenderSubmitMs": 0.79,
      "takt": {
       "aktiv": true,
-      "schritte": 948,
-      "alpha": 0.356
+      "schritte": 887,
+      "alpha": 0.148
      }
     },
     "boot_s": 0.2,
     "fehler": [],
     "runden_p95": [
-     4.1,
-     4.2,
-     4.2
+     3.5,
+     3.7,
+     4.1
     ]
    }
   }

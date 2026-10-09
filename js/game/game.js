@@ -607,15 +607,15 @@ export class Game {
     const pl = this.player, P = pl.pos, au = this.app.audio, def = S.def;
     if (!S.smk) { // Rauch hält so lange, wie die Figur dauert (die ganze Figur steht kurz am Himmel)
       S.smk = P.clone(); S.smkI = 0; S.evP = def.kf.evs.map(([f, e]) => [def.coreP(S, f), e]);
-      S.smkL = Math.min(5, Math.max(2.8, (def.coreP(S, 1) - def.coreP(S, 0)) * S.dur + 0.6));
+      S.smkL = Math.min(4.2, Math.max(2.8, (def.coreP(S, 1) - def.coreP(S, 0)) * S.dur + 0.4));
     }
-    const d = S.smk.distanceTo(P), k = Math.min(5, Math.ceil(d / 0.16));
+    const d = S.smk.distanceTo(P), k = Math.min(3, Math.ceil(d / 0.22)); // Wölkchen alle ~22 cm (Teilchen-Budget)
     const cols = SMOKE[def.smoke] || SMOKE.RAUCH_RB, rb = cols === SC.RAINBOW;
-    if (n || d > 0.16) for (let i = 1; i <= k; i++) {
+    if (n || d > 0.22) for (let i = 1; i <= k; i++) {
       _x.lerpVectors(S.smk, P, i / k); _x.y -= 0.12;
       const c = rb ? RB1[(S.smkI >> 2) % RB1.length] : [cols[S.smkI % cols.length]];
-      this.em(1, _x, c, 7, 0.62, 0.05, 0.12, S.smkL, 0.03, 2.5, 0.08, null, 0.6);
-      if ((S.smkI & 3) === 0) this.em(1, _x, SC.STAR, 1, 0.26, 0.25, 0, 1.1, -0.2, 1.5, 0.3);
+      this.em(1, _x, c, 7, 0.66, 0.05, 0.12, S.smkL, 0.03, 2.5, 0.08, null, 0.6);
+      if ((S.smkI % 5) === 0) this.em(1, _x, SC.STAR, 1, 0.26, 0.25, 0, 1.0, -0.2, 1.5, 0.3);
       S.smkI++;
     }
     S.smk.copy(P);
