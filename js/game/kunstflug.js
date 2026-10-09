@@ -252,7 +252,7 @@ add({ id: 'splits', info: 'Das Gegenteil vom Immelmann: erst auf den Rücken rol
 // 5) Fassrolle (Barrel Roll): Rolle um eine gedachte Röhre – die Bahn schraubt sich versetzt um die Fluglinie
 {
   const R = 2.1, len = 10.5;
-  add({ id: 'fassrolle', info: 'Eine Rolle um ein unsichtbares Fass: man schraubt sich in einem großen Kreis rund um die Fluglinie.', name: 'Fassrolle', sub: 'rund um ein unsichtbares Fass!', emoji: '🛢️', dur: 3.6, spd: 0.79, cam: 0.5, camD: 1.2, smoke: 'RAUCH_RB' },
+  add({ id: 'fassrolle', info: 'Eine Rolle um ein unsichtbares Fass: man schraubt sich in einem großen Kreis rund um die Fluglinie.', name: 'Fassrolle', sub: 'rund um ein unsichtbares Fass!', emoji: '🛢️', dur: 3.6, spd: 0.79, cam: 0.5, camD: 1.2, smoke: 'RAUCH_RB', camTh: 0.8, camY: 2.2, camF: 0.6, camDist: 8 },
     bahn().S(0.4, 1)
       .fn(len, 1.0, (u, o) => { const a = TAU * ease(u); return o.set(R * Math.sin(a), R * (1 - Math.cos(a)), len * u); },
         { roll: TAU, mark: 'fass', ev: [[0.02, 'rolle'], [0.5, 'funkel']] })
@@ -260,7 +260,7 @@ add({ id: 'splits', info: 'Das Gegenteil vom Immelmann: erst auf den Rücken rol
 }
 
 // 6) Gerissene Rolle (Snap Roll): kurz aufbäumen (Strömungsabriss-Wackler), dann blitzschnelle Rolle
-add({ id: 'gerissen', info: 'Kurz die Nase hoch, und – zack – reißt man sich blitzschnell einmal um die eigene Achse.', name: 'Gerissene Rolle', sub: 'zack – blitzschnell rumgerissen!', emoji: '💥', dur: 2.4, spd: 0.98, cam: 0.35, smoke: 'RAUCH_GELB', snap: true },
+add({ id: 'gerissen', info: 'Kurz die Nase hoch, und – zack – reißt man sich blitzschnell einmal um die eigene Achse.', name: 'Gerissene Rolle', sub: 'zack – blitzschnell rumgerissen!', emoji: '💥', dur: 2.4, spd: 0.98, cam: 0.35, smoke: 'RAUCH_GELB', camTh: 0.9, camY: 0.5, camF: 0.85, camDist: 5.5, snap: true },
   bahn().S(1.5, 1)
     .P(4, 10, 0.85, { flip: -0.35, at: [0, 1] })
     .S(0.7, 0.75, { wob: snapWob, ev: [[0, 'abriss']] })
@@ -286,23 +286,24 @@ add({ id: 'gerissen', info: 'Kurz die Nase hoch, und – zack – reißt man sic
 
 // 8) Trudeln (Spin): steil hoch, Strömungsabriss (Wackeln), Nase kippt runter, enge Drehspirale nach unten, ausleiten
 {
-  const Ra = 1.8, Rp = 0.7, Rb = 1.9, turns = 2, r = 0.5, hlen = 4.6;
-  add({ id: 'trudeln', info: 'Ganz langsam werden, bis die Flügel nicht mehr tragen – dann dreht man sich wie ein Ahornsamen im Kreisel nach unten.', name: 'Trudeln', sub: 'abkippen und im Kreisel runter!', emoji: '🌪️', dur: 6.6, spd: 0.43, fa: 0.2, cam: 1.0, camD: 1.45, smoke: 'RAUCH_LILA' },
+  const Ra = 1.8, Rp = 0.7, Rb = 1.9, turns = 2, r = 0.85, hlen = 4.8;
+  add({ id: 'trudeln', info: 'Ganz langsam werden, bis die Flügel nicht mehr tragen – dann dreht man sich wie ein Ahornsamen im Kreisel nach unten.', name: 'Trudeln', sub: 'abkippen und im Kreisel runter!', emoji: '🌪️', dur: 6.4, spd: 0.34, fa: 0.2, cam: 1.0, camD: 1.45, smoke: 'RAUCH_LILA', camTh: 1.1, camY: 1.2 },
     bahn().S(0.4, 1)
-      .P(Ra, 70, 0.85, { ev: [[0, 'zieh']] })
-      .S(6.2, 0.5)
-      .P(Ra, -70, 0.32)
+      .P(Ra, 70, 0.95, { ev: [[0, 'zieh']] })
+      .S(4.0, 0.8)
+      .S(2.2, 0.42)
+      .P(Ra, -70, 0.3)
       .S(0.7, 0.22, { wob: (u) => { const e = Math.sin(Math.PI * u); return [0.25 * Math.sin(5 * Math.PI * u) * e, -0.2 * e, 0]; }, ev: [[0, 'abriss']] })
       .P(Rp, -90, 0.55, { ev: [[0.3, 'kipp']] })
-      .fn(hlen, 0.8, (u, o) => { const a = TAU * turns * ease(u), rr = r * sstep(0, 0.18, u) * (1 - sstep(0.82, 1, u)); return o.set(rr * Math.sin(a), rr * (Math.cos(a) - 1), hlen * u); },
-        { mark: 'spin', ev: [[0, 'kreisel'], [0.5, 'kreisel']] })
+      .fn(hlen, 1.0, (u, o) => { const a = TAU * turns * ease(u), rr = r * sstep(0, 0.18, u) * (1 - sstep(0.82, 1, u)); return o.set(rr * Math.sin(a), rr * (Math.cos(a) - 1), hlen * u); },
+        { mark: 'spin', ev: [[0, 'kreisel'], [0.5, 'kreisel']], wob: (u) => [0, 0.8 * Math.sin(Math.PI * Math.min(1, u * 1.25)) * (1 - sstep(0.8, 1, u)), 0] }) // Nase steil nach unten
       .Sy(Rb, 1.45, { ev: [[0.1, 'sturz']] })
       .P(Rb, 90, 1.0)
       .S(0.3, 1).fertig('trudeln'));
 }
 
 // 9) Kobra (Pugatschow): Nase reißt hoch bis fast senkrecht – die Figur fliegt dabei fast geradeaus weiter –, dann wieder flach
-add({ id: 'kobra', info: 'Die Nase reißt hoch bis fast senkrecht, wie eine Kobra, die sich aufrichtet – und trotzdem fliegt man fast geradeaus weiter.', name: 'Kobra', sub: 'aufbäumen wie eine Schlange!', emoji: '🐍', dur: 3.0, spd: 0.88, cam: 1.45, camD: 1.1, smoke: 'RAUCH_GRUEN' },
+add({ id: 'kobra', info: 'Die Nase reißt hoch bis fast senkrecht, wie eine Kobra, die sich aufrichtet – und trotzdem fliegt man fast geradeaus weiter.', name: 'Kobra', sub: 'aufbäumen wie eine Schlange!', emoji: '🐍', dur: 3.0, spd: 0.88, cam: 1.45, camD: 1.1, smoke: 'RAUCH_GRUEN', camF: 0.85, camDist: 6 },
   bahn().S(1.2, 1)
     .P(5, 8, 0.8)
     .S(1.9, 0.35, { flip: -1.65, at: [0, 0.45], mark: 'kobra', ev: [[0, 'kobra']] })
@@ -311,7 +312,7 @@ add({ id: 'kobra', info: 'Die Nase reißt hoch bis fast senkrecht, wie eine Kobr
     .S(1.2, 1).fertig('kobra'));
 
 // 10) Messerflug: auf die Flügelkante gerollt, ein Stück so gleiten, zurückrollen
-add({ id: 'messerflug', info: 'Auf die Seite gerollt, die Flügel stehen senkrecht – man gleitet auf der Flügelkante wie ein Messer durch die Luft.', name: 'Messerflug', sub: 'auf der Flügelkante gleiten!', emoji: '🔪', dur: 2.8, spd: 0.98, cam: 0.15, smoke: 'RAUCH_BLAU' },
+add({ id: 'messerflug', info: 'Auf die Seite gerollt, die Flügel stehen senkrecht – man gleitet auf der Flügelkante wie ein Messer durch die Luft.', name: 'Messerflug', sub: 'auf der Flügelkante gleiten!', emoji: '🔪', dur: 2.8, spd: 0.98, cam: 0.15, smoke: 'RAUCH_BLAU', camTh: 0.45, camY: 1.1, camF: 0.85, camDist: 5.5 },
   bahn().S(0.6, 1)
     .S(1.6, 1, { roll: Math.PI / 2, ev: [[0.1, 'rolle']] })
     .Y(9, 12, 1.0, { mark: 'messer', ev: [[0.2, 'funkel']] })
@@ -344,13 +345,13 @@ add({ id: 'messerflug', info: 'Auf die Seite gerollt, die Flügel stehen senkrec
 }
 
 // 13) Lomcovák: Taumel-Überschlag – im Steigflug kopfüber purzeln, dann abfangen
-add({ id: 'lomcovak', info: 'Der wildeste Trick aus Tschechien: man purzelt und taumelt Hals über Kopf durch die Luft und fängt sich dann wieder.', name: 'Lomcovák', sub: 'wild durch die Luft purzeln!', emoji: '🤪', dur: 4.2, spd: 0.68, cam: 1.2, camD: 1.25, smoke: 'RAUCH_LILA' },
+add({ id: 'lomcovak', info: 'Der wildeste Trick aus Tschechien: man purzelt und taumelt Hals über Kopf durch die Luft und fängt sich dann wieder.', name: 'Lomcovák', sub: 'wild durch die Luft purzeln!', emoji: '🤪', dur: 5.2, spd: 0.55, cam: 1.2, camD: 1.25, smoke: 'RAUCH_LILA', camF: 0.6, camDist: 6.5, camY: 0.6 },
   bahn().S(0.5, 1)
-    .P(2.2, 45, 0.7, { ev: [[0, 'zieh']] })
-    .S(2.2, 0.4)
-    .P(2.4, -90, 0.35, { flip: -2 * TAU, twirl: TAU, at: [0.05, 0.95], mark: 'taumel', ev: [[0.05, 'taumel']] })
-    .S(2.2, 1.25)
-    .P(2.2, 45, 1.0)
+    .P(2.0, 60, 0.7, { ev: [[0, 'zieh']] })
+    .S(3.2, 0.3)
+    .P(1.6, -120, 0.25, { flip: -2 * TAU, roll: TAU, twirl: TAU, at: [0.0, 1.0], mark: 'taumel', ev: [[0.02, 'taumel'], [0.5, 'taumel']] })
+    .S(3.2, 1.3)
+    .P(2.0, 60, 1.0)
     .S(0.3, 1).fertig('lomcovak'));
 
 // ---------------------------------------------------------------- Flugshow (seltene Sieger-Einlage, v3.0)

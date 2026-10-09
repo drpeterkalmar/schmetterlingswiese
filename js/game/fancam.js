@@ -18,7 +18,8 @@ const QS = new URLSearchParams(location.search);
 const RM = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SHOTS = ['chase', 'front', 'unten', 'side', 'orbit'];
 const _e = new THREE.Vector3(), _p = new THREE.Vector3(), _l = new THREE.Vector3(), _f = new THREE.Vector3(), _u = new THREE.Vector3(), _s = new THREE.Vector3();
-const _q = new THREE.Quaternion(), _Y = new THREE.Vector3(0, 1, 0), _Z = new THREE.Vector3(0, 0, 1), _UP = new THREE.Vector3(0, 1, 0);
+const _Z0 = new THREE.Vector3(), _Y = new THREE.Vector3(0, 1, 0), _Z = new THREE.Vector3(0, 0, 1), _UP = new THREE.Vector3(0, 1, 0);
+const GLITZER = [0xffffff, 0xfff3b0, 0xffd0f0, 0xcfe8ff];
 const ease = (x) => 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, x)));
 // Beat-Muster je Takt (8 Achtel): Bassdrum/Klatscher/Hi-Hat; Drop-Takte dichter
 const KICK = [1, 0, 0, 0, 1, 0, 0, 0], KICK_D = [1, 0, 0, 1, 1, 0, 1, 0], CLAP = [0, 0, 1, 0, 0, 0, 1, 0], HAT = [0, 1, 0, 1, 0, 1, 0, 1];
@@ -36,6 +37,7 @@ export class FanCam {
   constructor(app) {
     this.app = app; this.on = false; this.log = []; this.cuts = []; this.el = null; this.last = null;
     this.camPos = new THREE.Vector3(); this.camLook = new THREE.Vector3(); this.fwd = new THREE.Vector3(0, 0, 1);
+    this.camOff = new THREE.Vector3(); this.lookOff = new THREE.Vector3();
   }
   get flashArm() { return RM || this.app.settings.blitze === 'wenig'; } // „Blitze reduzieren“ (Einstellung) bzw. reduzierte Bewegung
   // ------------------------------------------------------------ Start/Ende
@@ -52,6 +54,7 @@ export class FanCam {
     this.grade(true);
     au.musicDuck(0.12, 0.2);
     this.dom();
+    if (QS.get('fcdom') === '0') this.el.style.display = 'none'; // (Messung: ohne Bild-Ebene)
     document.body.classList.add('clip');
     this.name(`@${this.spieler()}`, this.figurName(), 'intro');
     this.cut('side', 0); // erstes Bild: weite Seitenansicht
@@ -94,7 +97,7 @@ export class FanCam {
   dom() {
     if (!this.el) {
       const e = document.createElement('div'); e.id = 'fancam'; e.setAttribute('aria-hidden', 'true');
-      e.innerHTML = `<div class="fcBar"></div><div class="fcGlit"></div><div class="fcName"><b></b><i></i></div>
+      e.innerHTML = `<div class="fcBar"></div><div class="fcName"><b></b><i></i></div>
         <div class="fcCap"><b class="fcWho"></b><span class="fcSong">♪ Flugshow-Beat · Schmetterlingswiese</span></div>
         <div class="fcEnd"><div class="fcStars"></div><div class="fcTime"></div></div><div class="fcFlash"></div><div class="fcSkip">Tippen = überspringen</div>`;
       document.body.appendChild(e);
@@ -102,19 +105,20 @@ export class FanCam {
       this.el = e;
     }
     const e = this.el;
-    e.querySelector('.fcBar').innerHTML = this.teile.map(() => '<i><b></b></i>').join('');
+    e.querySelector('.fcBar').innerHTML = this.teile.map(() => '<i><b></b></i>').join(''); this.bars = null; this.barK = null;
     e.querySelector('.fcWho').textContent = `@${this.spieler()} · ${this.figurName()}`;
     e.querySelector('.fcEnd').className = 'fcEnd';
     e.classList.toggle('arm', this.flashArm);
     e.classList.add('on');
-    this.glitter();
   }
-  glitter() { // Glitzer-Ebene: ein paar CSS-Funken (kein WebGL)
-    const g = this.el.querySelector('.fcGlit');
-    if (g.childElementCount) return;
-    let h = '';
-    for (let i = 0; i < 18; i++) h += `<i style="left:${(i * 37 % 100)}%;top:${(i * 53 % 100)}%;animation-delay:${(i * 0.23 % 2).toFixed(2)}s;font-size:${10 + (i * 7 % 14)}px">✦</i>`;
-    g.innerHTML = h;
+  // Glitzer-Ebene auf dem Beat: ein paar Funkel-Sterne direkt vor der Kamera (Effekt-Teilchen statt DOM-Animation –
+  // die CSS-Funken kosteten im Mess-Gate ~0,6 ms je Bild)
+  glitzer(n) {
+    const cam = this.app.camera, g = this.app.game;
+    for (let i = 0; i < n; i++) {
+      _e.set((Math.random() - 0.5) * 2.2, (Math.random() - 0.5) * 3.2, -2.2 - Math.random() * 1.2).applyQuaternion(cam.quaternion).add(cam.position);
+      g.em(1, _e, GLITZER, 1, 0.12 + Math.random() * 0.1, 0.2, 0.15, 0.5, 0, 1, 0.05);
+    }
   }
   name(big, small, cls = '') {
     const n = this.el.querySelector('.fcName');
@@ -142,7 +146,7 @@ export class FanCam {
     // Uhr an die Audio-Uhr binden (bei Rucklern/Hängern springt sie mit, statt hinterherzulaufen)
     if (this.a0 !== null && au.ctx && au.ctx.state === 'running') {
       const ta = au.ctx.currentTime - this.a0;
-      if (Math.abs(ta - this.t) > 0.05) { this.mark('sync', { von: +this.t.toFixed(3), auf: +ta.toFixed(3) }); this.t = ta; }
+      if (Math.abs(ta - this.t) > 0.012) { this.mark('sync', { von: +this.t.toFixed(3), auf: +ta.toFixed(3) }); this.t = ta; } // > ¾ Bild daneben
     }
     this.planen();
     // Schläge: im Schritt, der dem Schlag am nächsten liegt (± halber Schritt)
@@ -174,12 +178,13 @@ export class FanCam {
       if (this.t - this.outro > 2.4) this.stop(false);
     }
   }
+  // Takt-Balken: nur Transform (kein Layout), nur bei sichtbarer Änderung schreiben
   balken(p) {
-    const bars = this.el.querySelectorAll('.fcBar b');
+    const bars = this.bars || (this.bars = [...this.el.querySelectorAll('.fcBar b')]), alt = this.barK || (this.barK = []);
     this.teile.forEach((T, i) => {
       const a = T.pf, b = this.teile[i + 1] ? this.teile[i + 1].pf : 1;
-      const k = Math.min(1, Math.max(0, (p - a) / (b - a)));
-      if (bars[i]) bars[i].style.width = (k * 100).toFixed(1) + '%';
+      const k = Math.round(Math.min(1, Math.max(0, (p - a) / (b - a))) * 100) / 100;
+      if (bars[i] && alt[i] !== k) { alt[i] = k; bars[i].style.transform = `scaleX(${k})`; }
     });
   }
   // Beat planen (Vorlauf 0,25 s auf der Audio-Uhr): Achtel-Raster
@@ -201,7 +206,7 @@ export class FanCam {
   schlag(k) {
     const R = this.ramp, tB = k * SPB;
     // Schlag verpasst (Hänger, Uhr nachgezogen): Zustand weiterschalten, aber kein verspäteter Schnitt
-    const spaet = this.t - tB > 0.02;
+    const spaet = this.t - tB > 0.03;
     let cut = false, drop = false;
     if (R.ph === 'slow' && k === R.drop) {
       drop = true; R.ph = 'fast'; R.tFast = this.t;
@@ -223,6 +228,7 @@ export class FanCam {
       const nxt = this.wahl(drop);
       this.cut(nxt, tB, !drop && this.wischArt());
     }
+    if (this.on) this.glitzer(drop ? 6 : k % 2 ? 1 : 3);
     this.mark('schlag', { n: k, cut, drop });
   }
   // jeder 3. Schnitt (außerhalb von Zeitlupe/Drop) ist ein Wisch-Schwenk
@@ -263,7 +269,7 @@ export class FanCam {
     switch (this.shot) {
       case 'chase': _p.copy(P).addScaledVector(f, -3.0).addScaledVector(_u, 1.0).addScaledVector(_s, 1.3).addScaledVector(_UP, 0.4); _l.copy(P).addScaledVector(f, 1.6); break; // seitlich versetzt: nicht im eigenen Rauch
       case 'front': _p.copy(P).addScaledVector(f, 2.5).addScaledVector(_s, 0.8).addScaledVector(_UP, 0.35); _l.copy(P); break;
-      case 'unten': _p.copy(P).addScaledVector(_UP, -3.4).addScaledVector(_s, 1.4).addScaledVector(f, 1.2); _l.copy(P).addScaledVector(_UP, 0.4); break;
+      case 'unten': _p.copy(P).addScaledVector(_UP, -2.6).addScaledVector(_s, 1.8).addScaledVector(f, 1.2); _l.copy(P).addScaledVector(_UP, 0.4); break;
       case 'orbit': this.orbitA += h * (this.outro >= 0 ? 0.7 : 1.8); _p.set(P.x + Math.cos(this.orbitA) * 3.3, P.y + 0.8, P.z + Math.sin(this.orbitA) * 3.3); _l.copy(P); break;
       default: { // weite Seite: Zuschauer-Blick auf die ganze Figur
         if (S && S.c) {
@@ -273,12 +279,22 @@ export class FanCam {
         } else { _p.copy(P).addScaledVector(_s, 6).addScaledVector(_UP, 0.4); _l.copy(P); }
       }
     }
-    const g = height(_p.x, _p.z) + 0.6; if (_p.y < g) _p.y = g;
+    // nicht ins Gras/in Blumen und nicht in Baumkronen: mind. 1,4 m über dem Boden, nahe Bäume → näher an die Figur
+    const gm = this.app.game;
+    for (let i = 0; i < 4 && gm.nearTree(_p.x, _p.z, 0.6) && _p.y < height(_p.x, _p.z) + 9; i++) _p.lerp(P, 0.3);
+    const g = height(_p.x, _p.z) + 1.4; if (_p.y < g) _p.y = g;
     // Figur nie aus dem Bild: nahe am Rand zieht der Blick zu ihr (Maß: letztes Bild)
     _e.copy(P).project(cam); const e = Math.max(Math.abs(_e.x), Math.abs(_e.y)) * (_e.z < 1 ? 1 : 2);
     if (!this.fresh && e > 0.6) _l.lerp(P, Math.min(1, (e - 0.6) * 2.2));
-    if (this.fresh) { this.camPos.copy(_p); this.camLook.copy(_l); this.fresh = false; }
-    else { this.camPos.lerp(_p, 1 - Math.exp(-h * (this.shot === 'side' ? 5 : 11))); this.camLook.lerp(_l, 1 - Math.exp(-h * 16)); }
+    // Nah-Kameras hängen fest an der Figur (Versatz geglättet, nicht die Lage – sonst holt die Figur im „zack“ die
+    // Kamera ein); die weite Seite steht in der Luft und gleitet
+    const rel = this.shot !== 'side';
+    _p.sub(rel ? P : _Z0); _l.sub(rel ? P : _Z0);
+    if (this.fresh) { this.camOff.copy(_p); this.lookOff.copy(_l); this.fresh = false; }
+    else { this.camOff.lerp(_p, 1 - Math.exp(-h * (rel ? 9 : 5))); this.lookOff.lerp(_l, 1 - Math.exp(-h * 16)); }
+    this.camPos.copy(this.camOff).add(rel ? P : _Z0); this.camLook.copy(this.lookOff).add(rel ? P : _Z0);
+    if (rel && this.camPos.distanceTo(P) < 1.8) this.camPos.sub(P).setLength(1.8).add(P); // nie in die Figur
+    { const g2 = height(this.camPos.x, this.camPos.z) + 1.2; if (this.camPos.y < g2) this.camPos.y = g2; }
     cam.position.copy(this.camPos);
     if (this.shake > 0.002) { const k = RM ? 0 : this.shake; cam.position.x += Math.sin(this.t * 71) * k; cam.position.y += Math.sin(this.t * 53 + 1) * k; }
     cam.lookAt(this.camLook);
@@ -300,7 +316,7 @@ export class FanCam {
     cam.updateProjectionMatrix();
     // Endbild-Effekte
     const u = this.app.renderer.post && this.app.renderer.post.mComp && this.app.renderer.post.mComp.uniforms;
-    if (u) {
+    if (u && QS.get('fcfx') !== '0') {
       u.uFlash.value = Math.min(0.7, this.flashK);
       if (u.uWisch) u.uWisch.value.set(0.05 * wisch, 0);
       if (u.uRgb) u.uRgb.value = 0.009 * this.rgbK;

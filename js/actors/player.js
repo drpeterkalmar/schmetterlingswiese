@@ -104,7 +104,7 @@ export class Player {
       S.R = def.kf ? kunstRadius(S) : showBounds(S, S.mid);
       // Kamera-Seite schräg von hinten (Hochformat 55°, quer 75°), gegenüber dem seitlichen Ausschlag der Bahn
       // (Kunstflug: fast genau von der Seite – die Figuren stehen senkrecht in der Flugrichtung)
-      const fx = Math.sin(this.yaw), fz = Math.cos(this.yaw), port = (this.camAspect || 1) < 1, th = def.kf ? 1.5 : port ? 0.8 : 1.3;
+      const fx = Math.sin(this.yaw), fz = Math.cos(this.yaw), port = (this.camAspect || 1) < 1, th = def.kf ? (def.camTh ?? 1.5) : port ? 0.8 : 1.3;
       S.th = th;
       const k = S.mid.x * S.side > 0.3 ? -S.side : S.side;
       S.camSide = new THREE.Vector3(k * (fz * Math.sin(th)) - fx * Math.cos(th), 0, k * (-fx * Math.sin(th)) - fz * Math.cos(th));
@@ -398,7 +398,7 @@ export class Player {
     _f.set(Math.sin(this.yaw), 0, Math.cos(this.yaw));
     // gelandet: Kamera schwenkt langsam nach vorn (Gesicht zeigen)
     // Sieger-Looping: Kamera schwenkt zur Seite (Kreis gut sichtbar), danach weiter nach vorn zum Jubel
-    const st = this.stunt, kfCam = st && st.def && st.def.kf && !st.grand && st.p < st.kEnd + 0.03; // 🎪-Kunstflug: Zuschauer-Kamera bis zum Ausleiten
+    const st = this.stunt, kfCam = st && st.def && st.def.kf && !st.grand; // 🎪-Kunstflug: Zuschauer-Kamera bis zum Ende
     const grand = st && (st.grand || kfCam) ? st : null;
     // 🎪 Einlagen mit Loopings: Kamera etwas seitlich (Kreis als Ellipse sichtbar), vor dem Ende zurück
     const show = this.stunt && this.stunt.type === 'show' ? this.stunt : null;
@@ -418,11 +418,11 @@ export class Player {
       if (kf) { // v3.0 Kunstflug: Abstand so, dass die ganze Figur (samt Rauchspur) ins Bild passt – genau von der Seite, die Kamera folgt zu 20 %
         const B = grand.Rb, vf = THREE.MathUtils.degToRad(cam.fov) / 2, hf = Math.atan(Math.tan(vf) * cam.aspect);
         const w = B.z * Math.sin(grand.th) + B.x * Math.abs(Math.cos(grand.th));
-        D = THREE.MathUtils.clamp(0.95 * Math.max(w / Math.tan(hf), B.y / Math.tan(vf)), 5.5, 14);
+        D = grand.def.camDist || THREE.MathUtils.clamp(0.95 * Math.max(w / Math.tan(hf), B.y / Math.tan(vf)), 5.5, 14);
       }
       const side = grand.camSide || grand.side;
       // Sieger-Einlagen (v2.4): Kreismitte wandert zu 50 % mit der Figur – seitliche Bahnen bleiben im schmalen Hochformat drin
-      const C = grand.camSide ? _gc.copy(grand.c).lerp(this.pos, kf ? 0.2 : 0.5) : grand.c;
+      const C = grand.camSide ? _gc.copy(grand.c).lerp(this.pos, kf ? grand.def.camF || 0.2 : 0.5) : grand.c;
       if (!this.camInit) { this.camPos.copy(C).addScaledVector(side, D); this.camLook.copy(C); this.camInit = true; }
       if (!grand.cam) {
         const dx = this.camPos.x - C.x, dz = this.camPos.z - C.z;
@@ -430,11 +430,11 @@ export class Player {
       }
       const K = grand.cam, k = 1 - Math.exp(-dt * 3.4);
       let da = Math.atan2(side.x, side.z) - K.a; da = Math.atan2(Math.sin(da), Math.cos(da));
-      K.a += da * k; K.r += (D - K.r) * k; K.y += ((kf ? -0.35 * grand.Rb.y : 0.9) - K.y) * k; // Kunstflug: leicht von unten gegen den Himmel
+      K.a += da * k; K.r += (D - K.r) * k; K.y += ((kf ? grand.def.camY ?? -0.35 * grand.Rb.y : 0.9) - K.y) * k; // Kunstflug: leicht von unten gegen den Himmel
       this.camPos.set(C.x + Math.sin(K.a) * K.r, C.y + K.y, C.z + Math.cos(K.a) * K.r);
       const g2 = height(this.camPos.x, this.camPos.z) + 0.8; if (this.camPos.y < g2) this.camPos.y = g2;
       // Kunstflug: Blick folgt der Figur stärker, sobald sie dem Bildrand nahe kommt (letztes Bild als Maß)
-      let fk = kf ? 0.2 : grand.camSide ? 0.4 : 0.2;
+      let fk = kf ? grand.def.camF || 0.2 : grand.camSide ? 0.4 : 0.2;
       if (kf) { _v.copy(this.pos).project(cam); const e = Math.max(Math.abs(_v.x), Math.abs(_v.y)); grand.edge = Math.max((grand.edge || 0) * Math.exp(-dt * 1.5), THREE.MathUtils.smoothstep(e, 0.55, 0.9)); fk += 0.6 * grand.edge; }
       _w.copy(C).lerp(this.pos, fk);
       this.camLook.lerp(_w, 1 - Math.exp(-dt * (kf ? 8 : 6)));

@@ -97,7 +97,7 @@ with sync_playwright() as pw:
     ok(r['cur'] == 'palt1' and r['name'] == 'Alt', 'aktuelles Profil + Name erhalten')
     ok(r['stars'] == 3 + 2 + 2 + 1, f"Sterne erhalten ({r['stars']})")
     ok(r['levels'] == O['levels'] and r['stats'] == O['stats'] and r['album'] == O['album'] and r['badges'] == O['badges'] and r['daily'] == {'done': {'2026-09-26': True}} and r['seen'] == O['seen'], 'Level, Statistik, Album, Abzeichen, Tagesaufgaben erhalten')
-    ok(r['settings'] == OLD['settings'], 'Einstellungen erhalten')
+    ok(all(r['settings'].get(k) == v for k, v in OLD['settings'].items()), 'Einstellungen erhalten')  # v3.0: neue Schalter (edit, blitze) kommen mit Standardwert dazu
     ok(r['oldLook'] == {'color': O['look']['color'], 'pattern': 'herzen', 'hat': 'krone'}, 'alte Aussehen-Felder unangetastet')
     ok(r['char'] == 'biene' and r['kind'] == 'biene', 'gewählte Figur (Biene) bleibt')
     ok(r['a'] == r['biene1']['a'] and r['c'] == r['biene1']['c'] and r['hat'], 'Biene trägt ihre alte Farbe (Zuckerwatte) und die Krone')

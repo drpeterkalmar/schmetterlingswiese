@@ -1,0 +1,85 @@
+{
+ "datum": "2026-10-09T15:14:17",
+ "stand": "v30_clip_ab",
+ "modus": "ab",
+ "runden": 3,
+ "varianten": [
+  {
+   "name": "clip",
+   "wurzel": "/Users/wohnzimmer/dev/butterfly-game",
+   "zusatz": ""
+  },
+  {
+   "name": "ohne_clip",
+   "wurzel": "/Users/wohnzimmer/dev/butterfly-game",
+   "zusatz": "&edit=0"
+  }
+ ],
+ "profil": {
+  "drossel": 4,
+  "dpr": 2.6,
+  "sek": 10,
+  "start": "open",
+  "vsync": false
+ },
+ "szenen": {
+  "flugshow_clip": {
+   "hoch": {
+    "clip": {
+     "p50": 3.1,
+     "p95": 4.8,
+     "fps": 307.2,
+     "calls": 90,
+     "tris": 268875,
+     "runden_p95": [
+      4.7,
+      4.8,
+      4.8
+     ],
+     "fehler": []
+    },
+    "ohne_clip": {
+     "p50": 2.3,
+     "p95": 3.3,
+     "fps": 430.7,
+     "calls": 107,
+     "tris": 304933,
+     "runden_p95": [
+      3.5,
+      3.3,
+      3.3
+     ],
+     "fehler": []
+    }
+   },
+   "quer": {
+    "clip": {
+     "p50": 3.2,
+     "p95": 4.9,
+     "fps": 298.4,
+     "calls": 108,
+     "tris": 309562,
+     "runden_p95": [
+      4.9,
+      5.1,
+      4.7
+     ],
+     "fehler": []
+    },
+    "ohne_clip": {
+     "p50": 2.5,
+     "p95": 3.5,
+     "fps": 394.8,
+     "calls": 130,
+     "tris": 347107,
+     "runden_p95": [
+      3.5,
+      3.6,
+      3.2
+     ],
+     "fehler": []
+    }
+   }
+  }
+ }
+}

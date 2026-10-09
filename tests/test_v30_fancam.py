@@ -43,7 +43,7 @@ def measure(s, shots=None, n=0):
           shot: f.shot, ph: f.ramp.ph, flash: f.flashK, rgb: f.rgbK, name: document.querySelector('#fancam .fcName b') ? document.querySelector('#fancam .fcName b').textContent : '' }; })()""")
         rec.append(st)
         if not st['on'] and len(rec) > 3: break
-        if shots and k < n and st['t'] >= 0.35 + k * 8.6 / n:
+        if shots and k < n and st['t'] >= 0.35 + k * 10.3 / (n - 1):
             s.pg.screenshot(path=f'{OUT}/{shots}_{k}.png'); k += 1
         time.sleep(0.03)
     return rec
@@ -139,8 +139,9 @@ with sync_playwright() as pw:
     s.close()
 
 H, Q, B = res['hoch'], res['quer'], res['blitze_wenig']
-def clip_ok(r, audio=True):
-    return (r['cuts'] >= 8 and r['dev_t_ms'] < FRAME * 1000 and (not audio or r['dev_audio_ms'] is None or r['dev_audio_ms'] < FRAME * 1000)
+# timing=False: Läufe mit Bildaufnahmen (jede Aufnahme hält die Seite an → Takt-Messung dort nicht aussagekräftig)
+def clip_ok(r, timing=True):
+    return (r['cuts'] >= 8 and (not timing or (r['dev_t_ms'] < FRAME * 1000 and (r['dev_audio_ms'] is None or r['dev_audio_ms'] < FRAME * 1000)))
             and 8 <= r['clip_s'] <= 12.5 and r['ts_min'] < 0.35 and r['ts_max'] > 1.5 and len(r['names']) >= 3 and r['flashes'] <= 3
             and len(r['shots']) >= 4 and r['whips'] >= 1 and r['done'] and not r['skipped'])
 res['ok'] = (res['started'] and res['finale_id'] == 'flugshow' and clip_ok(H) and H['result'] and H['clip_btn'] and H['end_rot'] < 0.02

@@ -3,6 +3,8 @@
 # am Boden, Taste C, Sieg/Finale gesperrt, URL-Override, Knopfgröße/Lage hoch + quer) + Burst-Aufnahmen je Einlage.
 # v2.5: jede Einlage zusätzlich mit Start beim Lenken (und mit gehaltener Taste), knapp über dem Boden, direkt nach dem
 # Abheben und im Riesen-Modus → Flugrichtung danach unverändert (< 0,02 rad), Seitenversatz < 0,6 m.
+# v3.0: + 13 Kunstflug-Figuren (über die Liste automatisch dabei), dazu je Simulationsschritt höchstens 0,4 m Lage- und
+# 33° Winkeländerung (kein Sprung; gerissene Rollen sind absichtlich schnell)
 import time, json, sys, os, math
 sys.path.insert(0, 'tests')
 from util import *
@@ -31,7 +33,7 @@ REC = """(() => { window.__rec = []; window.__recOn = true;
     __rec.push([__app.t, p.pos.x, p.pos.y, p.pos.z, __H(p.pos.x, p.pos.z), S && S.type === 'show' ? S.p : -1, q.x, q.y, q.z, q.w,
       p.critter.tilt.rotation.x, p.critter.tilt.rotation.z, p.yaw]); } requestAnimationFrame(f); })(); })()"""
 
-def run_stunt(s, i, sid, dur, name=None):
+def run_stunt(s, i, sid, dur, name=None, kf=False):
     name = name or sid
     place(s)
     st0 = s.ev("JSON.stringify(__app.progress.cur.stats)")
@@ -74,7 +76,15 @@ def run_stunt(s, i, sid, dur, name=None):
     for a, b in zip(during, during[1:]):
         dt = b[0] - a[0]
         if dt > 1e-4: sp.append(math.dist(a[1:4], b[1:4]) / dt)
+    # v3.0: kein Sprung zwischen zwei Bildern – Lage- und Winkeländerung je Simulationsschritt (1/60 s, aus der Simzeit
+    # zwischen zwei Bildern; gedrosselte Browser zeichnen mehrere Schritte je Bild)
+    mstep = mrot = 0.0
+    for a, b in zip(during, during[1:]):
+        n = max(1, round((b[0] - a[0]) * 60))
+        dq = abs(a[6] * b[6] + a[7] * b[7] + a[8] * b[8] + a[9] * b[9])
+        mstep = max(mstep, math.dist(a[1:4], b[1:4]) / n); mrot = max(mrot, math.degrees(2 * math.acos(min(1.0, dq))) / n)
     r = {
+        'max_step_m': round(mstep, 3), 'max_rot_deg': round(mrot, 1),
         'ok_start': bool(ok) and started == sid, 'frames': len(during),
         'min_clear': round(min(clear), 2) if clear else None, 'min_clear_main': round(min(clear_main), 2) if clear_main else None,
         'end_lateral': round(ex * rx + ez * rz, 2), 'end_forward': round(ex * fx + ez * fz, 1), 'end_up': round(ey, 2),
@@ -86,6 +96,7 @@ def run_stunt(s, i, sid, dur, name=None):
     r['ok'] = (r['ok_start'] and r['min_clear'] is not None and r['min_clear'] > 0.8 and (r['min_clear_main'] or 9) >= 2.3
                and abs(r['end_lateral']) < 0.6 and abs(r['yaw_change']) < 0.02 and max(abs(x) for x in r['end_rot']) < 0.02
                and r['wobble_after'] < 0.12 and r['in_view'] and r['stats_unchanged'] and r['time_runs'] > dur * 0.9)
+    if kf: r['ok'] = r['ok'] and r['max_step_m'] < 0.4 and r['max_rot_deg'] < 33  # v3.0 Kunstflug: kein Sprung je Schritt
     return r
 
 # v2.5: Richtung bleibt auch in Sonderfällen (Start beim Lenken, knapp über dem Boden, direkt nach dem Abheben, Riese)
@@ -162,10 +173,10 @@ with sync_playwright() as pw:
     stunts = s.ev("__game.stunts()")
     res['n_stunts'] = len(stunts)
     for i, d in enumerate(stunts):
-        r = run_stunt(s, i, d['id'], d['dur'])
+        r = run_stunt(s, i, d['id'], d['dur'], kf=d.get('kf'))
         res['stunts'][d['id']] = r
         grid(d['id'])
-        print(d['id'], 'ok' if r['ok'] else 'FEHLER', json.dumps({k: r[k] for k in ['min_clear', 'min_clear_main', 'end_lateral', 'end_forward', 'end_up', 'yaw_change', 'wobble_after', 'in_view', 'stats_unchanged', 'min_speed']}), flush=True)
+        print(d['id'], 'ok' if r['ok'] else 'FEHLER', json.dumps({k: r[k] for k in ['min_clear', 'min_clear_main', 'end_lateral', 'end_forward', 'end_up', 'yaw_change', 'wobble_after', 'in_view', 'stats_unchanged', 'min_speed', 'max_step_m', 'max_rot_deg']}), flush=True)
     # --- v2.5 Sonderfälle: Flugrichtung bleibt (Start beim Lenken / Taste gehalten, knapp über dem Boden, nach dem Abheben, Riese)
     res['cases'] = {}
     for case in ['lenkt', 'lenkt_halten', 'boden', 'abheben', 'riese']:
@@ -204,8 +215,10 @@ with sync_playwright() as pw:
     B['no_repeat'] = len(seq) == 10 and all(a != b for a, b in zip(seq, seq[1:]))
     B['distinct'] = len(set(seq))
     # --- Abklingzeit: direkt nach Ende nochmal tippen → nichts; nach Ablauf → Einlage
+    # (v3.0: mit einer kurzen Einlage – die langen Kunstflug-Figuren dauern länger als die Abklingzeit von 4 s)
     t1 = time.time()
     while s.ev("!!__app.player.stunt") and time.time() - t1 < 10: time.sleep(0.02)
+    s.ev("__app.stuntOverride = 'salto'")
     place(s); wait_ready(s)
     tap_show(s); sim_wait(s, 0.1)
     n1 = s.ev("__app.game.showLog.length")
@@ -219,6 +232,7 @@ with sync_playwright() as pw:
     B['cooldown_blocks'] = s.ev("__app.game.showLog.length") == n1 and not s.ev("!!__app.player.stunt")
     wait_ready(s); place(s); tap_show(s); sim_wait(s, 0.1)
     B['after_cooldown'] = s.ev("__app.game.showLog.length") == n1 + 1
+    s.ev("__app.stuntOverride = null")
     t1 = time.time()
     while s.ev("!!__app.player.stunt") and time.time() - t1 < 10: time.sleep(0.02)
     # --- Taste C
@@ -278,7 +292,8 @@ with sync_playwright() as pw:
 
 B = res['button']
 geo_ok = all(g['w'] >= 48 and g['h'] >= 48 and g['inView'] and not g['overlaps'] and g['display'] != 'none' for g in [B['geom_P'], B['geom_L']])
-res['ok'] = (res['n_stunts'] >= 8 and all(r['ok'] for r in res['stunts'].values()) and B['no_repeat'] and B['distinct'] >= 5
+res['n_kunstflug'] = sum(1 for d in stunts if d.get('kf'))
+res['ok'] = (res['n_stunts'] >= 8 and res['n_kunstflug'] >= 8 and all(r['ok'] for r in res['stunts'].values()) and B['no_repeat'] and B['distinct'] >= 5
              and len(res['cases']) == 5 * res['n_stunts'] and all(r['ok'] for r in res['cases'].values())
              and all(v for k, v in res['variants'].items() if not k.endswith('_name'))
              and B['ignored_while_running'] and B['cooldown_blocks'] and B['after_cooldown'] and B['key_c'] and B['from_ground']

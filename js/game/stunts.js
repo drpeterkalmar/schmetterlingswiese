@@ -88,7 +88,7 @@ export const LOOPING = { id: 'looping', hi: 0.5, name: 'Sieger-Looping', emoji: 
   shape: (p, L, s, o) => { const a = TAU * ease(p), R = 2.6; return o.set(0, R * (1 - Math.cos(a)), R * Math.sin(a)); } };
 // v3.0: + „Flugshow“ (Kür aus Immelmann → Fassrolle → Split-S, als Fan-Cam-Clip inszeniert) – selten (FLUGSHOW_P)
 export const FINALES = [LOOPING, ...STUNTS, FLUGSHOW];
-export const FLUGSHOW_P = 0.14;
+export const FLUGSHOW_P = 0.1;
 // Effekt-Akzent je Sieger-Einlage: Farben + Partikelform (0 Kugel, 1 Stern, 2 Konfetti, 3 Herz, 6 Blase) für Spur und Höhepunkt
 export const ACCENT = {
   looping: { c: C.GOLD, sh: 1 }, doppel: { c: C.RAINBOW, sh: 0 }, korkenzieher: { c: C.GOLD, sh: 1 }, salto: { c: C.STAR, sh: 1 },
