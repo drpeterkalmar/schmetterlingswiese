@@ -73,4 +73,6 @@ export class Darstellung {
     }
   }
   vergessen() { this.bereit = false; }
+  // v3.0 harter Kamera-Schnitt im letzten Schritt: Eintrag i nicht über den Schnitt hinweg glätten
+  einrasten(i) { const e = this.liste[i]; if (e && e.o) { e.p0.copy(e.p1); e.q0.copy(e.q1); e.f0 = e.f1; } }
 }

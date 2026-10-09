@@ -39,6 +39,8 @@ const MIX = {
   zauber: 0.42, swoosh: 0.4, rakete: 0.42, pop: 0.42, blubb: 0.38, wackel: 0.45, funkel: 0.4, summ: 0.14, platsch: 0.34,
   // v2.4: Sieger-Einlagen
   trommel: 0.4, knall: 0.4, zeitlupe: 0.36,
+  // v3.0: Flugshow-Clip (Beat)
+  bkick: 0.55, bclap: 0.34, bhat: 0.16, bbass: 0.3, bpluck: 0.26, briser: 0.3, bimpact: 0.5,
 };
 const DUCK = { fanfare: [0.3, 3.0], unlock: [0.45, 1.8], glitter: [0.55, 1.4], star0: [0.6, 0.8], star1: [0.6, 0.8], star2: [0.55, 1.0], combo: [0.75, 0.6], fail: [0.6, 1.0] };
 const PITCHED = new Set(['fanfare', 'unlock', 'glitter', 'star0', 'star1', 'star2', 'combo', 'go', 'fail', 'zauber', 'funkel']);
@@ -185,6 +187,34 @@ export class AudioEngine {
     s.start(c.currentTime + when);
     this.stats.played++;
     return v;
+  }
+  // v3.0 Flugshow-Clip: Baustein zu einer festen Audio-Zeit spielen (eigener Bus, kein Stimmen-Klau – der Beat wird nur
+  // ~0,2 s im Voraus geplant). Rückgabe: Startzeit (Audio-Uhr) oder null (kein Audio)
+  beat(name, at, { gain = 1, rate = 1, pan = 0 } = {}) {
+    const list = this.bufs && this.bufs.sfx && this.bufs.sfx[name];
+    if (!this.ctx || !list || !list.length || this.ctx.state !== 'running') return null;
+    const c = this.ctx;
+    if (!this.beatBus) { this.beatBus = c.createGain(); this.beatBus.connect(this.m.sfx); }
+    const s = c.createBufferSource(); s.buffer = list[0]; s.playbackRate.value = rate;
+    const g = c.createGain(); g.gain.value = (MIX[name] ?? 0.4) * gain;
+    const p = c.createStereoPanner(); p.pan.value = pan;
+    s.connect(g); g.connect(p); p.connect(this.beatBus);
+    s.onended = () => { s.disconnect(); g.disconnect(); p.disconnect(); };
+    s.start(Math.max(c.currentTime, at));
+    return at;
+  }
+  // Clip vorbei/übersprungen: geplante Beat-Klänge sofort weich stummschalten, Bus neu
+  beatStop() {
+    if (!this.beatBus) return;
+    const b = this.beatBus, t = this.ctx.currentTime;
+    b.gain.setTargetAtTime(0, t, 0.03); setTimeout(() => b.disconnect(), 400);
+    this.beatBus = null;
+  }
+  // Musik unter dem Clip leiser (0..1), weich
+  musicDuck(level, tau = 0.15) {
+    if (!this.m) return;
+    const g = this.m.duck.gain, t = this.ctx.currentTime;
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.setTargetAtTime(level, t, tau);
   }
   sfx(name, pan = 0, o = {}) {
     const buf = this.pick(name); if (!buf) return;

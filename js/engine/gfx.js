@@ -812,12 +812,19 @@ void main(){
 const COMP_F = /* glsl */`
 uniform sampler2D tCol, tBlur, tBloom, tBlur2, tDepth; uniform vec2 uNF; uniform float uBloom, uThresh, uDof, uFocus, uVig, uSat, uUseDepth;
 uniform vec3 uLift, uGain; uniform float uFlash; uniform vec3 uFlashCol;
+uniform vec2 uWisch; uniform float uRgb; // v3.0 Fan-Cam-Clip: Wisch-Unschärfe (Richtung·Länge in UV) und RGB-Versatz; 0 = aus
 varying vec2 vUv;
 ${KANTEN_SR}
 float linDepth(float d){ float z = d * 2.0 - 1.0; return 2.0 * uNF.x * uNF.y / (uNF.y + uNF.x - z * (uNF.y - uNF.x)); }
 void main(){
   // v2.9: kantenbewusstes Hochskalieren aus der Renderskala (+ Kantenglättung/Schärfen je Stufe; ohne defines = wie bisher)
   vec3 c = kantenSR(tCol, vUv);
+  if (uWisch.x != 0.0 || uWisch.y != 0.0) { // Wisch-Schwenk: 7 Abtastungen entlang der Schwenkrichtung
+    vec3 w = c;
+    for (int i = 1; i < 7; i++) w += texture2D(tCol, vUv + uWisch * (float(i) / 6.0 - 0.5)).rgb;
+    c = w / 7.0;
+  }
+  if (uRgb > 0.0) { vec2 o = (vUv - 0.5) * uRgb; c.r = texture2D(tCol, vUv + o).r; c.b = texture2D(tCol, vUv - o).b; }
   vec3 b = texture2D(tBlur, vUv).rgb;
   vec3 bb = texture2D(tBloom, vUv).rgb; // v2.9: Glüh-Quelle (ohne Maske = tBlur)
   vec3 b2 = texture2D(tBlur2, vUv).rgb;
@@ -865,6 +872,7 @@ export class Post {
         uSat: { value: 1.12 }, uLift: { value: new THREE.Color(0.35, 0.3, 0.55) }, uGain: { value: new THREE.Vector3(1, 1, 1) },
         uFlash: { value: 0 }, uFlashCol: { value: new THREE.Color(1, 0.97, 0.85) }, uUseDepth: { value: 1 },
         uSrcTexel: { value: new THREE.Vector2(1, 1) }, uSharp: { value: 0 },
+        uWisch: { value: new THREE.Vector2(0, 0) }, uRgb: { value: 0 },
       },
       vertexShader: FS_V, fragmentShader: COMP_F, depthTest: false, depthWrite: false,
     });

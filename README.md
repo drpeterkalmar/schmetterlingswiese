@@ -50,6 +50,17 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
   die Farbe des Himmels an (abends violett, im Kirschhain golden), Schatten fallen zur richtigen Seite – auch unter den
   Bäumen –, nur noch Sonne, Glühwürmchen und Funken leuchten, und der Flug fühlt sich auf jedem Handy gleich an (auch mit
   120-Hz-Bildschirm). Die Grafik regelt sich selbst und holt Qualität zurück, wenn wieder Luft ist
+- **Echter Kunstflug (v3.0):** 13 Figuren aus der Flugshow, auf den Schmetterling übertragen – Immelmann, Split-S,
+  Hammerhead, Kubanische Acht, Fassrolle, Gerissene Rolle, Männchen (Tailslide), Trudeln, Kobra, Messerflug, Avalanche,
+  Humpty Bump, Lomcovák. Jede zeigt beim Start ihren echten Namen mit Untertitel („Immelmann – halber Looping, dann
+  umdrehen!“), zeichnet eine bunte Rauchspur an den Himmel und wird von der Seite gezeigt wie von der Zuschauerwiese.
+  Figuren, die im echten Kunstflug umdrehen, haben einen Rückweg, der selbst eine Figur ist (Immelmann ↔ Split-S,
+  Hammerhead + halber Looping). Die **Kunstflug-Fibel** (im 📖 Album) erklärt jede Figur in einem Satz und fliegt sie vor
+- **Flugshow als Fan-Clip (v3.0):** Seltene Sieger-Einlage „Flugshow“ (Immelmann → Fassrolle → Split-S), inszeniert wie
+  ein Fan-Edit auf TikTok: eigener Beat, harte Schnitte zwischen fünf Kameras genau auf den Schlägen, Zeitlupe am
+  Höhepunkt jeder Figur und dann „zack“ schnell, Zoom-Stöße, Wisch-Schwenks, kurze Blitze nur auf den Drops, großer
+  Figurname, am Ende Sterne und Zeit. Antippen = überspringen, „🎬 Clip nochmal“ auf dem Ergebnis-Bildschirm,
+  Einstellungen: 🎬 Flugshow-Clip an/aus, ⚡ Blitze reduzieren; `?edit=0` = bisherige Sieger-Kamera
 - **Tierbabys (v2.4):** Bärenbaby, Capybara, Häschen und Entchen mit Schnauze, Pfoten mit Ballen, Bauchfell und
   Schwänzchen; sie laufen mit echten Beinbewegungen, blinzeln, zucken mit den Ohren, schauen dich an, wenn du nah
   bist, und freuen sich über Besuch mit Hüpfer, ^ ^-Augen und Herzchen
@@ -60,8 +71,8 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
 |---|---|
 | 📱 Tippen & Halten (Standard) | links/rechts halten = drehen · Mitte oben = steigen · Mitte unten = sinken/landen · Finger liegen lassen und hoch/runter schieben = steigen/sinken (auch beim Drehen, ohne loszulassen) |
 | 🕹️ Joystick (Einstellungen) | Daumen-Stick links |
-| 🌀 🤸 Kunststücke | automatisch: jedes geschaffte Teilziel = Freuden-Schraube; ganze Aufgabe = 🏆 **Sieger-Einlage (v2.4)**: jedes Mal eine andere von 12 (Sieger-Looping, Doppel-Looping, Rakete, Bumerang …), groß inszeniert mit Zeitlupe am Höhepunkt, Regenbogen-Schweif, Feuerwerk und Konfetti |
-| 🎪 Stunt-Knopf (v2.3) | unten rechts tippen (Computer: Taste C) = eine von 11 zufälligen Flugeinlagen mit Effekten (Doppel-Looping, Feuerwerk-Rakete, Bumerang, Blitz-Zickzack …); nur Spaß, zählt nicht als Aufgabe, kurze Pause (Ring) bis zum nächsten Mal |
+| 🌀 🤸 Kunststücke | automatisch: jedes geschaffte Teilziel = Freuden-Schraube; ganze Aufgabe = 🏆 **Sieger-Einlage (v2.4)**: jedes Mal eine andere von 26 (Sieger-Looping, Doppel-Looping, Rakete, Bumerang, seit v3.0 auch alle Kunstflug-Figuren und selten die Flugshow als Clip), groß inszeniert mit Zeitlupe am Höhepunkt, Regenbogen-/Rauchschweif, Feuerwerk und Konfetti |
+| 🎪 Stunt-Knopf (v2.3) | unten rechts tippen (Computer: Taste C) = eine von 24 zufälligen Flugeinlagen mit Effekten (Doppel-Looping, Feuerwerk-Rakete, Bumerang, seit v3.0 13 echte Kunstflug-Figuren …); nur Spaß, zählt nicht als Aufgabe, kurze Pause (Ring) bis zum nächsten Mal. In Kunststück-Missionen kommen nur die kürzeren Einlagen (Zeitziel bleibt fair) |
 | ⌨️ Tastatur | Pfeile/WASD · P/Esc = Pause |
 
 ## Technik
@@ -108,9 +119,12 @@ python3 tools/load_size.py           # Ladegröße (gzip) aller Spieldateien
 
 Debug-Hilfe im Browser: `window.__game` (Zustand, Level starten, Autopilot, Einfrieren, Audio-Messung).
 Stunt-Einlagen: `__game.stunts()` listet alle, `__game.stunt(n | 'id')` startet eine direkt; `?stunt=rakete` in der URL
-legt den Knopf auf eine feste Einlage (A/B-Vergleich).
-Sieger-Einlagen: `__game.finales()` listet alle 12, `__game.finale(n | 'id')` legt die nächste fest (`null` = Zufall);
-`?finale=bumerang` in der URL erzwingt sie für jeden Sieg.
+legt den Knopf auf eine feste Einlage (A/B-Vergleich), z. B. `?stunt=immelmann`, `?stunt=hammerhead`, `?stunt=kubanisch`.
+Sieger-Einlagen: `__game.finales()` listet alle 26, `__game.finale(n | 'id')` legt die nächste fest (`null` = Zufall);
+`?finale=bumerang` in der URL erzwingt sie für jeden Sieg, `?finale=flugshow` den Fan-Cam-Clip (`&edit=0` ohne Clip).
+Kunstflug-Bahnen: `js/game/kunstflug.js` (Bahn-Baukasten wie im Kunstflug-Katalog), Clip: `js/game/fancam.js`,
+Bericht: `V30_BERICHT.md`. Tests: `tests/node/test_kunstflug.mjs` (Bahn), `tests/test_v30_fancam.py` (Clip, Beat-Schnitte),
+`tests/v30_shots.py` (Bildfolgen je Figur).
 
 *Gebaut mit viel Liebe für die Familie. 🌸*
 

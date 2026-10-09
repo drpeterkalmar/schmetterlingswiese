@@ -12,8 +12,9 @@ PIXEL7_LAND = dict(PIXEL7, viewport={"width": 915, "height": 412})
 # SwiftShader erzwingen: WEBGL=swiftshader python3 tests/<test>.py
 # Windows (rog17): ANGLE/D3D11 statt Metal (Plattform-Weiche, Mac unverändert)
 GPU_ANGLE, GPU_NAME = ("d3d11", "Direct3D") if sys.platform == 'win32' else ("metal", "Metal")
-GPU_ARGS = ["--use-angle=" + GPU_ANGLE, "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"]
-SWIFT_ARGS = ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"]
+# v3.0: Test-Browser immer stumm (--mute-audio) – der Mac darf beim Testen nicht bimmeln
+GPU_ARGS = ["--use-angle=" + GPU_ANGLE, "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--mute-audio"]
+SWIFT_ARGS = ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--mute-audio"]
 ARGS = SWIFT_ARGS if os.environ.get('WEBGL') == 'swiftshader' else GPU_ARGS
 GL_RENDERER = """(() => { const gl = __app.renderer.r.getContext(); const e = gl.getExtension('WEBGL_debug_renderer_info');
   return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); })()"""

@@ -7,7 +7,8 @@ import { Flyers, Animals, Wasps } from '../actors/npcs.js';
 import { makeTask, GlitterStar } from './objectives.js';
 import { DEKO } from '../engine/deko.js';
 import { DIFFS, worldOf, isRace, timeGoals } from './levels.js';
-import { pickStunt, stuntByKey, stuntName, COOLDOWN, C as SC, ease, pickFinale, finaleByKey, ACCENT, FINALE_AMP, FINALE_DUR } from './stunts.js';
+import { FanCam, editAn } from './fancam.js';
+import { pickStunt, stuntByKey, stuntName, stuntTitle, COOLDOWN, C as SC, ease, pickFinale, finaleByKey, ACCENT, SMOKE, FINALE_AMP, FINALE_DUR } from './stunts.js';
 
 const _v = new THREE.Vector3(), _w = new THREE.Vector3();
 const RAINBOW = [0xff5a6e, 0xff9a3c, 0xffd84a, 0x7ee06a, 0x4fc8ff, 0x8a7bff, 0xd67cff];
@@ -91,6 +92,7 @@ export class Game {
     this.rainMat = toonMat({ vc: true, color: 0x9aa4c4, rim: 0.8, soft: 0.4 });
     this.rains = [];
     this.showLast = null; this.showAt = -99; this.showLog = []; this.finaleLog = [];
+    this.fancam = new FanCam(app); // v3.0 Fan-Cam-Clip der Sieger-Flugshow
   }
 
   get diff() { return this.diffCfg; }
@@ -240,6 +242,8 @@ export class Game {
     this.bursts.clear();
     this.arrow.visible = false; this.arrowA = 0; this.guideOff();
     this.state = 'idle';
+    if (this.fancam.on) this.fancam.stop(true);
+    this.fancam.last = null;
     this.player.frozen = false; this.player.cheer = false; this.player.hover = false; this.finale = null; this.app.timeScale = 1; this.rollQ = null;
     document.body.classList.remove('won');
   }
@@ -319,9 +323,12 @@ export class Game {
     const def = finaleByKey(app.finaleOverride) || pickFinale(prof && prof.lastFinale);
     if (prof) { prof.lastFinale = def.id; app.progress.save(); }
     const ok = pl.tryShow(def, Math.random() < 0.5 ? -1 : 1, { grand: true, amp: FINALE_AMP, durK: FINALE_DUR });
-    this.finale = { t: 0, def, id: def.id, loop: ok, apex: false, end: ok ? -1 : 0, hue: 0, slowT: -1, acc: 0 };
+    // v3.0: die Flugshow wird als Fan-Cam-Clip inszeniert (?edit=0 bzw. Einstellung aus → bisherige Sieger-Kamera)
+    const edit = ok && !!def.show && editAn(app);
+    this.finale = { t: 0, def, id: def.id, loop: ok, apex: false, end: ok ? -1 : 0, hue: 0, slowT: -1, acc: 0, edit };
     this.finaleLog.push(def.id); if (this.finaleLog.length > 40) this.finaleLog.shift();
     if (ok) { const S = pl.stunt; S.ev = {}; S.acc = 0; }
+    if (edit) { this.fancam.start(pl.stunt, this.finale); app.haptics.buzz('stunt'); return; }
     app.audio.sfx('combo'); app.audio.sfx('zauber', 0, { gain: 0.9, rate: 0.9 }); app.audio.sfx('trommel', 0, { gain: 0.9 });
     if (app.funOn('hupe')) setTimeout(() => app.audio.sfx('hupe', 0, { gain: 1 }), 700);
     app.haptics.buzz('stunt');
@@ -329,12 +336,13 @@ export class Game {
     this.em(1, pl.pos, FLASH, 5, 6, 0, 0, 0.45, 0, 0);
     this.em(24, pl.pos, SC.STAR, 1, 0.4, 5, 1, 0.9, -0.8);
     const wid = this.world.def.id;
-    app.ui.toast(`🏆 ${(def.emojis && def.emojis[wid]) || def.emoji} ${stuntName(def, wid)}!`);
+    app.ui.toast(`🏆 ${(def.emojis && def.emojis[wid]) || def.emoji} ${stuntTitle(def, wid)}`, def.sub ? 3200 : 2400);
     if (!ok) this.finaleEnd();
   }
   finaleUpdate(dt) {
     const F = this.finale; if (!F) return;
     F.t += dt;
+    if (F.edit) this.fancam.step(this.app.realDt || dt);
     const pl = this.player, S = pl.stunt, app = this.app;
     if (S && S.grand) {
       const A = ACCENT[F.id] || ACCENT.looping, p = S.p;
@@ -343,12 +351,12 @@ export class Game {
       F.hue = (F.hue + dt * 1.6) % 1;
       for (let i = 0; i < n; i++) {
         _v.copy(pl.pos).add(_w.set((Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4));
-        this.em(1, _v, RB1[(((F.hue * RAINBOW.length) | 0) + i) % RAINBOW.length], 0, 0.6, 0.2, 0, 2.4, 0.05, 1); // 0,75: nah an der Kamera zu wuchtig
+        if (!S.def.kf) this.em(1, _v, RB1[(((F.hue * RAINBOW.length) | 0) + i) % RAINBOW.length], 0, 0.6, 0.2, 0, 2.4, 0.05, 1); // 0,75: nah an der Kamera zu wuchtig (v3.0 Kunstflug: Rauchspur statt Regenbogen)
         if (Math.random() < 0.5) this.em(1, pl.pos, SC.GOLD, 1, 0.42, 1.2, 0, 1.1, -0.5);
         if (Math.random() < 0.35) this.em(1, pl.pos, A.c, A.sh, A.sh === 2 ? 0.26 : 0.4, 1.4, 0.3, 1.2, A.sh === 6 ? 0.6 : -0.6, 1.2, 0.4, null, 8);
       }
-      // Zeitlupe: kurz vor dem Höhepunkt ≈0,4 s (Echtzeit), weich rein und raus
-      if (F.slowT < 0 && p >= S.def.hi - 0.05) { F.slowT = 0; app.audio.sfx('zeitlupe', 0, { gain: 0.9 }); }
+      // Zeitlupe: kurz vor dem Höhepunkt ≈0,4 s (Echtzeit), weich rein und raus (Fan-Cam-Clip: eigene Speed-Ramps)
+      if (F.slowT < 0 && !F.edit && p >= S.def.hi - 0.05) { F.slowT = 0; app.audio.sfx('zeitlupe', 0, { gain: 0.9 }); }
       if (!F.apex && p >= S.def.hi) {
         F.apex = true;
         _x.copy(pl.pos);
@@ -385,6 +393,21 @@ export class Game {
     pl.kick(6, 0.3);
     this.bursts.emit({ n: 1, pos: pl.pos, colors: [0xfff3b0], shape: 5, size: 8, speed: 0, up: 0, life: 0.6, grav: 0, drag: 0 });
     for (let i = 0; i < 4; i++) this.bursts.emit({ n: 40, pos: _v.copy(pl.pos).add(_w.set(0, 2.5, 0)), colors: [0xff6f9a, 0xffd84a, 0x6fd0ff, 0x9cf07a, 0xc08cff, 0xffffff], shape: 2, size: 0.26, speed: 9, up: 4, life: 2.6, grav: -3.5, drag: 1.2, spin: 10 });
+  }
+  // v3.0 „Clip nochmal ansehen“ (Ergebnis-Bildschirm): dieselbe Flugshow vom selben Startpunkt noch einmal als Clip –
+  // ohne neue Wertung; danach wieder das Ergebnis
+  replayClip() {
+    const L = this.fancam.last, pl = this.player;
+    if (!L || !L.start || this.state !== 'won' || this.fancam.on) return false;
+    this.app.ui.show(null); this.resultShown = false; this.wonT = 0;
+    pl.cheer = false; pl.hover = false; pl.stunt = null; pl.landed = false;
+    pl.pos.copy(L.start); pl.yaw = L.yaw; pl.pitch = 0; pl.yawRate = 0; pl.camInit = false; pl.showReset = true;
+    const ok = pl.tryShow(L.def, L.side, { grand: true, amp: FINALE_AMP, durK: FINALE_DUR });
+    this.finale = { t: 0, def: L.def, id: L.def.id, loop: ok, apex: false, end: ok ? -1 : 0, hue: 0, slowT: -1, acc: 0, edit: ok, replay: true };
+    if (!ok) { this.finaleEnd(); return false; }
+    const S = pl.stunt; S.ev = {}; S.acc = 0;
+    this.fancam.start(S, this.finale, { replay: true });
+    return true;
   }
   firework(pos, col) {
     this.bursts.emit({ n: 1, pos, colors: [col], shape: 5, size: 4.5, speed: 0, up: 0, life: 0.5, grav: 0, drag: 0 });
@@ -438,7 +461,8 @@ export class Game {
     const pl = this.player;
     if (this.state !== 'play' || this.finale || pl.frozen || pl.stunt) return false; // nie in Sieg/Finale/laufende Kunststücke
     if (!force && this.time - this.showAt < COOLDOWN) return false;
-    const def = stuntByKey(key ?? this.app.stuntOverride) || pickStunt(this.showLast);
+    const kurz = this.tasks.some(t => t.needS && !t.done) ? 3.6 : Infinity; // Kunststück-Mission: Zeitziel fair halten
+    const def = stuntByKey(key ?? this.app.stuntOverride) || pickStunt(this.showLast, Math.random, kurz);
     if (!pl.tryShow(def, Math.random() < 0.5 ? -1 : 1)) return false;
     this.showLast = def.id; this.showAt = this.time; this.showLog.push(def.id);
     if (this.showLog.length > 60) this.showLog.shift();
@@ -449,7 +473,7 @@ export class Game {
     this.app.haptics.buzz('stunt');
     pl.kick(6, 0.05);
     const wid = this.world.def.id;
-    this.app.ui.toast(`${(def.emojis && def.emojis[wid]) || def.emoji} ${stuntName(def, wid)}!`);
+    this.app.ui.toast(`${(def.emojis && def.emojis[wid]) || def.emoji} ${stuntTitle(def, wid)}`, def.sub ? 3200 : 2400);
     return true;
   }
   em(n, pos, colors, shape, size, speed, up, life, grav, drag = 1.2, spread = 0.3, vel = null, spin = 3) {
@@ -473,6 +497,7 @@ export class Game {
     const fx = Math.sin(S.yaw), fz = Math.cos(S.yaw), rx = Math.cos(S.yaw), rz = -Math.sin(S.yaw);
     const once = this.once; // (E, p, Schlüssel, ab) – einmalige Ereignisse je Einlage
     S.acc += dt * 60; const n = Math.min(4, S.acc | 0); S.acc -= n; // ~60 Emissionen/s, bildratenunabhängig
+    if (S.def.kf) { this.kunstFx(S, p, E, n); return; }
     switch (S.id) {
       case 'doppel':
         if (once(E, p, 'l1', 0.02)) au.sfx('loop', 0, { gain: 0.9, rate: 1.05 });
@@ -576,6 +601,43 @@ export class Game {
       }
     }
   }
+  // v3.0 Kunstflug: bunte Rauchspur wie bei Flugstaffeln (zeichnet die Figur am Himmel nach, ~2,8 s sichtbar) + Ereignisse
+  // der Figur (ziehen, rollen, hängen, stürzen, reißen …) mit Klang, Glitzer und Kamera-Kick
+  kunstFx(S, p, E, n) {
+    const pl = this.player, P = pl.pos, au = this.app.audio, def = S.def;
+    if (!S.smk) { // Rauch hält so lange, wie die Figur dauert (die ganze Figur steht kurz am Himmel)
+      S.smk = P.clone(); S.smkI = 0; S.evP = def.kf.evs.map(([f, e]) => [def.coreP(S, f), e]);
+      S.smkL = Math.min(5, Math.max(2.8, (def.coreP(S, 1) - def.coreP(S, 0)) * S.dur + 0.6));
+    }
+    const d = S.smk.distanceTo(P), k = Math.min(5, Math.ceil(d / 0.16));
+    const cols = SMOKE[def.smoke] || SMOKE.RAUCH_RB, rb = cols === SC.RAINBOW;
+    if (n || d > 0.16) for (let i = 1; i <= k; i++) {
+      _x.lerpVectors(S.smk, P, i / k); _x.y -= 0.12;
+      const c = rb ? RB1[(S.smkI >> 2) % RB1.length] : [cols[S.smkI % cols.length]];
+      this.em(1, _x, c, 7, 0.62, 0.05, 0.12, S.smkL, 0.03, 2.5, 0.08, null, 0.6);
+      if ((S.smkI & 3) === 0) this.em(1, _x, SC.STAR, 1, 0.26, 0.25, 0, 1.1, -0.2, 1.5, 0.3);
+      S.smkI++;
+    }
+    S.smk.copy(P);
+    const A = ACCENT[S.id] || ACCENT.looping;
+    S.evP.forEach(([pe, e], i) => {
+      if (!this.once(E, p, 'k' + i, pe)) return;
+      switch (e) {
+        case 'zieh': au.sfx('swoosh', 0, { gain: 0.6, rate: 0.85 }); break;
+        case 'sturz': au.sfx('swoosh', 0, { gain: 0.8, rate: 1.25 }); pl.kick(7, 0.06); break;
+        case 'rolle': au.sfx('roll', 0, { gain: 0.65, rate: 1.05 }); this.em(10, P, A.c, A.sh, 0.32, 2.5, 0.4, 0.8, -0.4); break;
+        case 'haenge': au.sfx('funkel', 0, { gain: 0.8, rate: 0.9 }); this.ringOut(P, 14, A.c, A.sh, 0.4, 3, 0.4, 1.0); pl.critter && pl.critter.bump(4); break;
+        case 'rutsch': au.sfx('wackel', 0, { gain: 0.6, rate: 0.85 }); break;
+        case 'kipp': au.sfx('swoosh', 0, { gain: 0.7, rate: 0.75 }); pl.critter && pl.critter.bump(3); break;
+        case 'snap': au.sfx('pop', 0, { gain: 0.9 }); au.sfx('swoosh', 0, { gain: 0.8, rate: 1.35 }); this.em(16, P, SC.BOLT, 1, 0.4, 6, 0.3, 0.5, 0); pl.kick(9, 0.08); break;
+        case 'abriss': au.sfx('wackel', 0, { gain: 0.55, rate: 1.1 }); pl.critter && pl.critter.bump(5); break;
+        case 'kreisel': au.sfx('roll', 0, { gain: 0.7, rate: 0.85 }); break;
+        case 'kobra': au.sfx('zauber', 0, { gain: 0.6, rate: 0.8 }); this.em(12, P, A.c, A.sh, 0.34, 3, 0.8, 0.9, -0.4); pl.kick(6, 0.04); break;
+        case 'funkel': au.sfx('funkel', 0, { gain: 0.75 }); this.em(12, P, SC.STAR, 1, 0.34, 3, 0.6, 0.8, -0.5); break;
+        case 'taumel': au.sfx('wackel', 0, { gain: 0.8 }); this.em(16, P, SC.CONF, 2, 0.24, 4, 1.5, 1.4, -2.5, 1.2, 0.3, null, 10); break;
+      }
+    });
+  }
   once(E, p, k, at) { if (p >= at && !E[k]) { E[k] = true; return true; } return false; }
   onShowDone() {
     const pl = this.player;
@@ -617,6 +679,7 @@ export class Game {
     pl.update(dt, t, playing ? input : null);
     this.showFx(dt);
     pl.updateCamera(this.app.camera, dt, t);
+    if (this.fancam.on) this.fancam.camera(this.app.camera, this.app.realDt || dt); // v3.0 Fan-Cam-Clip übernimmt die Kamera
     this.animals.update(dt, t, pl.pos);
     this.flyers.update(dt, t);
     for (const task of this.tasks) task.update(dt, t);
@@ -641,8 +704,10 @@ export class Game {
     if (this.state === 'won') {
       this.wonT += dt;
       this.finaleUpdate(dt);
-      const F = this.finale, ready = F && F.end > 1.6;
-      if ((ready || this.wonT > 6) && !this.resultShown) { this.resultShown = true; this.app.ui.show('result', this.app.lastResult); }
+      // (v3.0: Clip läuft → Ergebnis erst danach; lange Kunstflug-Figuren: Notbremse nach Figurdauer statt fest 6 s)
+      const F = this.finale, clip = F && F.edit, ready = F && (clip ? F.end > 0.3 && !this.fancam.on : F.end > 1.6);
+      const notT = clip ? 40 : Math.max(6, F && F.def ? F.def.dur * FINALE_DUR * 1.8 + 2 : 6);
+      if ((ready || this.wonT > notT) && !this.resultShown) { if (this.fancam.on) this.fancam.stop(true); this.resultShown = true; this.app.ui.show('result', this.app.lastResult); }
       if (F && F.end > 0 && Math.random() < dt * 14) this.bursts.emit({ n: 6, pos: _v.copy(pl.pos).add(_w.set((Math.random() - 0.5) * 6, 3 + Math.random() * 2, (Math.random() - 0.5) * 6)), colors: [0xff6f9a, 0xffd84a, 0x6fd0ff, 0x9cf07a, 0xc08cff], shape: 2, size: 0.22, speed: 2, up: 0, life: 2.2, grav: -2.2, drag: 1.5, spin: 8 });
     }
     this.app.ui.hudTime(this.time, this.limit, this.par);

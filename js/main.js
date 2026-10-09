@@ -20,7 +20,7 @@ import { Takt, Darstellung } from './engine/takt.js';
 // v2.9 fester Simulationstakt im Spiel (60 Hz + Interpolation der Darstellung); ?takt=0 = variables dt wie bis v2.8
 const TAKT_AN = new URLSearchParams(location.search).get('takt') !== '0';
 
-export const VERSION = '2.9.0';
+export const VERSION = '3.0.0';
 
 class App {
   constructor() {
@@ -174,7 +174,28 @@ class App {
     this.player.cheer = false; this.player.frozen = false;
     if (this.game.state !== 'idle') { this.game.clear(); const p = this.progress.cur; this.menuWorld(p && p.lastWorld || 'wiese'); }
   }
+  // v3.0 Kunstflug-Fibel: Figur im Menü-Schaukasten vorfliegen (Zuschauer-Kamera wie im Spiel), danach zurück zur Fibel
+  demoStunt(id) {
+    const def = STUNTS.find(d => d.id === id), pl = this.player;
+    if (!def || this.mode !== 'showcase' || this.demo) return false;
+    this.ui.show(null);
+    pl.reset(this.showPos.clone().add(new THREE.Vector3(0, 2.5, 0)), Math.PI * 0.85);
+    if (!pl.tryShow(def, 1)) { this.ui.show('fibel', { sel: id }); return false; }
+    pl.stunt.ev = {}; pl.stunt.acc = 0;
+    this.demo = { id };
+    this.audio.sfx('zauber', 0, { gain: 0.6 });
+    this.ui.toastMenu(`${def.emoji} ${def.name} – ${def.sub}`);
+    return true;
+  }
+  demoUpdate(dt, t) {
+    const pl = this.player;
+    pl.update(dt, t, null);
+    this.game.showFx(dt);
+    pl.updateCamera(this.camera, dt, t);
+    if (!pl.stunt) { const id = this.demo.id; this.demo = null; pl.reset(this.showPos, Math.PI * 0.85); this.ui.show('fibel', { sel: id }); }
+  }
   showcaseUpdate(dt, t) {
+    if (this.demo) { this.demoUpdate(dt, t); return; }
     const pl = this.player, c = pl.critter, cam = this.camera;
     this.showT += dt;
     const sp = this.showPos;
@@ -368,6 +389,7 @@ class App {
           this.showBtnUpdate();
         } else this.showcaseUpdate(dt, this.t);
         this.trailUpdate(gdt);
+        this.camSchnitt = false;
         this.bursts.update(gdt);
         this.focus.copy(this.player.pos);
         this.nachSim(dt);
@@ -421,6 +443,7 @@ class App {
     // ruckeln sie auf 120-Hz-Schirmen in 60-Hz-Sprüngen (Heavy-Job; Bewegung ist reine Optik, Puffer 1× je Bild hoch)
     this.bursts.update(dt * this.timeScale);
     if (n > 0) D.merkeNachher();
+    if (this.camSchnitt) { if (n > 0) D.einrasten(0); this.camSchnitt = false; } // v3.0 Fan-Cam: harter Schnitt
     D.anwenden(T.alpha);
     G.uTime.value = this.t - h * (1 - T.alpha); // Shader-Zeit passend zur interpolierten Darstellung
     if (this.mode === 'game') this.showBtnUpdate();
@@ -468,11 +491,13 @@ window.__game = {
   start: (id, diff) => { if (diff) app.setDiff(diff); app.startLevel(id); },
   step: () => app.game.debugStep(),
   stunt: (n = null, force = true) => app.game.showStunt(n, force), // 🎪 Einlage n (Index oder id) direkt; ohne n = Zufall
-  stunts: () => STUNTS.map(d => ({ id: d.id, name: d.name, dur: d.dur })),
+  stunts: () => STUNTS.map(d => ({ id: d.id, name: d.name, dur: d.dur, kf: !!d.kf, sub: d.sub || null, hi: d.hi })),
+  stuntDef: (id) => STUNTS.find(d => d.id === id) || FINALES.find(d => d.id === id) || null,
   // 🏆 Sieger-Einlage für den nächsten Levelsieg festlegen (Index in finales() oder id; null = wieder Zufall)
   finale: (k = null) => { app.finaleOverride = k; return k === null ? null : (FINALES[+k] || FINALES.find(d => d.id === k) || {}).id || null; },
   finales: () => FINALES.map(d => ({ id: d.id, name: d.name, dur: d.dur, hi: d.hi })),
   timeScale: () => app.timeScale,
+  fancam: () => app.game.fancam, // v3.0 Fan-Cam-Clip (Schnitte, Protokoll)
   autopilot: (on = true) => { app.autopilot = on; if (!on) app.input.injected = null; },
   levels: () => LEVELS.map(l => l.id),
   unlocked: () => LEVELS.filter(l => app.progress.unlocked(l.id)).map(l => l.id),

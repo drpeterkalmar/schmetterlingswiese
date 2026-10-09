@@ -5,6 +5,7 @@
 // shape(0) = shape(1) = 0 mit flachen Enden → die Figur startet und endet auf der alten Fluglinie, ohne Ruck.
 // Zusatz-Drehungen (twirl um y, flip um x, roll um z) enden auf ganzen Umdrehungen → am Ende hart genullt.
 import * as THREE from 'three';
+import { KUNSTFLUG, FLUGSHOW } from './kunstflug.js';
 
 const TAU = Math.PI * 2;
 export const ease = (p) => 0.5 - 0.5 * Math.cos(Math.PI * p);
@@ -29,6 +30,7 @@ export const C = {
   BUBBLE: [0xbfe8ff, 0xe8f6ff, 0xd8c8ff],
   PETAL: [0xffb7cf, 0xffd7e4, 0xffffff, 0xff9fc0],
   FIREFLY: [0xd8ff6a, 0xfff08a, 0xeaff9a],
+  SKY: [0x4fc8ff, 0xffffff, 0xbfe8ff], MINT: [0x7ee06a, 0xd8ffcf, 0xffffff], LILAC: [0xb98cff, 0xffd0f4, 0xffffff],
 };
 
 // ---------------------------------------------------------------- Einlagen
@@ -70,9 +72,13 @@ export const STUNTS = [
     names: { kirsch: 'Blütenwirbel', abend: 'Glühwürmchen-Wirbel' }, emojis: { kirsch: '🌸', abend: '✨' },
     shape: (p, L, s, o) => o.set(0, 1.6 * bump(p), -0.35 * L * slow(p)),
     spin: (p, s, o) => o.set(0, s * 2 * TAU * ease(p), 0) },
+  // v3.0: echte Kunstflug-Figuren (Immelmann, Split-S, Hammerhead, Kubanische Acht …) – Bahn aus kunstflug.js
+  ...KUNSTFLUG,
 ];
 STUNTS.forEach((d, i) => { d.n = i; });
 export const stuntName = (d, wid) => (d.names && d.names[wid]) || d.name;
+// Einblende-Text: Kunstflug-Figuren mit echtem Namen + kindgerechtem Untertitel („Immelmann – halber Looping, dann umdrehen!“)
+export const stuntTitle = (d, wid) => d.sub ? `${stuntName(d, wid)} – ${d.sub}` : `${stuntName(d, wid)}!`;
 
 // ---------------------------------------------------------------- Sieger-Einlagen (v2.4)
 // Levelsieg → zufällige Einlage aus dem Katalog, eine Stufe größer inszeniert (Bahn ×AMP, Dauer ×DUR, Seitenkamera,
@@ -80,12 +86,24 @@ export const stuntName = (d, wid) => (d.names && d.names[wid]) || d.name;
 export const FINALE_AMP = 1.2, FINALE_DUR = 1.25;
 export const LOOPING = { id: 'looping', hi: 0.5, name: 'Sieger-Looping', emoji: '🏆', dur: 2.2, spd: 1.0, cam: 0.6,
   shape: (p, L, s, o) => { const a = TAU * ease(p), R = 2.6; return o.set(0, R * (1 - Math.cos(a)), R * Math.sin(a)); } };
-export const FINALES = [LOOPING, ...STUNTS];
+// v3.0: + „Flugshow“ (Kür aus Immelmann → Fassrolle → Split-S, als Fan-Cam-Clip inszeniert) – selten (FLUGSHOW_P)
+export const FINALES = [LOOPING, ...STUNTS, FLUGSHOW];
+export const FLUGSHOW_P = 0.14;
 // Effekt-Akzent je Sieger-Einlage: Farben + Partikelform (0 Kugel, 1 Stern, 2 Konfetti, 3 Herz, 6 Blase) für Spur und Höhepunkt
 export const ACCENT = {
   looping: { c: C.GOLD, sh: 1 }, doppel: { c: C.RAINBOW, sh: 0 }, korkenzieher: { c: C.GOLD, sh: 1 }, salto: { c: C.STAR, sh: 1 },
   bumerang: { c: C.HEART, sh: 3 }, zickzack: { c: C.BOLT, sh: 1 }, rakete: { c: C.FIRE, sh: 0 }, sternschnuppe: { c: C.STAR, sh: 1 },
   tauchen: { c: C.BUBBLE, sh: 6 }, wackeltanz: { c: C.CONF, sh: 2 }, superschraube: { c: C.STAR, sh: 1 }, wirbel: { c: C.PETAL, sh: 2 },
+  // v3.0 Kunstflug
+  immelmann: { c: C.RAINBOW, sh: 1 }, splits: { c: C.SKY, sh: 1 }, hammerhead: { c: C.FIRE, sh: 1 }, kubanisch: { c: C.RAINBOW, sh: 0 },
+  fassrolle: { c: C.GOLD, sh: 1 }, gerissen: { c: C.BOLT, sh: 1 }, maennchen: { c: C.MINT, sh: 2 }, trudeln: { c: C.LILAC, sh: 1 },
+  kobra: { c: C.MINT, sh: 1 }, messerflug: { c: C.SKY, sh: 1 }, avalanche: { c: C.BOLT, sh: 1 }, humpty: { c: C.CONF, sh: 2 }, lomcovak: { c: C.CONF, sh: 2 },
+  flugshow: { c: C.RAINBOW, sh: 1 },
+};
+// v3.0 Rauchspur der Kunstflug-Figuren (zwei Farben wie bei Flugstaffeln, Regenbogen für die großen Figuren)
+export const SMOKE = {
+  RAUCH_RB: C.RAINBOW, RAUCH_BLAU: [0x4fc8ff, 0xffffff, 0x8adfff], RAUCH_ROT: [0xff5a6e, 0xffffff, 0xff9a9a], RAUCH_GELB: [0xffd84a, 0xffffff, 0xffe98a],
+  RAUCH_GRUEN: [0x7ee06a, 0xffffff, 0xb6f0a0], RAUCH_LILA: [0xb98cff, 0xffffff, 0xff9fe0],
 };
 // ?finale=<n|id> bzw. __game.finale(n|id): Index in FINALES oder id
 export function finaleByKey(k) {
@@ -96,7 +114,8 @@ export function finaleByKey(k) {
   return FINALES.find(d => d.id === k) || null;
 }
 export function pickFinale(lastId, rnd = Math.random) {
-  const pool = FINALES.filter(d => d.id !== lastId);
+  if (lastId !== FLUGSHOW.id && rnd() < FLUGSHOW_P) return FLUGSHOW;
+  const pool = FINALES.filter(d => d.id !== lastId && d !== FLUGSHOW);
   return pool[(rnd() * pool.length) | 0];
 }
 
@@ -109,8 +128,9 @@ export function stuntByKey(k) {
   return STUNTS.find(d => d.id === k) || null;
 }
 // Zufall ohne direkte Wiederholung
-export function pickStunt(lastId, rnd = Math.random) {
-  const pool = STUNTS.filter(d => d.id !== lastId);
+// v3.0 maxDur: in Kunststück-Missionen nur kürzere Einlagen (die langen Kunstflug-Figuren würden das Zeitziel verschieben)
+export function pickStunt(lastId, rnd = Math.random, maxDur = Infinity) {
+  const pool = STUNTS.filter(d => d.id !== lastId && d.dur <= maxDur);
   return pool[(rnd() * pool.length) | 0];
 }
 
@@ -118,9 +138,10 @@ export function pickStunt(lastId, rnd = Math.random) {
 const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _e = new THREE.Vector3(), _f = new THREE.Vector3(0, 0, 1);
 const _q = new THREE.Quaternion(), _qe = new THREE.Quaternion(), _eu = new THREE.Euler(0, 0, 0, 'YXZ'), _id = new THREE.Quaternion();
 // Lokaler Versatz gegenüber dem Start (inkl. Fluglinie L·p), ohne Sicherheitshöhe
+// (v3.0: Kunstflug-Figuren bekommen S und skalieren selbst – die Figur wird größer, die Fluglinie nicht)
 export function showOffset(S, p, out) {
-  S.def.shape(p, S.L, S.side, out);
-  if (S.amp && S.amp !== 1) out.multiplyScalar(S.amp);
+  S.def.shape(p, S.L, S.side, out, S);
+  if (S.amp && S.amp !== 1 && !S.def.kf) out.multiplyScalar(S.amp);
   out.z += S.L * p;
   return out;
 }
@@ -136,9 +157,9 @@ export function showOrient(S, p, out) {
     S.qt.premultiply(_q).normalize();
   }
   out.copy(S.qt);
-  const w = sstep(0.86, 1, p); if (w > 0) out.slerp(_id, w); // Rest-Verdrillung sanft abbauen
+  const w = S.def.kf ? 0 : sstep(0.86, 1, p); if (w > 0) out.slerp(_id, w); // Rest-Verdrillung sanft abbauen (Kunstflug: in spin)
   if (S.def.spin) {
-    S.def.spin(p, S.side, _e);
+    S.def.spin(p, S.side, _e, S);
     _eu.set(_e.x, _e.y, _e.z, 'YXZ');
     out.multiply(_qe.setFromEuler(_eu));
   }
@@ -148,17 +169,22 @@ export function showOrient(S, p, out) {
 export function showLift(S, x0, y0, z0, heightFn) {
   const fx = Math.sin(S.yaw), fz = Math.cos(S.yaw), rx = Math.cos(S.yaw), rz = -Math.sin(S.yaw);
   let need = 0;
-  for (let i = 3; i <= 32; i++) {
-    const p = i / 32;
+  // v3.0: Kunstflug-Figuren heben nur vorher an (auf der Ein-Geraden + kurz danach), damit die Figur selbst unverfälscht bleibt
+  if (S.def.kf) S.liftEnd = Math.min(0.3, S.def.coreP(S, 0) + 0.08);
+  const le = liftEnd(S);
+  const N = S.def.kf ? 128 : 32; // v3.0: Kunstflug-Figuren haben enge Tiefpunkte (Abfangbogen) → feiner abtasten
+  for (let i = Math.round(3 * N / 32); i <= N; i++) {
+    const p = i / N;
     showOffset(S, p, _a);
     const x = x0 + rx * _a.x + fx * _a.z, z = z0 + rz * _a.x + fz * _a.z;
     // Start (Hub noch nicht voll): nur Bodenkontakt vermeiden; danach volle Sicherheitshöhe
-    const want = p < 0.3 ? 1.2 + (SAFE_H - 1.2) * sstep(0, 0.3, p) : SAFE_H;
-    need = Math.max(need, (heightFn(x, z) + want - (y0 + _a.y)) / Math.max(0.25, sstep(0, 0.3, p)));
+    const want = p < le ? 1.2 + (SAFE_H - 1.2) * sstep(0, le, p) : SAFE_H;
+    need = Math.max(need, (heightFn(x, z) + want - (y0 + _a.y)) / Math.max(0.25, sstep(0, le, p)));
   }
   return Math.min(8, Math.max(0, need));
 }
-export const liftAt = (p) => sstep(0, 0.3, p);
+const liftEnd = (S) => (S && S.liftEnd) || 0.3;
+export const liftAt = (p, S) => sstep(0, liftEnd(S), p);
 // Ausdehnung der Figur-Bahn ohne Fluglinie (für die Sieger-Kamera): Mitte (lokal) + Radius
 export function showBounds(S, outC) {
   let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, z0 = 1e9, z1 = -1e9;

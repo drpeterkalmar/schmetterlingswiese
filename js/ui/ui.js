@@ -6,6 +6,7 @@ import { CHARACTERS, COLORS, HATS, EXTRAS, PATTERNS, SKINS, TRAILS, SIZES, WINGF
 import { wingMask, glassWing, skinWing, tintMask, wingIcon } from '../engine/textures.js';
 import { BUILD } from '../build.js';
 import { DEKO } from '../engine/deko.js';
+import { KUNSTFLUG } from '../game/kunstflug.js';
 
 const WGRAD = { wiese: 'linear-gradient(160deg,#8ee39a,#5db4ea)', sonne: 'linear-gradient(160deg,#ffd45a,#ff9460)', teich: 'linear-gradient(160deg,#5fd6c8,#5a92e8)', kirsch: 'linear-gradient(160deg,#ffa6cc,#b48cf0)', abend: 'linear-gradient(160deg,#3e4396,#9a62b4)' };
 const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -110,12 +111,17 @@ export class UI {
         break;
       }
       case 'album': this.show('album'); break;
+      case 'fibel': this.show('fibel', { sel: v || null }); break; // v3.0 Kunstflug-Fibel
+      case 'demo': app.demoStunt(v); break;
       case 'fact': { const e = ALBUM.find(x => x.id === v); const f = this.root.querySelector('.fact'); if (f && e) f.innerHTML = P.cur.album[v] ? `${e.emoji} <b>${e.name}</b><br>${e.fact}` : '❓ Noch nicht entdeckt – halte die Augen offen!'; break; }
       case 'badges': this.show('badges'); break;
       case 'settings': this.prev = this.current; this.show('settings'); break;
       case 'setback': this.show(this.prev === 'pause' ? 'pause' : 'map'); break;
       case 'tog': { const s = app.settings; app.setSetting(v, !s[v] ? (v === 'haptics' ? true : 0.8) : (v === 'haptics' ? false : 0)); if (v === 'haptics' && app.settings.haptics) app.haptics.buzz('star'); this.show('settings'); break; }
       case 'ctl': app.setSetting('control', v); this.show('settings'); break;
+      case 'tedit': app.setSetting('edit', app.settings.edit === false); this.show('settings'); break; // v3.0 Flugshow-Clip an/aus
+      case 'tblitz': app.setSetting('blitze', app.settings.blitze === 'wenig' ? 'normal' : 'wenig'); this.show('settings'); break;
+      case 'clip': app.game.replayClip(); break;
       case 'qual': app.setSetting('quality', v === 'auto' ? 'auto' : +v); this.show('settings'); break;
       case 'help': this.show('help'); break;
       case 'helpback': this.show('settings'); break;
@@ -281,7 +287,7 @@ export class UI {
         : `<div>🔥 Kombo ${r.maxCombo}${r.diff === 'schwer' ? ` / ${r.comboReq}` : ''}</div>${r.diff !== 'schwer' ? `<div>⭐ Glitzerstern ${r.bonus ? '✅' : '❌'}</div>` : ''}`}</div>
       </div><div>${nw ? `<button class="unl neww" data-a="nextw" data-v="${nwFirst.id}" style="animation-delay:1.4s"><span class="e">${nw.emoji}</span><span>Neue Welt offen:<br>${nw.name} ➜</span></button>` : ''}${r.unlocks.map((u, k) => `<div class="unl" style="animation-delay:${1.6 + k * 0.2}s"><span class="e">${this.unlIcon(u)}</span><span>Neu freigeschaltet:<br>${esc(u.name)}</span></div>`).join('')}
       ${r.badges.map((b, k) => `<div class="unl" style="animation-delay:${1.8 + k * 0.2}s"><span class="e">${b.emoji}</span><span>Abzeichen: ${b.name}</span></div>`).join('')}
-      </div></div><div class="row cta"><button class="btn soft" data-a="map">🗺️ Karte</button><button class="btn alt" data-a="again">🔄 Nochmal</button>${r.unlocks.length ? `<button class="btn big surprise" data-a="surprise"><i class="gift">🎁</i> Überraschung!</button>` : hasNext ? `<button class="btn big" data-a="next">Weiter ➜</button>` : ''}</div>
+      </div></div><div class="row cta"><button class="btn soft" data-a="map">🗺️ Karte</button>${this.app.game.fancam.last ? '<button class="btn alt" data-a="clip">🎬 Clip nochmal</button>' : ''}<button class="btn alt" data-a="again">🔄 Nochmal</button>${r.unlocks.length ? `<button class="btn big surprise" data-a="surprise"><i class="gift">🎁</i> Überraschung!</button>` : hasNext ? `<button class="btn big" data-a="next">Weiter ➜</button>` : ''}</div>
     </div></div>`;
   }
   s_fail(d) {
@@ -389,7 +395,15 @@ export class UI {
     return `<div class="screen dim"><div class="card album"><h2>📖 Sammelalbum <span class="small">${n}/${ALBUM.length}</span></h2>
       <div class="grid">${ALBUM.map(e => `<button class="item ${p.album[e.id] ? '' : 'unk'}" data-a="fact" data-v="${e.id}">${p.album[e.id] ? e.emoji : '❓'}<span>${p.album[e.id] ? e.name : '???'}</span></button>`).join('')}</div>
       <div class="fact">Tippe auf ein Bild! Neue Seiten entdeckst du beim Fliegen.</div>
-      <div class="row cta"><button class="btn" data-a="map">Zurück</button></div></div></div>`;
+      <div class="row cta"><button class="btn" data-a="map">Zurück</button><button class="btn alt" data-a="fibel">🛩️ Kunstflug-Fibel</button></div></div></div>`;
+  }
+  // v3.0 Kunstflug-Fibel: echte Figuren aus der Flugshow – Name, ein Satz, „Vorführen“ fliegt sie im Menü vor
+  s_fibel(d) {
+    const sel = d && d.sel ? KUNSTFLUG.find(x => x.id === d.sel) : null;
+    return `<div class="screen dim"><div class="card album"><h2>🛩️ Kunstflug-Fibel <span class="small">${KUNSTFLUG.length} Figuren</span></h2>
+      <div class="grid">${KUNSTFLUG.map(e => `<button class="item ${sel === e ? 'sel' : ''}" data-a="fibel" data-v="${e.id}">${e.emoji}<span>${e.name}</span></button>`).join('')}</div>
+      <div class="fact">${sel ? `${sel.emoji} <b>${sel.name}</b> – ${sel.sub}<br>${sel.info}` : 'Tippe auf eine Figur! Mit dem 🎪 STUNT-Knopf fliegst du sie im Spiel.'}</div>
+      <div class="row cta"><button class="btn soft" data-a="album">Zurück</button>${sel ? `<button class="btn big" data-a="demo" data-v="${sel.id}">▶️ Vorführen</button>` : ''}</div></div></div>`;
   }
   s_badges() {
     const p = this.app.progress.cur;
@@ -405,12 +419,14 @@ export class UI {
       <div class="set"><span>🎵 Musik</span><input type="range" min="0" max="100" value="${Math.round(s.music * 100)}" data-vol="music"><button class="toggle ${s.music > 0 ? 'on' : ''}" data-a="tog" data-v="music" aria-label="Musik an/aus"></button></div>
       <div class="set"><span>🔔 Effekte</span><input type="range" min="0" max="100" value="${Math.round(s.sfx * 100)}" data-vol="sfx"><button class="toggle ${s.sfx > 0 ? 'on' : ''}" data-a="tog" data-v="sfx" aria-label="Effekte an/aus"></button></div>
       <div class="set"><span>📳 Vibration</span><button class="toggle ${s.haptics ? 'on' : ''}" data-a="tog" data-v="haptics" aria-label="Vibration an/aus"></button></div>
+      <div class="set"><span>🎬 Flugshow-Clip</span><button class="toggle ${s.edit !== false ? 'on' : ''}" data-a="tedit" aria-label="Flugshow als Clip an/aus"></button></div>
+      <div class="set"><span>⚡ Blitze reduzieren</span><button class="toggle ${s.blitze === 'wenig' ? 'on' : ''}" data-a="tblitz" aria-label="Blitze reduzieren an/aus"></button></div>
       <div class="set stack"><span>👆 Steuerung</span><div class="opts"><button data-a="ctl" data-v="zones" class="${s.control === 'zones' ? 'sel' : ''}">Tippen & Halten</button><button data-a="ctl" data-v="stick" class="${s.control === 'stick' ? 'sel' : ''}">Joystick</button></div></div>
       <div class="set stack"><span>✨ Grafik</span><div class="opts">${[['auto', 'Auto'], ['0', 'Niedrig'], ['1', 'Mittel'], ['2', 'Hoch']].map(([v, n]) => `<button data-a="qual" data-v="${v}" class="${String(q) === v ? 'sel' : ''}">${n}</button>`).join('')}</div></div>
       </div><div class="small">Jetzt: ${r.q.name} · ${this.app.fps} fps</div>
       <button class="btn alt small" data-a="help">❓ So wird gespielt</button>
       <div class="row cta"><button class="btn" data-a="setback">Fertig ✓</button></div>
-      <div class="small">Schmetterlingswiese 2.2 · Build ${BUILD} · offline spielbar</div></div></div>`;
+      <div class="small">Schmetterlingswiese 3.0 · Build ${BUILD} · offline spielbar</div></div></div>`;
   }
   s_help() {
     return `<div class="screen dim"><div class="card"><h2>❓ So wird gespielt</h2>

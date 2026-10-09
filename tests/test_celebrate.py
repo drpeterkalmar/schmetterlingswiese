@@ -17,7 +17,7 @@ def sim_wait(s, sec):
 
 REC = """(() => { window.__rec = []; window.__recOn = true;
   (function f() { if (!window.__recOn) return; if (!window.__freeze) { const p = __app.player, S = p.stunt, v = p.pos.clone().project(__app.camera);
-    __rec.push([__app.t, p.pos.y - __H(p.pos.x, p.pos.z), S && S.grand ? S.p : -1, v.x, v.y, v.z, __app.timeScale]); } requestAnimationFrame(f); })(); })()"""
+    __rec.push([__app.t, p.pos.y - __H(p.pos.x, p.pos.z), S && S.grand ? S.p : -1, v.x, v.y, v.z, __app.timeScale, __app.game.fancam.on && __app.game.fancam.wischK > 0.05]); } requestAnimationFrame(f); })(); })()"""
 
 def grid(name):
     try:
@@ -70,7 +70,9 @@ def run_finale(s, fid, shots):
     during = [x for x in rec if x[2] >= 0]
     r['frames'] = len(during)
     r['min_clear'] = round(min(x[1] for x in during), 2) if during else None
-    r['in_view_frames'] = round(sum(1 for x in during if abs(x[3]) < 0.95 and abs(x[4]) < 0.95 and x[5] < 1) / max(1, len(during)), 3)
+    # v3.0 Flugshow-Clip: Wisch-Schwenks schwenken absichtlich kurz weg → diese Bilder zählen nicht
+    during_v = [x for x in during if not x[7]]
+    r['in_view_frames'] = round(sum(1 for x in during_v if abs(x[3]) < 0.95 and abs(x[4]) < 0.95 and x[5] < 1) / max(1, len(during_v)), 3)
     r['slow_min'] = round(min([x[6] for x in rec] or [1]), 2)
     r['apex'] = s.ev("!!(__app.game.finale && __app.game.finale.apex)")
     r['burst_view'] = view

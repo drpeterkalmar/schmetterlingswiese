@@ -1,0 +1,44 @@
+{
+ "_kommentar": "v3.0 Zusatz-Szenen (nur nachher messbar): Kunstflug-Figuren im Wechsel (mit Rauchspur) und der Fan-Cam-Clip der Sieger-Flugshow (Mittel). Gleiche Regeln wie tests/perf_szenen.json.",
+ "bereit": "window.__app && window.__game && window.__app.frames > 3",
+ "info": "() => { const i = __app.renderer.r.info; return { calls: i.render.calls, tris: i.render.triangles, tex: i.memory.textures }; }",
+ "zusatz": "() => __game.info()",
+ "ladeQuery": "?nosw",
+ "ladeNachlauf": 3,
+ "szenen": [
+  {
+   "name": "kunstflug_mittel",
+   "query": "?nosw&startprobe=0",
+   "schritte": [
+    "__game.progress.create('Mess'); __game.setQuality(1)",
+    "__game.start('1-1', 'leicht')",
+    {
+     "warte": 4
+    },
+    "window.__kf = __game.stunts().filter(d => d.kf).map(d => d.id); window.__ki = 0; window.__pgIv = setInterval(() => { if (!__app.player.stunt) { __app.player.pos.y = Math.max(__app.player.pos.y, 5); __game.stunt(__kf[__ki++ % __kf.length], true); } }, 300)",
+    {
+     "warte": 0.5
+    }
+   ]
+  },
+  {
+   "name": "flugshow_clip",
+   "query": "?nosw&startprobe=0&finale=flugshow",
+   "schritte": [
+    "__game.progress.create('Mess'); __game.setQuality(1)",
+    "__game.start('1-1', 'leicht')",
+    {
+     "warte": 3
+    },
+    {
+     "bis": "__app.game.state === 'won'",
+     "schritt": "__game.step()",
+     "max": 15
+    },
+    {
+     "warte": 0.3
+    }
+   ]
+  }
+ ]
+}

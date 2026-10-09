@@ -49,7 +49,7 @@ function countLevels(p) { return Object.values(p.levels).filter(l => Object.valu
 function worldDone(p, wid) { return LEVELS.filter(l => l.world === wid).every(l => p.levels[l.id] && Object.values(p.levels[l.id]).some(d => d.stars > 0)); }
 
 function defaults() {
-  return { v: 2, profiles: [], current: null, settings: { music: 0.7, sfx: 0.9, haptics: true, control: 'zones', quality: 'auto' } };
+  return { v: 2, profiles: [], current: null, settings: { music: 0.7, sfx: 0.9, haptics: true, control: 'zones', quality: 'auto', edit: true, blitze: 'normal' } };
 }
 function newProfile(name, color) {
   return {

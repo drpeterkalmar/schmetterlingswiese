@@ -117,6 +117,7 @@ varying vec3 vC; varying vec4 vP;
 void main(){
   vec4 mv = viewMatrix * bendW(modelMatrix * vec4(position, 1.0));
   vC = aCol; vP = aP;
+  vP.y *= smoothstep(0.5, 1.6, -mv.z); // v3.0: Teilchen direkt vor der Linse ausblenden (Nahkameras im Flugshow-Clip)
   gl_PointSize = aP.x * uPx * projectionMatrix[1][1] * 0.5 / max(-mv.z, 0.1);
   gl_Position = projectionMatrix * mv;
 }`;

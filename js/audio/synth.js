@@ -435,6 +435,33 @@ export async function renderSfx(onProgress) {
     const n = noise(c, t, t + 0.9); const bp = filt(c, 'bandpass', 2400, 1.5); bp.frequency.setValueAtTime(3200, t); bp.frequency.exponentialRampToValueAtTime(500, t + 0.8);
     const na = g(c, 0); na.gain.setValueAtTime(0, t); na.gain.linearRampToValueAtTime(0.35, t + 0.15); na.gain.linearRampToValueAtTime(0, t + 0.85); chain(n, bp, na, o);
   }, { wet: 0.45 });
+  // ---- v3.0: Flugshow-Clip – eigener Beat (Bausteine, zur Laufzeit im Takt geplant: js/game/fancam.js)
+  add('bkick', 0.5, 1, (c, o, t) => { // Bassdrum: Sinus mit Tonhöhen-Fall + Klick
+    const s = osc(c, 'sine', 160, t, t + 0.45); s.frequency.setValueAtTime(160, t); s.frequency.exponentialRampToValueAtTime(52, t + 0.12);
+    const a = g(c, 0); env(a.gain, t, 0.002, 1, 0.13, t + 0.45); chain(s, a, o);
+    const k = noise(c, t, t + 0.012); const kf = filt(c, 'highpass', 2500); const ka = g(c, 0); env(ka.gain, t, 0.0005, 0.35, 0.004, t + 0.012); chain(k, kf, ka, o);
+  }, { hp: 35, peak: 0.85 });
+  add('bclap', 0.5, 2, (c, o, t) => { // Klatscher: drei schnelle Rausch-Stöße + Hallfahne
+    for (let k = 0; k < 3; k++) { const tt = t + k * 0.011, n = noise(c, tt, tt + 0.03); const bp = filt(c, 'bandpass', 1300, 1.1); const a = g(c, 0); env(a.gain, tt, 0.0008, 0.8, 0.008, tt + 0.03); chain(n, bp, a, o); }
+    const n = noise(c, t + 0.03, t + 0.3); const bp = filt(c, 'bandpass', 1700, 0.8); const a = g(c, 0); env(a.gain, t + 0.03, 0.002, 0.45, 0.07, t + 0.3); chain(n, bp, a, o);
+  }, { wet: 0.2, peak: 0.6 });
+  add('bhat', 0.12, 1, (c, o, t) => { const n = noise(c, t, t + 0.08); const hp = filt(c, 'highpass', 7500); const a = g(c, 0); env(a.gain, t, 0.0008, 0.6, 0.018, t + 0.08); chain(n, hp, a, o); }, { peak: 0.4 });
+  add('bbass', 0.6, 1, (c, o, t) => { // Bass-Stoß (C3, zur Laufzeit transponiert): Sägezahn durch Tiefpass mit Hüllkurve
+    const f = mtof(48), s = osc(c, 'sawtooth', f, t, t + 0.5), s2 = osc(c, 'square', f * 0.5 * 1.003, t, t + 0.5);
+    const lp = filt(c, 'lowpass', 900, 4); lp.frequency.setValueAtTime(1800, t); lp.frequency.exponentialRampToValueAtTime(240, t + 0.3);
+    const a = g(c, 0); env(a.gain, t, 0.004, 0.8, 0.16, t + 0.5); const a2 = g(c, 0.45); s2.connect(a2); a2.connect(lp); chain(s, lp, a, o);
+  }, { hp: 60, peak: 0.6 });
+  add('bpluck', 0.7, 2, (c, o, t) => { kalimba(c, o, t, mtof(72), 0.9, { dur: 0.6, tau: 0.16 }); bell(c, o, t, mtof(84), 0.18, { dur: 0.5, tau: 0.12 }); }, { wet: 0.25, peak: 0.55 });
+  add('briser', 1.2, 2, (c, o, t) => { // Anlauf vor dem Drop: Rauschen + Ton steigen
+    const n = noise(c, t, t + 1.1); const bp = filt(c, 'bandpass', 600, 1.4); bp.frequency.setValueAtTime(500, t); bp.frequency.exponentialRampToValueAtTime(7000, t + 1.05);
+    const a = g(c, 0); a.gain.setValueAtTime(0.0001, t); a.gain.exponentialRampToValueAtTime(0.7, t + 1.0); a.gain.linearRampToValueAtTime(0, t + 1.1); chain(n, bp, a, o);
+    const s = osc(c, 'triangle', 300, t, t + 1.1); s.frequency.exponentialRampToValueAtTime(1500, t + 1.05); const sa = g(c, 0); sa.gain.setValueAtTime(0.0001, t); sa.gain.exponentialRampToValueAtTime(0.18, t + 1.0); sa.gain.linearRampToValueAtTime(0, t + 1.1); chain(s, sa, o);
+  }, { wet: 0.2, peak: 0.5 });
+  add('bimpact', 1.4, 2, (c, o, t) => { // Drop: tiefer Bumm + heller Glitzer-Schlag
+    const b = osc(c, 'sine', 120, t, t + 0.9); b.frequency.exponentialRampToValueAtTime(40, t + 0.5); const ba = g(c, 0); env(ba.gain, t, 0.002, 1, 0.22, t + 0.9); chain(b, ba, o);
+    const n = noise(c, t, t + 1.2); const hp = filt(c, 'highpass', 5000); const na = g(c, 0); env(na.gain, t, 0.002, 0.35, 0.3, t + 1.2); chain(n, hp, na, o);
+    [0, 4, 7, 12].forEach((d, i) => bell(c, o, t + i * 0.02, mtof(84 + d), 0.16, { tau: 0.3, dur: 0.9 }));
+  }, { wet: 0.35, peak: 0.75 });
   let done = 0; jobs.forEach(j => j.then(() => onProgress && onProgress(++done / jobs.length)));
   await Promise.all(jobs);
   return S;
