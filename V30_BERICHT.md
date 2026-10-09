@@ -205,6 +205,7 @@ Ergebnisse: `tests/perf/2026-10-09_v30_ab.json`, `…_v30_kunstflug_clip.json`, 
 
 ## Live-Prüfung
 `tests/test_v30_live.py` gegen https://drpeterkalmar.github.io/schmetterlingswiese/ (mit Service-Worker, wie am Handy),
-09.10.2026 nach dem Push von `a809e35`: Version **3.0.0**, Build `a8cb9ea6da` = lokal; `?stunt=immelmann` → 🎪 echt getippt →
+09.10.2026, zuletzt nach dem Abschluss-Push `0059161`: Version **3.0.0**, Build `169e79cbd5` = lokal (vorher auch mit
+`a809e35`/`a8cb9ea6da` geprüft); `?stunt=immelmann` → 🎪 echt getippt →
 Immelmann fliegt, Einblendung „↩️ Immelmann – halber Looping, dann umdrehen!“, Winkel am Ende 0; `?finale=flugshow` →
 nach dem Sieg läuft der Clip, danach Ergebnis mit „🎬 Clip nochmal“. Keine JS-Fehler. Bilder: `tests/shots/v30/live_*.png`.
