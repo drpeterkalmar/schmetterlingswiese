@@ -1,0 +1,56 @@
+{
+ "_kommentar": "v3.1 Flugschule: Flug mit vollem Blüten-Schweif (20 Blätter, Schwer-Höchstzahl), Aufwind-Säulen im Bild und Rückenwind-Ringen. A/B mit &schweif=0&aufwind=0 bzw. gegen v3.0. Gleiche Regeln wie tests/perf_szenen.json. aufwind_flug_unsichtbar = gleiche Stelle, Säulen ausgeblendet (Kosten der Säulen-Optik allein).",
+ "bereit": "window.__app && window.__game && window.__app.frames > 3",
+ "info": "() => { const i = __app.renderer.r.info; return { calls: i.render.calls, tris: i.render.triangles, tex: i.memory.textures }; }",
+ "zusatz": "() => __game.info()",
+ "ladeQuery": "?nosw",
+ "ladeNachlauf": 3,
+ "szenen": [
+  {
+   "name": "schweif_flug",
+   "query": "?nosw&startprobe=0",
+   "schritte": [
+    "__game.progress.create('Mess'); __game.setQuality(1)",
+    "__game.start('1-3', 'mittel')",
+    {
+     "warte": 3
+    },
+    "(() => { const g = __app.game, S = g.schweif; if (S) { S.max = 20; for (let k = 0; k < 20 && S.p.length < 20; k++) S.add([0xff8fc8, 0x8fd8ff, 0xffc83a][S.p.length % 3], __app.player.pos); } __app.autopilot = true; })()",
+    {
+     "warte": 1
+    }
+   ]
+  },
+  {
+   "name": "aufwind_flug",
+   "query": "?nosw&startprobe=0",
+   "schritte": [
+    "__game.progress.create('Mess'); __game.setQuality(1)",
+    "__game.start('1-3', 'mittel')",
+    {
+     "warte": 3
+    },
+    "(() => { const p = __app.player, A = p.aufwinde && p.aufwinde[0]; if (A) { p.pos.set(A.x + 20, A.gy + 4, A.z); p.yaw = -Math.PI / 2; p.camInit = false; } __app.input.injected = { turn: 0, climb: 0 }; })()",
+    {
+     "warte": 1
+    }
+   ]
+  },
+  {
+   "name": "aufwind_flug_unsichtbar",
+   "query": "?nosw&startprobe=0",
+   "schritte": [
+    "__game.progress.create('Mess'); __game.setQuality(1)",
+    "__game.start('1-3', 'mittel')",
+    {
+     "warte": 3
+    },
+    "(() => { const p = __app.player, A = p.aufwinde && p.aufwinde[0]; if (A) { p.pos.set(A.x + 20, A.gy + 4, A.z); p.yaw = -Math.PI / 2; p.camInit = false; } __app.input.injected = { turn: 0, climb: 0 }; })()",
+    "(() => { const A = __app.game.aufwind; A.points.visible = false; A.schlauch.visible = false; })()",
+    {
+     "warte": 1
+    }
+   ]
+  }
+ ]
+}

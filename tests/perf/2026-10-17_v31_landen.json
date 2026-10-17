@@ -1,0 +1,31 @@
+{
+ "standard": {
+  "landungen": 62,
+  "federleicht": 1,
+  "sanft": 59,
+  "gelandet": 2,
+  "sanft_oder_besser_pct": 97,
+  "q_median": 0.407,
+  "texte": [
+   "🌸 Sanft gelandet!",
+   "🌼 Gelandet!",
+   "🪶 Federleicht!"
+  ],
+  "album_federleicht": 1,
+  "album_sanft": 59,
+  "errors": [],
+  "album_zeile": "🪶 Federleicht-Landungen: 1 · 🌸 sanft: 59"
+ },
+ "&landewertung=0": {
+  "landungen": 0,
+  "federleicht": 0,
+  "sanft": 0,
+  "gelandet": 0,
+  "sanft_oder_besser_pct": 0,
+  "q_median": null,
+  "texte": [],
+  "album_federleicht": 0,
+  "album_sanft": 0,
+  "errors": []
+ }
+}

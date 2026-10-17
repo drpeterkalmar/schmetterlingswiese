@@ -132,6 +132,29 @@ def sz_aufwind(s, f):
         out.append((bild(s, f'aw{k+1}'), f'ohne Eingabe +{sum([1.5, 2.0, 2.5][:k + 1]):.1f} s: {y - y0:+.1f} m'))
     return out
 
+def sz_schweif(s, f):
+    start(s, '1-3', 'leicht', 5); out = []
+    for k, n in enumerate([3, 7, 11]):
+        auto_bis(s, f"__app.game.hits >= {n}", 300)
+        r = s.ev("({ n: __app.game.schweif.p.length, g: __app.game.schweif.glanz, c: __app.game.combo })")
+        out.append((bild(s, f'sw{k}'), f'{r["n"]} Blätter · Kombo {r["c"]} · Glanz {r["g"]:.2f}'))
+    auto_bis(s, "__app.game.combo === 0 || __app.game.state === 'won'", 30); auto(s, 0.6)
+    r = s.ev("({ n: __app.game.schweif.p.length, g: __app.game.schweif.glanz })")
+    out.append((bild(s, 'sw9'), f'Kombo vorbei: {r["n"]} Blätter, Glanz {r["g"]:.2f}'))
+    # Höchstzahl (Schwer: 20 Blätter) – nichts darf vor der Kamera hängen
+    s.ev("(() => { const S = __app.game.schweif; S.max = 20; for (let k = 0; k < 20 && S.p.length < 20; k++) S.add([0xff8fc8, 0x8fd8ff, 0xffc83a][S.p.length % 3], __app.player.pos); })()")
+    __import__('json'); s.ev("__app.game.state = 'play'"); lauf(s, 1.5, 0.4, 0)
+    out.append((bild(s, 'sw10'), '20 Blätter (Schwer-Höchstzahl) in der Kurve'))
+    return out
+def sz_landen(s, f):
+    start(s, '2-1', 'leicht', 5); out = []
+    for k in range(3):
+        auto_bis(s, "__app.player.landed && __app.player.seatK >= 1", 300)
+        r = s.ev("(__app.game.landeLog || []).at(-1)"); auto(s, 0.3)
+        out.append((bild(s, f'la{k}'), f'Landung {k + 1}: Abstand {r["q"]:.2f} × Fangradius'))
+        auto_bis(s, "!__app.player.landed", 30); auto(s, 1.0)
+    return out
+
 SZENEN = {'kurve': sz_kurve, 'sturz': sz_sturz, 'flatter': sz_flatter}
 for extra in ['ringschub', 'kette', 'saugen', 'aufwind', 'schweif', 'landen', 'rolle']:
     fn = globals().get('sz_' + extra)

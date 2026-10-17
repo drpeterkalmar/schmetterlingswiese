@@ -7,7 +7,7 @@ import { RM } from '../engine/deko.js';
 import { PX } from './particles.js';
 import { FLUG } from '../game/flugschule.js';
 
-export const AUF_MAX = 3, JE_SAEULE = 120;
+export const AUF_MAX = 3, JE_SAEULE = 90;
 
 const V = /* glsl */`
 uniform float uBend; uniform vec3 uCam;
@@ -28,7 +28,7 @@ void main(){
   vGl = pow(max(dot(normalize(p - uCam), uSunDir), 0.0), 4.0);
   vType = step(0.25, fract(aR.w * 7.0)); // ¾ Schirmchen, ¼ Sonnenstaub
   float size = vType > 0.5 ? 0.42 + aR.w * 0.25 : 0.1;
-  gl_PointSize = clamp(size * uPx * projectionMatrix[1][1] * 0.5 / max(-mv.z, 0.1), vType > 0.5 ? 4.0 : 1.5, 96.0); // fern: nicht kleiner als 4 px
+  gl_PointSize = clamp(size * uPx * projectionMatrix[1][1] * 0.5 / max(-mv.z, 0.1), vType > 0.5 ? 4.0 : 1.5, 64.0); // fern: nicht kleiner als 4 px
   gl_Position = projectionMatrix * mv;
 }`;
 const F = /* glsl */`
@@ -109,7 +109,7 @@ export class AufwindSaeulen {
     this.aS = new THREE.InstancedBufferAttribute(new Float32Array(AUF_MAX * 4), 4); ig.setAttribute('aS', this.aS);
     const zm = new THREE.ShaderMaterial({
       uniforms: { uTime: G.uTime, uBend: G.uBend, uCam: G.uCam, uSunCol: G.uSunCol, uSlow: { value: RM ? 0.5 : 1 }, uH: { value: P.hoehe } },
-      vertexShader: ZV, fragmentShader: ZF, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+      vertexShader: ZV, fragmentShader: ZF, transparent: true, depthWrite: false, side: THREE.FrontSide, // nur Außenseite: halbe Überzeichnung
     });
     zm.userData.keinBloom = true;
     this.schlauch = new THREE.Mesh(ig, zm);

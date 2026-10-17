@@ -1,0 +1,210 @@
+{
+ "datum": "2026-10-17T22:27:14",
+ "stand": "v31_e5_aufwind2",
+ "wurzel": "/Users/wohnzimmer/dev/butterfly-game",
+ "git": "a91f877",
+ "profil": {
+  "drossel": 4,
+  "dpr": 2.6,
+  "sek": 10,
+  "geraete": "quer,hoch",
+  "gpu": "ANGLE/Metal headless",
+  "start": "open",
+  "vsync": false,
+  "zusatz": ""
+ },
+ "szenen": {
+  "aufwind_flug": {
+   "quer": {
+    "n": 3071,
+    "p50": 3.2,
+    "p95": 4.5,
+    "p99": 5.2,
+    "fps": 306.9,
+    "calls": 102,
+    "callsMax": 170,
+    "tris": 288169,
+    "tex": 8,
+    "zusatz": {
+     "calls": 67,
+     "tris": 217015,
+     "geos": 66,
+     "tex": 8,
+     "tier": 1,
+     "dpr": 1.5,
+     "w": 915,
+     "h": 412,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "skala": 1,
+     "rt": [
+      1373,
+      618
+     ],
+     "autopilot": null,
+     "apLog": null,
+     "startProbe": null,
+     "fps": 344,
+     "cpuUpdateMs": 0.22,
+     "cpuRenderSubmitMs": 1.3,
+     "takt": {
+      "aktiv": true,
+      "schritte": 905,
+      "alpha": 0.37
+     }
+    },
+    "boot_s": 0.2,
+    "fehler": [],
+    "runden_p95": [
+     4.5,
+     4.4,
+     4.6
+    ]
+   },
+   "hoch": {
+    "n": 3167,
+    "p50": 3.1,
+    "p95": 4.3,
+    "p99": 5,
+    "fps": 316.5,
+    "calls": 85,
+    "callsMax": 132,
+    "tris": 267127,
+    "tex": 8,
+    "zusatz": {
+     "calls": 65,
+     "tris": 234440,
+     "geos": 67,
+     "tex": 8,
+     "tier": 1,
+     "dpr": 1.5,
+     "w": 412,
+     "h": 915,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "skala": 1,
+     "rt": [
+      618,
+      1373
+     ],
+     "autopilot": null,
+     "apLog": null,
+     "startProbe": null,
+     "fps": 340,
+     "cpuUpdateMs": 0.31,
+     "cpuRenderSubmitMs": 1.73,
+     "takt": {
+      "aktiv": true,
+      "schritte": 910,
+      "alpha": 0.512
+     }
+    },
+    "boot_s": 0.2,
+    "fehler": [],
+    "runden_p95": [
+     4.2,
+     4.3,
+     4.3
+    ]
+   }
+  },
+  "aufwind_flug_unsichtbar": {
+   "quer": {
+    "n": 2732,
+    "p50": 3.5,
+    "p95": 5.3,
+    "p99": 6.3,
+    "fps": 273,
+    "calls": 101,
+    "callsMax": 168,
+    "tris": 282819,
+    "tex": 8,
+    "zusatz": {
+     "calls": 66,
+     "tris": 217894,
+     "geos": 67,
+     "tex": 8,
+     "tier": 1,
+     "dpr": 1.5,
+     "w": 915,
+     "h": 412,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "skala": 1,
+     "rt": [
+      1373,
+      618
+     ],
+     "autopilot": null,
+     "apLog": null,
+     "startProbe": null,
+     "fps": 288,
+     "cpuUpdateMs": 0.32,
+     "cpuRenderSubmitMs": 1.51,
+     "takt": {
+      "aktiv": true,
+      "schritte": 910,
+      "alpha": 0.496
+     }
+    },
+    "boot_s": 0.2,
+    "fehler": [],
+    "runden_p95": [
+     5.3,
+     5,
+     5.8
+    ]
+   },
+   "hoch": {
+    "n": 3223,
+    "p50": 3.1,
+    "p95": 4.3,
+    "p99": 5.1,
+    "fps": 322.1,
+    "calls": 83,
+    "callsMax": 131,
+    "tris": 265169,
+    "tex": 8,
+    "zusatz": {
+     "calls": 63,
+     "tris": 235363,
+     "geos": 67,
+     "tex": 8,
+     "tier": 1,
+     "dpr": 1.5,
+     "w": 412,
+     "h": 915,
+     "hdr": true,
+     "postFallbacks": 0,
+     "postFailed": false,
+     "skala": 1,
+     "rt": [
+      618,
+      1373
+     ],
+     "autopilot": null,
+     "apLog": null,
+     "startProbe": null,
+     "fps": 358,
+     "cpuUpdateMs": 0.16,
+     "cpuRenderSubmitMs": 1.25,
+     "takt": {
+      "aktiv": true,
+      "schritte": 921,
+      "alpha": 0.712
+     }
+    },
+    "boot_s": 0.2,
+    "fehler": [],
+    "runden_p95": [
+     4.2,
+     4.6,
+     4.3
+    ]
+   }
+  }
+ }
+}

@@ -2,6 +2,7 @@
 import { WORLDS } from '../game/worlds.js';
 import { LEVELS, DIFFS, levelById, levelsOfWorld, dailyLevel, todayStr, isRace, timeGoals, rivalOf, worldUnlockNeed } from '../game/levels.js';
 import { AVATAR_COLORS, ALBUM, BADGES } from '../game/progress.js';
+import { FLUG } from '../game/flugschule.js';
 import { CHARACTERS, COLORS, HATS, EXTRAS, PATTERNS, SKINS, TRAILS, SIZES, WINGFORMS, ANTENNAE, EYESTYLES, FUN, PALETTE, SLOT_NAMES, DEFAULT_LOOK, randomLook } from '../actors/characters.js';
 import { wingMask, glassWing, skinWing, tintMask, wingIcon } from '../engine/textures.js';
 import { BUILD } from '../build.js';
@@ -394,7 +395,8 @@ export class UI {
     const n = Object.keys(p.album).length;
     return `<div class="screen dim"><div class="card album"><h2>📖 Sammelalbum <span class="small">${n}/${ALBUM.length}</span></h2>
       <div class="grid">${ALBUM.map(e => `<button class="item ${p.album[e.id] ? '' : 'unk'}" data-a="fact" data-v="${e.id}">${p.album[e.id] ? e.emoji : '❓'}<span>${p.album[e.id] ? e.name : '???'}</span></button>`).join('')}</div>
-      <div class="fact">Tippe auf ein Bild! Neue Seiten entdeckst du beim Fliegen.</div>
+      <div class="fact">Tippe auf ein Bild! Neue Seiten entdeckst du beim Fliegen.</div>${FLUG.landewertung.an ? `
+      <div class="small lande">🪶 Federleicht-Landungen: <b>${p.stats.federleicht || 0}</b> · 🌸 sanft: <b>${p.stats.sanft || 0}</b></div>` : ''}
       <div class="row cta"><button class="btn" data-a="map">Zurück</button><button class="btn alt" data-a="fibel">🛩️ Kunstflug-Fibel</button></div></div></div>`;
   }
   // v3.0 Kunstflug-Fibel: echte Figuren aus der Flugshow – Name, ein Satz, „Vorführen“ fliegt sie im Menü vor

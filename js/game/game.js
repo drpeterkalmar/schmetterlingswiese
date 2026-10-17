@@ -8,8 +8,9 @@ import { makeTask, GlitterStar } from './objectives.js';
 import { DEKO } from '../engine/deko.js';
 import { DIFFS, worldOf, isRace, timeGoals } from './levels.js';
 import { FanCam, editAn } from './fancam.js';
-import { FLUG, RingKette } from './flugschule.js';
+import { FLUG, RingKette, landeWertung, LANDE_LOB } from './flugschule.js';
 import { AufwindSaeulen } from '../world/aufwind.js';
+import { BluetenSchweif } from '../world/trails.js';
 import { pickStunt, stuntByKey, stuntName, stuntTitle, COOLDOWN, C as SC, ease, pickFinale, finaleByKey, ACCENT, SMOKE, FINALE_AMP, FINALE_DUR } from './stunts.js';
 
 const _v = new THREE.Vector3(), _w = new THREE.Vector3();
@@ -96,6 +97,7 @@ export class Game {
     this.showLast = null; this.showAt = -99; this.showLog = []; this.finaleLog = [];
     this.fancam = new FanCam(app); // v3.0 Fan-Cam-Clip der Sieger-Flugshow
     this.aufwind = new AufwindSaeulen(); this.scene.add(this.aufwind.points); // v3.1 Aufwind-Säulen (1 Draw-Call)
+    this.schweif = new BluetenSchweif(this.scene); // v3.1 Blüten-Schweif (1 Draw-Call)
   }
 
   get diff() { return this.diffCfg; }
@@ -206,6 +208,7 @@ export class Game {
     this.gustT = 8 + this.rnd() * 6; this.gust = null;
     // Zustand
     this.kette = new RingKette();
+    this.landeLog = []; this.lockInfo = null;
     this.time = 0; this.combo = 0; this.maxCombo = 0; this.lastHit = -99; this.hits = 0; this.bumps = 0;
     const TG = timeGoals(level, D.id);
     this.limit = TG.limit; this.par = TG.par; this.blitz = TG.blitz;
@@ -229,6 +232,7 @@ export class Game {
     this.app.audio.setWorld(w);
     this.app.audio.setIntensity(0.35);
     this.setzeAufwinde(level, D);
+    this.schweif.reset(FLUG.schweif.max[D.id] || 16);
     // v2.5 Landeblumen: Figurform und feste Sitzhöhen schon beim Laden rechnen (sonst kurzer Ruckler beim ersten Anflug)
     const land = this.tasks.find(t => t.spots), c = this.player.critter;
     if (land && c) for (const sp of land.spots) sp.seatPose(this.app.t || 0, c, this.player.yaw, SEAT_TMP);
@@ -285,7 +289,7 @@ export class Game {
     this.tasks.forEach(t => t.dispose()); this.tasks = [];
     if (this.glitter) { this.glitter.dispose(); this.glitter = null; }
     this.rains.forEach(r => this.scene.remove(r.m)); this.rains = [];
-    this.aufwind.setze([]); this.player.aufwinde = [];
+    this.aufwind.setze([]); this.player.aufwinde = []; this.schweif.reset(0);
     this.animals.clear();
     this.wasps.setup([]);
     this.bursts.clear();
@@ -319,6 +323,7 @@ export class Game {
     this.bursts.emit({ n: 1, pos, colors: [col], shape: 5, size: 3.2, speed: 0, up: 0, life: 0.35, grav: 0, drag: 0 });
     const c = this.player.critter;
     if (c) { c.happyT = 0.7; c.squashV += 4; }
+    this.schweif.add(col, pos); // v3.1 ein Blütenblatt mehr im Schweif
     if (schub) this.player.kick(0, 0.08); else this.player.kick(2.5 + Math.min(4, this.combo * 0.5), 0.08); // Ring: FOV kommt vom Rückenwind
     // Teilziel geschafft → automatische Freuden-Schraube (ersetzt den Schraube-Knopf)
     const last = this.tasks.length && this.tasks.every(tk => tk.done);
@@ -506,11 +511,29 @@ export class Game {
     }
     let used = false;
     for (const t of this.tasks) if (t.onLand && t.onLand(spot)) used = true;
+    if (spot && FLUG.landewertung.an) this.landeLob(spot);
     if (!this.shownHints.takeoff) { this.shownHints.takeoff = true; this.app.ui.hint(used ? '🍯 Nektar schlürfen … dann ▲ oben halten zum Abheben' : '▲ Oben halten zum Abheben'); }
     this.app.stat('landings');
   }
+  // v3.1 Landewertung – nur Lob: Abstand zur Blütenmitte beim Einrasten ÷ Fangradius → Federleicht / Sanft / Gelandet
+  landeLob(spot) {
+    const pl = this.player, L = this.lockInfo;
+    const q = L && L.spot === spot ? L.q : Math.hypot(pl.pos.x - spot.pos.x, pl.pos.z - spot.pos.z) / pl.catchR(spot);
+    this.lockInfo = null;
+    const w = landeWertung(q);
+    (this.landeLog || (this.landeLog = [])).push({ q: +q.toFixed(3), w });
+    this.app.ui.toast(LANDE_LOB[w]);
+    if (w === 2) {
+      this.app.stat('federleicht');
+      this.bursts.emit({ n: 14, pos: pl.pos, colors: [0xffffff, 0xfff3b0, 0xbfe6ff], shape: 1, size: 0.34, speed: 2.4, up: 1.2, life: 0.9, grav: -0.6 });
+      this.app.audio.sfx('funkel', 0, { gain: 0.7 });
+      this.app.audio.collect(Math.min(12, this.combo + 1), 0, 'land-lob');
+    } else if (w === 1) this.app.stat('sanft');
+  }
   // v2.5.1 Landeplatz eingerastet: leises Aufsetz-Signal (Glitzer, Ton, Haptik), die Figur landet dann von selbst
   onLock(spot) {
+    const pl = this.player;
+    this.lockInfo = { spot, q: Math.hypot(pl.pos.x - spot.pos.x, pl.pos.z - spot.pos.z) / pl.catchR(spot) };
     this.app.audio.sfx('land', 0, { gain: 0.45, rate: 1.3 });
     this.app.haptics.buzz('land');
     this.bursts.emit({ n: 12, pos: spot.pos, colors: [0x9ff0ff, 0xffffff, 0xfff3b0], shape: 1, size: 0.3, speed: 2.2, up: 0.8, life: 0.7, grav: -0.5 });
@@ -770,6 +793,7 @@ export class Game {
     if (this.glitter) this.glitter.update(dt, t);
     if (this.rollQ && !pl.landed && pl.airT >= 0.3 && this.state === 'play') { const q = this.rollQ; this.rollQ = null; this.doRoll(q.col, q.big); }
     this.rollTrail(dt);
+    this.schweif.update(dt, t, pl, this.combo);
     if (playing) this.hazards(dt, t);
     else this.wasps.update(dt, t, null);
     // Kombo verfällt

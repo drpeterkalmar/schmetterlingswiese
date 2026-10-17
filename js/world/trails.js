@@ -1,6 +1,8 @@
 // Spuren hinter der Figur (Seifenblasen, Herzchen, Pups-Wölkchen, Glitzer, Regenbogen, Konfetti).
 // Nutzt den Burst-Pool (1 Draw-Call); ein wiederverwendetes Options-Objekt → keine Allokationen pro Frame.
 import * as THREE from 'three';
+import { petalGeo } from '../engine/geo.js';
+import { FLUG } from '../game/flugschule.js';
 
 const RAINBOW = [0xff5a6e, 0xff9a3c, 0xffd84a, 0x7ee06a, 0x4fc8ff, 0x8a7bff, 0xd67cff];
 const SPEC = {
@@ -79,4 +81,61 @@ export class Trail {
     }
     if (this.acc > every * 6) this.acc = 0;
   }
+}
+
+// v3.1 Blüten-Schweif (?schweif=0: aus): je Treffer ein Blütenblatt im Schwarm hinter der Figur – Fortschritt ohne Zahl.
+// Die Blätter hängen wie an einer Schnur (Abstand fest), flattern leicht; Glanz = laufende Kombo (Kombo vorbei → Glanz
+// weg, die Blätter bleiben bis zum Levelende). Ein InstancedMesh = 1 Draw-Call, höchstens 20 Blätter.
+const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _s = new THREE.Vector3(), _d = new THREE.Vector3(), _c = new THREE.Color();
+export class BluetenSchweif {
+  constructor(scene, max = 20) {
+    const g = petalGeo(0.34, 0.2, 0.05, 4, 2); g.translate(-0.17, 0, 0);
+    const mat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true, opacity: 0.95, depthWrite: true });
+    mat.userData.keinBloom = true;
+    this.mesh = new THREE.InstancedMesh(g, mat, max);
+    this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.mesh.frustumCulled = false; this.mesh.count = 0;
+    for (let i = 0; i < max; i++) this.mesh.setColorAt(i, _c.set(0xffffff));
+    scene.add(this.mesh);
+    this.cap = max; this.max = 0; this.p = []; this.col = []; this.glanz = 0;
+  }
+  reset(max) { this.max = Math.min(this.cap, max); this.p.length = 0; this.col.length = 0; this.mesh.count = 0; this.glanz = 0; }
+  add(col, from) {
+    if (!FLUG.schweif.an || this.p.length >= this.max) return false;
+    const last = this.p.length ? this.p[this.p.length - 1] : from;
+    this.p.push(last.clone()); this.col.push(new THREE.Color(col).lerp(_c.set(0xffffff), 0.25));
+    return true;
+  }
+  update(dt, t, pl, combo) {
+    const n = this.p.length;
+    this.glanz += ((combo > 0 ? Math.min(1, 0.45 + combo * 0.07) : 0) - this.glanz) * Math.min(1, dt * 3);
+    if (!n) return;
+    const S = FLUG.schweif, fx = Math.sin(pl.yaw), fz = Math.cos(pl.yaw);
+    // Anker hinter der Figur; jedes Blatt hängt am vorigen (Schnur mit festem Abstand, weich nachgezogen)
+    _s.set(pl.pos.x - fx * S.start, pl.pos.y + 0.05, pl.pos.z - fz * S.start);
+    let prev = _s;
+    // kompakter Schwarm: Schnur höchstens ≈ 1,6 m lang (sonst hängen die hinteren Blätter vor der Kamera), die Blätter
+    // kreisen dafür in einer lockeren Spirale um die Schnur
+    const A0 = Math.min(S.abstand, 1.6 / Math.max(1, n)), rx = Math.cos(pl.yaw), rz = -Math.sin(pl.yaw);
+    for (let i = 0; i < n; i++) {
+      const P = this.p[i];
+      _d.subVectors(P, prev); const L = _d.length(), A = i ? A0 : 0.01;
+      if (L > A) P.addScaledVector(_d, -(L - A) / L * Math.min(1, dt * 14));
+      P.y += Math.sin(t * 2.2 + i * 0.9) * 0.12 * dt; // sanftes Wogen
+      // Lage: entlang der Schnur, flatternd
+      const ang = Math.atan2(_d.x, _d.z);
+      _e.set(Math.sin(t * 5 + i * 1.7) * 0.6, ang + Math.PI / 2, Math.sin(t * 3.3 + i) * 0.5);
+      _q.setFromEuler(_e);
+      const k = 0.85 + 0.15 * Math.sin(t * 4 + i);
+      const wa = t * 2.1 + i * 2.4, wr = 0.22 + 0.06 * i / Math.max(1, n) * 4;
+      _f.set(P.x + rx * Math.cos(wa) * wr, P.y + 0.12 + Math.sin(wa) * wr * 0.8, P.z + rz * Math.cos(wa) * wr);
+      _m.compose(_f, _q, _d.set(k, k, k));
+      this.mesh.setMatrixAt(i, _m);
+      this.mesh.setColorAt(i, _c.copy(this.col[i]).multiplyScalar(1 + this.glanz * (0.55 + 0.25 * Math.sin(t * 6 + i))));
+      prev = P;
+    }
+    this.mesh.count = n;
+    this.mesh.instanceMatrix.needsUpdate = true; this.mesh.instanceColor.needsUpdate = true;
+  }
+  dispose() { this.mesh.geometry.dispose(); this.mesh.material.dispose(); }
 }
