@@ -192,4 +192,9 @@ Zwischenstände: nach E1 (Schwung/Kurve) 0,991, nach E4 (+ Rückenwind, Aufwind)
   oder ▼ drücken. Bitte beobachten, ob das stört (Regler `?aufwind=0`).
 
 ## Live-Prüfung
-LIVE_ENDSTAND
+Jede Etappe nach dem Push mit `tests/v31_live_check.sh` (curl `…/js/main.js?x=$RANDOM` und `…/sw.js?x=$RANDOM`):
+3.1.0-e1 (`e43d9b009c`), -e2 (`109fd528cc`), -e3 (`a40705287d`), -e4 (`4ec9ec10f2`), -e5 (`78fb624a7e`), -e6 (`4714d4b6e5`),
+Abschluss **3.1.0 (`e45d9326ff`)** – jeweils live = lokal.
+Dazu am 18.10.2026 `tests/test_v31_live.py` gegen https://drpeterkalmar.github.io/schmetterlingswiese/ mit Service-Worker
+(wie am Handy): Version 3.1.0, Build `e45d9326ff` = lokal, echter Touch-Tipp oben → 1 Flatter-Stoß, 2 Aufwind-Säulen im
+Level 1-3, nach dem ersten Ring Rückenwind +20 %, keine JS-Fehler (Bild `tests/shots/v31/live_ring.png`).
