@@ -224,7 +224,8 @@ class CollectTask extends Task {
     for (const it of this.items) if (!it.taken && it.suck == null) { const d = it.pos.distanceToSquared(pl); if (d < bd) { bd = d; best = it.pos; } }
     return this.done ? null : best;
   }
-  debugNext() { const it = this.items.find(i => !i.taken && i.suck == null); if (it) { this.g.player.pos.copy(it.pos); } }
+  // (Test-Abkürzung: sofort zählen wie bis v3.0 – das Einsaugen braucht sonst 0,2 s, Tests zählen gleich danach)
+  debugNext() { const it = this.items.find(i => !i.taken && i.suck == null); if (it) { this.g.player.pos.copy(it.pos); this.take(it); } }
   // v2.5: Punkte + Radius (m), die der Zielpfeil nie verdecken darf
   marks(o) { for (const it of this.items) if (!it.taken) o.push(it.pos, 0.7); }
   dispose() { this.pool.dispose(); }

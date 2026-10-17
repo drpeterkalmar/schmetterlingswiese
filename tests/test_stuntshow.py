@@ -17,7 +17,9 @@ def sim_wait(s, sec):
     while s.ev("__app.t") - t0 < sec: time.sleep(0.02)
 
 def setup(s, q=''):
-    s.open('?nosw' + q); s.tap('#title'); s.pg.fill('input.name', 'Stunt'); s.tap('[data-a=create]')
+    # v3.1: ohne Aufwind-Säulen – deren Wirbel-Lenkhilfe dreht eine Figur, die nach der Einlage freihändig in einer Säule
+    # landet, absichtlich in den Kreis; hier wird nur die Einlage selbst geprüft (Fluglinie, Richtung, Winkel)
+    s.open('?nosw&aufwind=0' + q); s.tap('#title'); s.pg.fill('input.name', 'Stunt'); s.tap('[data-a=create]')
     s.ev("__game.setQuality(1)")
     s.ev("import('./js/world/terrain.js').then(m => { window.__H = m.height; })"); time.sleep(0.3)
 

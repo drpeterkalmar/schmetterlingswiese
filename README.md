@@ -61,6 +61,15 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
   Höhepunkt jeder Figur und dann „zack“ schnell, Zoom-Stöße, Wisch-Schwenks, kurze Blitze nur auf den Drops, großer
   Figurname, am Ende Sterne und Zeit. Antippen = überspringen, „🎬 Clip nochmal“ auf dem Ergebnis-Bildschirm,
   Einstellungen: 🎬 Flugshow-Clip an/aus, ⚡ Blitze reduzieren; `?edit=0` = bisherige Sieger-Kamera
+- **Flugschule (v3.1):** Fluggefühl inspiriert von klassischen 3D-Flugspielen der 90er – alles nur Zugabe, nichts wird
+  schwerer: **Sturzflug macht schneller** (bis +45 %, Steigen kostet ein wenig, nie unter 75 %), wer länger in eine Richtung
+  dreht, fliegt eine **engere Kurve** mit kräftigerer Schräglage, **kurz oben tippen = Flatter-Hüpfer** (bis 3 gestapelt,
+  Halten steigt wie bisher), **jeder Ring gibt Rückenwind**, **5 Ringe am Stück = großer Rückenwind** mit Blütenwirbel und
+  einem Ton, der mit jedem Ring steigt, Tropfen und Glühwürmchen **fliegen zur Figur** und werden erst dann gezählt,
+  **Aufwind-Säulen** aus Löwenzahn-Schirmchen tragen dich im Kreis nach oben (einfach loslassen), **Lob beim Landen**
+  („Federleicht!“, „Sanft gelandet!“, Zähler im Album), ein **Blütenblatt-Schweif** wächst mit jedem Treffer und glänzt
+  während der Kombo, auf Mittel/Schwer **Ausweich-Rolle** per Doppeltipp (Wespen prallen ab). Jede Neuerung hat einen
+  URL-Regler (siehe unten), `=0` = Verhalten wie v3.0; Bericht: `V31_VORLAGEN_BERICHT.md`
 - **Tierbabys (v2.4):** Bärenbaby, Capybara, Häschen und Entchen mit Schnauze, Pfoten mit Ballen, Bauchfell und
   Schwänzchen; sie laufen mit echten Beinbewegungen, blinzeln, zucken mit den Ohren, schauen dich an, wenn du nah
   bist, und freuen sich über Besuch mit Hüpfer, ^ ^-Augen und Herzchen
@@ -70,6 +79,8 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
 | Gerät | Bedienung |
 |---|---|
 | 📱 Tippen & Halten (Standard) | links/rechts halten = drehen · Mitte oben = steigen · Mitte unten = sinken/landen · Finger liegen lassen und hoch/runter schieben = steigen/sinken (auch beim Drehen, ohne loszulassen) |
+| 🪽 Flatter-Hüpfer (v3.1) | Mitte oben **kurz tippen** (kürzer als 0,2 s) = ein Flügelschlag nach oben, bis zu 3 schnell hintereinander stapeln sich; Halten steigt wie gewohnt. Joystick: Stick kurz nach oben schnippen oder rechts tippen · Tastatur: ↑ kurz antippen |
+| 🌀 Ausweich-Rolle (v3.1, Mittel/Schwer) | links oder rechts **zweimal schnell tippen** = Rolle 1,2 m zur Seite, Wespen prallen ab (Tastatur: ← ← bzw. → →). Normales Halten zum Drehen löst sie nie aus |
 | 🕹️ Joystick (Einstellungen) | Daumen-Stick links |
 | 🌀 🤸 Kunststücke | automatisch: jedes geschaffte Teilziel = Freuden-Schraube; ganze Aufgabe = 🏆 **Sieger-Einlage (v2.4)**: jedes Mal eine andere von 26 (Sieger-Looping, Doppel-Looping, Rakete, Bumerang, seit v3.0 auch alle Kunstflug-Figuren und selten die Flugshow als Clip), groß inszeniert mit Zeitlupe am Höhepunkt, Regenbogen-/Rauchschweif, Feuerwerk und Konfetti |
 | 🎪 Stunt-Knopf (v2.3) | unten rechts tippen (Computer: Taste C) = eine von 24 zufälligen Flugeinlagen mit Effekten (Doppel-Looping, Feuerwerk-Rakete, Bumerang, seit v3.0 13 echte Kunstflug-Figuren …); nur Spaß, zählt nicht als Aufgabe, kurze Pause (Ring) bis zum nächsten Mal. In Kunststück-Missionen kommen nur die kürzeren Einlagen (Zeitziel bleibt fair) |
@@ -117,6 +128,14 @@ python3 tests/deko_perf.py <label> [query] [port]    # Bildzeiten mit CPU-Drosse
 python3 tools/load_size.py           # Ladegröße (gzip) aller Spieldateien
 ```
 
+**Flugschule-Regler (v3.1, alle Werte in `js/game/flugschule.js`, Gruppe `FLUG`):** `?schwung=0` (Tempo fest wie v3.0) ·
+`?kurve=0` (Kurve wie v3.0) · `?flatter=0` · `?ringschub=0` (Zahl = Zuschlag, Standard 0.2) · `?kette=0` (Zahl = Ringe je Kette,
+Standard 5) · `?saugen=0` · `?aufwind=0` · `?landewertung=0` · `?schweif=0` · `?rolle=0` · `?expo=1.6` (feinere Eingabekurve
+für Joystick/Schieben, Standard 1 = linear). Alle auf 0 = genau die v3.0-Flugbahn (Node-Test).
+Tests: `tests/node/test_flugschule.mjs` (reine Funktionen + Flugmodell, Regler 0 = v3.0-Bahn ±1 cm), `tests/test_v31_flatter.py`,
+`test_v31_ringe.py`, `test_v31_landen.py`, `test_v31_rolle.py`, Bildfolgen `tests/v31_shots.py`, Test-Flieger mit festem Zufall
+`python3 tests/flieger.py --diffs leicht,mittel,schwer --rennen --seeds 5` + `tests/flieger_vergleich.py vorher.json nachher.json`.
+
 Debug-Hilfe im Browser: `window.__game` (Zustand, Level starten, Autopilot, Einfrieren, Audio-Messung).
 Stunt-Einlagen: `__game.stunts()` listet alle, `__game.stunt(n | 'id')` startet eine direkt; `?stunt=rakete` in der URL
 legt den Knopf auf eine feste Einlage (A/B-Vergleich), z. B. `?stunt=immelmann`, `?stunt=hammerhead`, `?stunt=kubanisch`.
@@ -125,6 +144,15 @@ Sieger-Einlagen: `__game.finales()` listet alle 26, `__game.finale(n | 'id')` le
 Kunstflug-Bahnen: `js/game/kunstflug.js` (Bahn-Baukasten wie im Kunstflug-Katalog), Clip: `js/game/fancam.js`,
 Bericht: `V30_BERICHT.md`. Tests: `tests/node/test_kunstflug.mjs` (Bahn), `tests/test_v30_fancam.py` (Clip, Beat-Schnitte),
 `tests/v30_shots.py` (Bildfolgen je Figur).
+
+## Changelog
+
+- **3.1.0 (17.10.2026) – Flugschule:** Schwung im Sturzflug, Eng-Kurve, Flatter-Hüpfer per Tipp, Rückenwind je Ring und
+  Ringkette, Einsaugen der Tropfen, Aufwind-Säulen, Lob beim Landen mit Album-Zähler, Blütenblatt-Schweif, Ausweich-Rolle.
+  In Etappen ausgeliefert (3.1.0-e1 … -e6), jede mit eigenem URL-Regler. Details und Messwerte: `V31_VORLAGEN_BERICHT.md`
+- **3.0.0 (09.10.2026):** echter Kunstflug (13 Figuren), Flugshow als Fan-Clip, Kunstflug-Fibel (`V30_BERICHT.md`)
+- **2.9.0:** Technik – schärfer, ruhiger, fester Takt (`TECHNIK_BERICHT.md`) · **2.8:** Blumenwiese & Lichtzauber
+  (`DEKO_BERICHT.md`) · **2.7:** 5 × 8 Missionen · ältere Stände: `V2*_BERICHT.md`
 
 *Gebaut mit viel Liebe für die Familie. 🌸*
 
