@@ -142,3 +142,29 @@ test('Einsaugen: Ziel erreicht die Figur in 0,15–0,25 s, schrumpft auf 0, dreh
   assert.equal(S.s, 0); assert.ok(pos < 0.25, 'Rest vor dem Einrasten ' + pos);
   assert.ok(Math.abs(S.dreh - 300 * Math.PI / 180 * t) < 1e-9);
 });
+
+test('Aufwind: Mitte ≥ 3 m/s, Rand < 0,3 m/s, oben auslaufend; ohne Eingabe 15 m in ≤ 6 s (Leicht/Mittel)', () => {
+  const A = FLUG.aufwind;
+  assert.ok(FS.aufwindProfil(0, 10, A.W).hub >= 3);
+  assert.ok(FS.aufwindProfil(A.R * 0.98, 10, A.W).hub < 0.3);
+  assert.equal(FS.aufwindProfil(A.R, 10, A.W).hub, 0);
+  assert.ok(FS.aufwindProfil(0, A.hoehe - 1, A.W).hub < 0.3 * A.W, 'oben auslaufend');
+  assert.equal(FS.aufwindProfil(0, A.hoehe + 0.1, A.W).hub, 0);
+  // Wirbel am stärksten bei R/2, 0 in der Mitte
+  const w = [0, 0.25, 0.5, 0.75].map(k => FS.aufwindProfil(k * A.R, 10, A.W).wirbel);
+  assert.equal(w[0], 0); assert.ok(w[2] > w[1] && w[2] > w[3]);
+  for (const s of ['leicht', 'mittel']) assert.ok(mess[s].aufwind.t15m !== null && mess[s].aufwind.t15m <= 6.0, `${s}: 15 m nach ${mess[s].aufwind.t15m} s`);
+});
+test('Aufwind: wer selbst lenkt oder sinkt, fliegt heraus (keine Falle)', async () => {
+  const THREE = await import('three');
+  const { Player } = await import('../../js/actors/player.js');
+  const { height } = await import('../../js/world/terrain.js');
+  for (const inp of [{ turn: 1, climb: 0 }, { turn: 0, climb: -1 }]) {
+    const pl = new Player(new THREE.Scene()); pl.baseSpeed = 7; pl.turnRate = 1.9; pl.speed = 7;
+    const x = 30, z = 30; pl.reset(new THREE.Vector3(x, height(x, z) + 12, z - 2), 0);
+    pl.aufwinde = [{ x, z, gy: height(x, z), W: FLUG.aufwind.W }];
+    let t = 0, raus = null;
+    for (let i = 0; i < 360; i++) { pl.update(dt, t, inp); t += dt; if (raus === null && Math.hypot(pl.pos.x - x, pl.pos.z - z) > FLUG.aufwind.R) raus = t; }
+    assert.ok(raus !== null && raus < 4, `${JSON.stringify(inp)}: raus nach ${raus}`);
+  }
+});

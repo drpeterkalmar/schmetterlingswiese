@@ -43,8 +43,8 @@ export const FLUG = {
   saugen: { an: regler('saugen', 1) > 0, dauer: 0.2, k: 12, dreh: 300 * DEG },
   // #3 Aufwind-Säulen: Hub W·√((R−d)/R), Wirbel am stärksten bei R/2; oben 4 m auslaufend; Wirbel-Lenkhilfe hält
   // die Figur im Kreis um die Säule, solange das Kind nicht selbst lenkt (sonst wäre man in 1 s durch)
-  aufwind: { an: regler('aufwind', 1) > 0, R: 6, W: 3.5, Wleicht: 4.0, wirbel: 0.5, hoehe: 25, auslauf: 4, traeg: 2.2,
-    halten: 0.85, kreisR: 0.5, lenkLos: 0.3, anzahl: [2, 3] },
+  aufwind: { an: regler('aufwind', 1) > 0, R: 6, W: 4.5, Wleicht: 5.0, wirbel: 0.5, hoehe: 25, auslauf: 4, traeg: 2.2,
+    halten: 1.0, kreisR: 0.4, sog: 3.0, lenkLos: 0.3, anzahl: [2, 3] },
   // #9 Landewertung (nur Lob): Abstand zur Blütenmitte beim Einrasten ÷ Fangradius
   landewertung: { an: regler('landewertung', 1) > 0, grenzen: [0.35, 0.7] },
   // #7 Blüten-Schweif: je Treffer ein Blatt (max. 12 / 16 / 20), Abstand 0,35 m; Glanz = Kombo, Blätter bleiben

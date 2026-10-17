@@ -9,6 +9,7 @@ import { DEKO } from '../engine/deko.js';
 import { DIFFS, worldOf, isRace, timeGoals } from './levels.js';
 import { FanCam, editAn } from './fancam.js';
 import { FLUG, RingKette } from './flugschule.js';
+import { AufwindSaeulen } from '../world/aufwind.js';
 import { pickStunt, stuntByKey, stuntName, stuntTitle, COOLDOWN, C as SC, ease, pickFinale, finaleByKey, ACCENT, SMOKE, FINALE_AMP, FINALE_DUR } from './stunts.js';
 
 const _v = new THREE.Vector3(), _w = new THREE.Vector3();
@@ -94,6 +95,7 @@ export class Game {
     this.rains = [];
     this.showLast = null; this.showAt = -99; this.showLog = []; this.finaleLog = [];
     this.fancam = new FanCam(app); // v3.0 Fan-Cam-Clip der Sieger-Flugshow
+    this.aufwind = new AufwindSaeulen(); this.scene.add(this.aufwind.points); // v3.1 Aufwind-Säulen (1 Draw-Call)
   }
 
   get diff() { return this.diffCfg; }
@@ -220,16 +222,60 @@ export class Game {
       stuntDone: (tp) => this.onStuntDone(tp),
       showDone: (id) => this.onShowDone(id),
       lock: (spot) => this.onLock(spot),
+      aufwind: () => this.onAufwind(),
     };
     this.showAt = -99;
     this.app.player.critter.happyT = 0;
     this.app.audio.setWorld(w);
     this.app.audio.setIntensity(0.35);
+    this.setzeAufwinde(level, D);
     // v2.5 Landeblumen: Figurform und feste Sitzhöhen schon beim Laden rechnen (sonst kurzer Ruckler beim ersten Anflug)
     const land = this.tasks.find(t => t.spots), c = this.player.critter;
     if (land && c) for (const sp of land.spots) sp.seatPose(this.app.t || 0, c, this.player.yaw, SEAT_TMP);
   }
 
+  // v3.1 Aufwind-Säulen: 2–3 je Level, bevorzugt vor hohen Ringen (auf der Anflugseite) und unter hohen Zielen,
+  // nie über dem Teich, nie an Landeplätzen, Ring-/Tropfen-Mitten frei; eigener Zufall (ändert sonst nichts am Level)
+  setzeAufwinde(level, D) {
+    const P = FLUG.aufwind, pl = this.player, out = [];
+    pl.aufwinde = out;
+    if (!P.an) { this.aufwind.setze(out); return; }
+    const rnd = rng(hashStr(level.id + ':' + D.id + ':aufwind')), P0 = pond(), W = D.id === 'leicht' ? P.Wleicht : P.W;
+    const n = P.anzahl[0] + (rnd() < 0.5 ? 0 : P.anzahl[1] - P.anzahl[0]);
+    const ziele = [];
+    for (const tk of this.tasks) {
+      if (tk.pts && tk.dirs) tk.pts.forEach((p, i) => ziele.push({ p, dir: tk.dirs[i], ring: true }));
+      if (tk.items) for (const it of tk.items) ziele.push({ p: it.base, dir: null });
+    }
+    const frei = (x, z) => {
+      if (Math.hypot(x, z) > 85 || this.nearTree(x, z, P.R * 0.6)) return false;
+      if (P0[2] > 1 && Math.hypot(x - P0[0], z - P0[1]) < P0[2] * 1.15 + P.R) return false;
+      if (pl.landables.some(L => Math.hypot(L.pos.x - x, L.pos.z - z) < P.R + 4)) return false;
+      if (ziele.some(Z => Math.hypot(Z.p.x - x, Z.p.z - z) < 3.5)) return false;
+      if (Math.hypot(this.spawn.x - x, this.spawn.z - z) < 14) return false;
+      return !out.some(A => Math.hypot(A.x - x, A.z - z) < 22);
+    };
+    const add = (x, z) => { out.push({ x, z, gy: height(x, z), W }); };
+    // 1) vor den höchsten Zielen (Ringe: 9 m vor dem Tor, gegen die Flugrichtung)
+    const hoch = ziele.filter(Z => Z.p.y - height(Z.p.x, Z.p.z) > 5).sort((a, b) => (b.p.y - height(b.p.x, b.p.z)) - (a.p.y - height(a.p.x, a.p.z)));
+    for (const Z of hoch) {
+      if (out.length >= n) break;
+      const back = Z.dir ? 9 : 0, a = rnd() * Math.PI * 2;
+      const x = Z.p.x - (Z.dir ? Z.dir.x * back : Math.cos(a) * 5), z = Z.p.z - (Z.dir ? Z.dir.z * back : Math.sin(a) * 5);
+      if (frei(x, z)) add(x, z);
+    }
+    // 2) Rest: freie Stellen auf der Wiese
+    for (let k = 0; k < 80 && out.length < n; k++) {
+      const a = rnd() * Math.PI * 2, r = 18 + rnd() * 55, x = Math.cos(a) * r, z = Math.sin(a) * r;
+      if (frei(x, z)) add(x, z);
+    }
+    this.aufwind.setze(out);
+  }
+  onAufwind() {
+    if (this.state !== 'play') return;
+    this.app.audio.sfx('swoosh', 0, { gain: 0.5, rate: 0.85 });
+    if (!this.shownHints.aufwind) { this.shownHints.aufwind = true; this.app.ui.toast('🌬️ Hui, Aufwind! Er trägt dich hoch'); }
+  }
   nearTree(x, z, gap) {
     for (const t of this.treePts || []) if ((t.x - x) ** 2 + (t.z - z) ** 2 < (gap + 2.5 * t.s) ** 2) return true;
     return false;
@@ -239,6 +285,7 @@ export class Game {
     this.tasks.forEach(t => t.dispose()); this.tasks = [];
     if (this.glitter) { this.glitter.dispose(); this.glitter = null; }
     this.rains.forEach(r => this.scene.remove(r.m)); this.rains = [];
+    this.aufwind.setze([]); this.player.aufwinde = [];
     this.animals.clear();
     this.wasps.setup([]);
     this.bursts.clear();

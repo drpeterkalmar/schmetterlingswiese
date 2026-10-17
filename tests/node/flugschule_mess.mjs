@@ -60,7 +60,8 @@ function aufwind(stufe) {
   const pl = neu(stufe, 4), y0 = pl.pos.y;
   if (!pl.aufwinde) return { mitte: +mitte.toFixed(2), rand: +rand.toFixed(2), hoehe6s: null };
   const fx = Math.sin(pl.yaw), fz = Math.cos(pl.yaw);
-  pl.aufwinde = [{ x: pl.pos.x + fx * 8, z: pl.pos.z + fz * 8, W }];
+  const ax = pl.pos.x + fx * 8, az = pl.pos.z + fz * 8;
+  pl.aufwinde = [{ x: ax, z: az, gy: height(ax, az), W }];
   let t = 0, t15 = null;
   for (let i = 0; i < 600; i++) { pl.update(dt, t, { turn: 0, climb: 0 }); t += dt; if (t15 === null && pl.pos.y - y0 >= 15) t15 = t; }
   return { mitte: +mitte.toFixed(2), rand: +rand.toFixed(2), t15m: t15 === null ? null : +t15.toFixed(2) };

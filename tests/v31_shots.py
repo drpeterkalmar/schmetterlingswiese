@@ -111,6 +111,27 @@ def sz_saugen(s, f):
         step(s, 0.05)
     return out
 
+def lauf(s, sek, turn=0, climb=0):
+    # Echtzeit mit fester Eingabe
+    s.ev(f"(() => {{ __app.input.injected = {{ turn: {turn}, climb: {climb} }}; window.__freeze = undefined; }})()")
+    t0 = s.ev("__app.t")
+    try: s.pg.wait_for_function(f"__app.t - {t0} >= {sek}", timeout=sek * 20000 + 10000, polling=16)
+    finally: s.ev("window.__freeze = 1")
+def sz_aufwind(s, f):
+    start(s, '1-3', 'mittel', 3); out = []
+    n = s.ev("""(() => { const p = __app.player, A = p.aufwinde[0]; if (!A) return 0;
+      const a = Math.atan2(p.pos.x - A.x, p.pos.z - A.z) || 0.5; p.pos.set(A.x + Math.sin(a) * 30, A.gy + 3.5, A.z + Math.cos(a) * 30);
+      p.yaw = Math.atan2(A.x - p.pos.x, A.z - p.pos.z); p.yawRate = 0; p.camInit = false; return p.aufwinde.length; })()""")
+    lauf(s, 0.3)
+    out.append((bild(s, 'aw0'), f'{n} Säulen · Säule 28 m voraus'))
+    lauf(s, 2.6)
+    out.append((bild(s, 'awa'), 'Säule 9 m voraus'))
+    y0 = s.ev("__app.player.pos.y")
+    for k, sek in enumerate([1.5, 2.0, 2.5]):
+        lauf(s, sek); y = s.ev("__app.player.pos.y")
+        out.append((bild(s, f'aw{k+1}'), f'ohne Eingabe +{sum([1.5, 2.0, 2.5][:k + 1]):.1f} s: {y - y0:+.1f} m'))
+    return out
+
 SZENEN = {'kurve': sz_kurve, 'sturz': sz_sturz, 'flatter': sz_flatter}
 for extra in ['ringschub', 'kette', 'saugen', 'aufwind', 'schweif', 'landen', 'rolle']:
     fn = globals().get('sz_' + extra)

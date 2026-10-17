@@ -11,7 +11,7 @@ const _sd = [0, 1, 0];
 import { showOffset, showOrient, showLift, liftAt, showBounds } from '../game/stunts.js';
 import { kunstMitte, kunstRadius, kunstEnde } from '../game/kunstflug.js';
 // v3.1 Flugschule: Schwung, Kurvenhilfe … (eine Parametergruppe, je Mechanik ein URL-Regler, 0 = wie v3.0)
-import { FLUG, tempoSchritt, tempoAlt, KurvenHilfe, FlatterStapel, Rueckenwind } from '../game/flugschule.js';
+import { FLUG, tempoSchritt, tempoAlt, KurvenHilfe, FlatterStapel, Rueckenwind, aufwindProfil } from '../game/flugschule.js';
 import { RM as RM_FS } from '../engine/deko.js';
 
 const TAU = Math.PI * 2;
@@ -39,7 +39,7 @@ export class Player {
     this.bounds = 108;
     this.critter = null;
     this.frozen = false;
-    this.diffId = 'mittel'; this.kurveH = new KurvenHilfe(); this.flat = new FlatterStapel(); this.wind = new Rueckenwind();
+    this.diffId = 'mittel'; this.kurveH = new KurvenHilfe(); this.flat = new FlatterStapel(); this.wind = new Rueckenwind(); this.aufwinde = []; this.aufV = 0; this.imAufwind = null;
     // Blob-Schatten (v2.9: gerichteter Kontaktschatten, Quad 2×2 in xz, Größe/Richtung je Bild)
     if (KONTAKT_AN) {
       const g = new THREE.PlaneGeometry(2, 2); g.rotateX(-Math.PI / 2);
@@ -68,7 +68,7 @@ export class Player {
     this.landed = false; this.landSpot = null; this.landing = null; this.stunt = null; this.wetT = 0; this.dizzyT = 0; this.carry = null; this.showReset = true;
     this.airT = 9; this.seatTilt = null; this.seatOrbit = null;
     this.camInit = false; this.orbit = 0; this.hover = false; this.cheer = false; this.grandBlend = 0; this.camD = 1;
-    this.kurveH.reset(); this.flat.reset(); this.wind.reset();
+    this.kurveH.reset(); this.flat.reset(); this.wind.reset(); this.aufV = 0; this.imAufwind = null;
   }
   emit(ev, a) { const f = this.on[ev]; if (f) f(a); }
   // o.grand = Sieger-Looping (länger, größerer Kreis, Seitenkamera)
@@ -132,6 +132,44 @@ export class Player {
     this.critter && this.critter.bump(1.5);
     this.emit('flap', this.flat.n);
     return true;
+  }
+  // v3.1 Aufwind-Säulen: Hub (träge nachgeführt) + Wirbel (seitlich) und – solange das Kind nicht selbst lenkt und nicht
+  // sinkt – eine Lenkhilfe, die die Figur auf einem Kreis (kreisR·R) um die Achse hält. Rückgabe: zusätzliche Lenk-Eingabe.
+  aufwindHilfe(dt, turn, climb) {
+    const P = FLUG.aufwind;
+    let hub = 0, hilfe = 0, best = null;
+    if (P.an && this.aufwinde.length && !this.landing) {
+      for (const A of this.aufwinde) {
+        const dx = this.pos.x - A.x, dz = this.pos.z - A.z, d = Math.hypot(dx, dz);
+        if (d >= P.R) continue;
+        const pr = aufwindProfil(d, this.pos.y - A.gy, A.W);
+        if (pr.hub <= hub) continue;
+        hub = pr.hub; best = A;
+        // Wirbel: tangential gegen den Uhrzeigersinn (von oben), am stärksten bei R/2
+        if (d > 1e-3) { this.pos.x += -dz / d * pr.wirbel * dt; this.pos.z += dx / d * pr.wirbel * dt; }
+        if (Math.abs(turn) < P.lenkLos && climb > -0.3 && pr.oben > 0.5 && d > 1e-3) {
+          // Kreisrichtung = die, in die die Figur ohnehin schon um die Achse fliegt
+          // (beim Hineinfliegen festgelegt, sonst kippt sie beim Überfliegen der Achse)
+          const fx = Math.sin(this.yaw), fz = Math.cos(this.yaw);
+          if (this.imAufwind !== A || !this.aufSinn) this.aufSinn = (dx * fz - dz * fx) >= 0 ? 1 : -1;
+          const sinn = this.aufSinn;
+          // Soll-Kurs: Tangente, nach innen/außen geneigt je nach Abstand zum Wunschkreis
+          const r0 = P.kreisR * P.R, ein = THREE.MathUtils.clamp((d - r0) / r0, -1, 1) * 0.9;
+          const tx = -dz / d * sinn, tz = dx / d * sinn;
+          const hx = tx - dx / d * ein, hz = tz - dz / d * ein;
+          let dd = Math.atan2(hx, hz) - this.yaw; dd = Math.atan2(Math.sin(dd), Math.cos(dd));
+          hilfe = THREE.MathUtils.clamp(-dd * 2.5, -1, 1) * P.halten;
+          // Sog: der Wirbel trägt die Figur seitlich auf den Wunschkreis (sonst wäre man in 1 s durch die Säule)
+          const sog = -THREE.MathUtils.clamp((d - r0) / r0, -1, 1) * P.sog * pr.oben;
+          this.pos.x += dx / d * sog * dt; this.pos.z += dz / d * sog * dt;
+        }
+      }
+    }
+    this.aufV += (hub - this.aufV) * Math.min(1, dt * P.traeg);
+    if (best && !this.imAufwind) this.emit('aufwind', best);
+    if (!best) this.aufSinn = 0;
+    this.imAufwind = best;
+    return hilfe;
   }
   // Tempo samt Rückenwind (Anzeige/Messung: Ring-Schub-Verlauf)
   get tempo() { return this.speed + this.wind.wert * this.baseSpeed; }
@@ -233,7 +271,8 @@ export class Player {
     } else {
       const dizzy = this.dizzyT > 0 ? 0.4 : 1;
       const KH = this.kurveH.schritt(turn, dt); // v3.1 Eng-Kurve: nach 0,7 s Dauer-Drehen ×1,35 (?kurve=0: ×1)
-      this.yawRate += (-turn * this.turnRate * dizzy * KH.rate - this.yawRate) * Math.min(1, dt * 5.5);
+      const AH = this.aufwindHilfe(dt, turn, climb); // v3.1 Aufwind: Wirbel-Lenkhilfe hält die Figur im Kreis um die Säule
+      this.yawRate += (-(turn + AH) * this.turnRate * dizzy * (AH ? FLUG.kurve.engRate : KH.rate) - this.yawRate) * Math.min(1, dt * 5.5);
       this.yaw += this.yawRate * dt;
       let tp = climb * 0.58;
       const alt = this.pos.y - gh;
@@ -291,6 +330,7 @@ export class Player {
       this.forward(_v);
       this.pos.addScaledVector(_v, (this.speed + (this.landing ? 0 : vWind)) * dt);
       if (vFlat > 0 && !this.landing) this.pos.y += vFlat * dt; // v3.1 Flatter-Stoß hebt (klingt mit 2,5/s aus)
+      if (this.aufV > 1e-3 && !this.landing) this.pos.y += this.aufV * dt;     // v3.1 Aufwind hebt (träge, ≈ 0,45 s)
       visPitch = this.pitch * 0.8 + Math.min(0.25, vFlat * 0.05);
       visRoll = KH.lage(this.yawRate); // v3.1 kräftigere Schräglage (?kurve=0: −0,36·Rate, höchstens 31°)
       // Boden & Decke
