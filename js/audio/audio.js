@@ -37,7 +37,7 @@ const MIX = {
   aww: 0.32, glitter: 0.5, fanfare: 0.62, star0: 0.5, star1: 0.52, star2: 0.55, unlock: 0.55, tick: 0.3, go: 0.45, fail: 0.45,
   tap: 0.32, back: 0.3, combo: 0.4, sip: 0.35, pups: 0.42, hupe: 0.5,
   // v2.3: Zufalls-Einlagen + Wiesen-Leben (Summen/Platscher bewusst leise)
-  zauber: 0.42, swoosh: 0.4, rakete: 0.42, pop: 0.42, blubb: 0.38, wackel: 0.45, funkel: 0.4, summ: 0.14, platsch: 0.34,
+  zauber: 0.42, swoosh: 0.4, rakete: 0.42, pop: 0.42, blubb: 0.38, wackel: 0.45, funkel: 0.4, summ: 0.14, flatter: 0.3, platsch: 0.34,
   // v2.4: Sieger-Einlagen
   trommel: 0.4, knall: 0.4, zeitlupe: 0.36,
   // v3.0: Flugshow-Clip (Beat)

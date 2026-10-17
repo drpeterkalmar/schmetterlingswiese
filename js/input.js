@@ -1,5 +1,5 @@
 // Eingabe: Tipp-Zonen (Kinderwunsch: Tippen & Halten statt Wischen), Joystick, Tastatur
-import { expoKurve } from './game/flugschule.js';
+import { expoKurve, FLUG, istTipp } from './game/flugschule.js';
 export class Input {
   constructor(layer) {
     this.layer = layer;
@@ -21,17 +21,24 @@ export class Input {
     addEventListener('keydown', (e) => {
       if (e.repeat) return;
       this.keys[e.code] = true;
+      if (e.code === 'ArrowUp' || e.code === 'KeyW') this.upT = e.timeStamp; // v3.1 kurz antippen = Flatter-Stoß
       if (e.code === 'Space' || e.code === 'KeyL') this.actions.push('loop');
       if (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyR' || e.code === 'KeyK') this.actions.push('roll');
       if (e.code === 'Escape' || e.code === 'KeyP') this.actions.push('pause');
       if (e.code === 'KeyC') this.actions.push('show'); // 🎪 Zufalls-Stunt
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
     });
-    addEventListener('keyup', (e) => { this.keys[e.code] = false; });
+    addEventListener('keyup', (e) => {
+      this.keys[e.code] = false;
+      if ((e.code === 'ArrowUp' || e.code === 'KeyW') && this.upT != null && istTipp((e.timeStamp - this.upT) / 1000, 0)) this.flap();
+      if (e.code === 'ArrowUp' || e.code === 'KeyW') this.upT = null;
+    });
     addEventListener('blur', () => { this.keys = {}; this.ptr.clear(); this.stick = null; });
     this.zoneEls = {};
     this.stickEl = null;
   }
+  // v3.1 Flatter-Stoß (?flatter=0: aus): kurzer Tipp ▲ (< 0,2 s, ohne Schieben) – Halten bleibt Dauer-Steigen
+  flap() { if (FLUG.flatter.an && this.enabled) this.actions.push('flap'); }
   zoneOf(x, y) {
     const w = innerWidth, h = innerHeight;
     if (x < w * 0.3) return 'L';
@@ -57,13 +64,13 @@ export class Input {
     this.onFirst && this.onFirst();
     if (this.mode === 'stick') {
       if (e.clientX < innerWidth * 0.55 && !this.stick) {
-        this.stick = { id: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY };
+        this.stick = { id: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, t0: e.timeStamp };
         this.showStick(true);
-      }
+      } else this.ptr.set(e.pointerId, { tap: true, t0: e.timeStamp, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY }); // rechte Seite: Tipp = Flattern
       return;
     }
     const z = this.zoneOf(e.clientX, e.clientY);
-    this.ptr.set(e.pointerId, { x: e.clientX, y: e.clientY, ay: e.clientY, c0: z === 'U' ? 1 : z === 'D' ? -1 : 0, t: 0, c: 0 });
+    this.ptr.set(e.pointerId, { x: e.clientX, y: e.clientY, ay: e.clientY, y0: e.clientY, x0: e.clientX, t0: e.timeStamp, c0: z === 'U' ? 1 : z === 'D' ? -1 : 0, t: 0, c: 0 });
     this.paintZones();
   }
   move(e) {
@@ -78,12 +85,20 @@ export class Input {
     }
   }
   up(e) {
-    if (this.stick && e.pointerId === this.stick.id) { this.stick = null; this.showStick(false); }
+    if (this.stick && e.pointerId === this.stick.id) {
+      // Joystick: kurz nach oben geschnippt = Flatter-Stoß
+      const S = this.stick, dy = S.y - S.y0;
+      if (e.type === 'pointerup' && dy < -20 && istTipp((e.timeStamp - S.t0) / 1000, 0)) this.flap();
+      this.stick = null; this.showStick(false);
+    }
+    const p = this.ptr.get(e.pointerId);
+    if (p && e.type === 'pointerup' && (p.tap || p.c0 === 1) && istTipp((e.timeStamp - p.t0) / 1000, Math.hypot(p.x - p.x0, p.y - p.y0))) this.flap();
     if (this.ptr.delete(e.pointerId)) this.paintZones();
   }
   paintZones() {
     const act = { L: 0, R: 0, U: 0, D: 0 };
     for (const p of this.ptr.values()) {
+      if (p.tap) continue;
       const [t, c] = this.axes(p); p.t = t; p.c = c;
       if (t < 0) act.L = 1; if (t > 0) act.R = 1; if (c > 0.05) act.U = 1; if (c < -0.05) act.D = 1;
     }

@@ -647,6 +647,16 @@ export class Game {
     // v2.7: zählt nur in Kunststück-Missionen (stunts mit show), sonst bleibt der 🎪-Knopf purer Spaß
     for (const t of this.tasks) if (t.needS && !t.done) { t.onStunt('show'); this.app.ui.hudTasks(this.tasks); }
   }
+  // v3.1 Flatter-Stoß: Flügelschlag (Figur), „frrr“ lauter je Stapelhöhe, ein paar Pollen-Stäubchen nach unten
+  flap() {
+    const pl = this.player;
+    if (!pl.flatter(this.time)) return false;
+    const n = pl.flat.n;
+    this.app.audio.sfx('flatter', 0, { gain: pl.flat.summen(n), rate: 1 + 0.06 * (n - 1) });
+    this.bursts.emit({ n: 3 + n, pos: pl.pos, colors: [0xfff3b0, 0xffffff], shape: 1, size: 0.22, speed: 1.2, up: -1.6, life: 0.55, grav: 0.8, drag: 2, spread: 0.5 });
+    if (!this.shownHints.flap) { this.shownHints.flap = true; this.app.ui.toast('🪽 Tipp-tipp = Flatter-Hüpfer!'); }
+    return true;
+  }
   fail(msg) {
     if (this.state !== 'play') return;
     this.state = 'failed';
@@ -674,6 +684,7 @@ export class Game {
       for (const a of input.take()) {
         if (a === 'pause') this.app.pause();
         if (a === 'show') this.showStunt();
+        if (a === 'flap') this.flap();
       }
     }
     pl.update(dt, t, playing ? input : null);

@@ -48,9 +48,12 @@ def collage(name, bilder, texte):
     cols = min(4, len(ims)); rows = (len(ims) + cols - 1) // cols
     W, H = int(w * sc), int(h * sc)
     out = Image.new('RGB', (cols * W, rows * (H + 22)), (255, 255, 255)); d = ImageDraw.Draw(out)
+    from PIL import ImageFont
+    try: font = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial.ttf', 14)
+    except Exception: font = None
     for k, im in enumerate(ims):
         x, y = (k % cols) * W, (k // cols) * (H + 22)
-        out.paste(im.convert('RGB').resize((W, H)), (x, y + 22)); d.text((x + 6, y + 4), texte[k], fill=(20, 20, 20))
+        out.paste(im.convert('RGB').resize((W, H)), (x, y + 22)); d.text((x + 6, y + 4), texte[k], fill=(20, 20, 20), font=font)
     out.save(f'{OUT}/{name}.jpg', quality=82)
     for b in bilder: os.remove(b)
     print('Collage', f'{OUT}/{name}.jpg')

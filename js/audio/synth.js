@@ -347,6 +347,17 @@ export async function renderSfx(onProgress) {
     const n = noise(c, t, t + 0.7); const bp = filt(c, 'bandpass', 2500, 1.2); bp.frequency.setValueAtTime(1200, t); bp.frequency.exponentialRampToValueAtTime(6000, t + 0.4);
     const a = g(c, 0); env(a.gain, t, 0.15, 0.35, 0.12, t + 0.7); chain(n, bp, a, o);
   }, { wet: 0.35 });
+  // v3.1 Flatter-Stoß: kurzes weiches „frrr“ (Rauschen, im Flügeltakt ~24 Hz moduliert, ein Hauch Summen darunter)
+  for (let v = 0; v < 3; v++) add('flatter', 0.4, 2, (c, o, t) => {
+    const n = noise(c, t, t + 0.3); const bp = filt(c, 'bandpass', 900 + v * 180, 1.4);
+    bp.frequency.setValueAtTime(700 + v * 150, t); bp.frequency.exponentialRampToValueAtTime(1600 + v * 200, t + 0.2);
+    const a = g(c, 0); a.gain.setValueAtTime(0, t);
+    for (let k = 0; k < 6; k++) { const tk = t + k / 24; a.gain.linearRampToValueAtTime(0.55 * (1 - k / 7), tk + 0.012); a.gain.linearRampToValueAtTime(0.08, tk + 0.038); }
+    a.gain.linearRampToValueAtTime(0, t + 0.3);
+    chain(n, bp, a, o);
+    const f = 230 + v * 25, s2 = osc(c, 'triangle', f, t, t + 0.28); s2.frequency.linearRampToValueAtTime(f * 1.12, t + 0.25);
+    const b = g(c, 0); env(b.gain, t, 0.03, 0.12, 0.13, t + 0.28); chain(s2, filt(c, 'lowpass', 900, 0.7), b, o);
+  }, { wet: 0.12, peak: 0.45 });
   // Wusch: schneller Luftzug mit Stereo-Wischer
   for (let v = 0; v < 3; v++) add('swoosh', 0.9, 2, (c, o, t) => {
     const n = noise(c, t, t + 0.6); const bp = filt(c, 'bandpass', 700, 2);

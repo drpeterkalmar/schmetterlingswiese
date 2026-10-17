@@ -31,8 +31,9 @@ export const FLUG = {
   kurve: { an: regler('kurve', 1) > 0, lage: 0.5, lageMax: 46 * DEG, engNach: 0.7, engEin: 0.3, engRate: 1.35, engLage: 60 * DEG, schwelle: 0.6 },
   // #11 Eingabekurve (nur Joystick und Schiebe-Steigen)
   expo: Math.max(1, regler('expo', 1)),
-  // #2 Flatter-Stapel: kurzer Tipp ▲ (< 0,2 s) = Stoß, Halten bleibt Dauer-Steigen
-  flatter: { an: regler('flatter', 1) > 0, stapel: 3, dauer: 0.8, abstand: 0.25, tippMax: 0.2, stoss: 1.6, abkling: 2.5,
+  // #2 Flatter-Stapel: kurzer Tipp ▲ (< 0,2 s) = Stoß, Halten bleibt Dauer-Steigen. Stoß 1,8 statt Startwert 1,6 m/s
+  // (Messung: 3 Tipps im Takt 3,6 → 3,9 m in 1,2 s, Ziel ≈ 4 m; 1 Tipp 1,05 → 1,1 m)
+  flatter: { an: regler('flatter', 1) > 0, stapel: 3, dauer: 0.8, abstand: 0.25, tippMax: 0.2, stoss: 1.8, abkling: 2.5,
     schlag: [1, 1.27, 1.6], summen: [0.9, 1.1, 1.2] },
   // #4 Ring-Schub: +20 % in 0,25 s, 0,6 s halten, 1,0 s abklingen; FOV +6° (reduzierte Bewegung +3°), Kamera 8 % weiter
   ringschub: { staerke: Math.max(0, regler('ringschub', 0.2)), rampe: 0.25, halten: 0.6, abkling: 1.0, fov: 6, fovRM: 3, camWeg: 0.08 },

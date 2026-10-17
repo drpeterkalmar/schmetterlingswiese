@@ -11,7 +11,7 @@ const _sd = [0, 1, 0];
 import { showOffset, showOrient, showLift, liftAt, showBounds } from '../game/stunts.js';
 import { kunstMitte, kunstRadius, kunstEnde } from '../game/kunstflug.js';
 // v3.1 Flugschule: Schwung, Kurvenhilfe … (eine Parametergruppe, je Mechanik ein URL-Regler, 0 = wie v3.0)
-import { FLUG, tempoSchritt, tempoAlt, KurvenHilfe } from '../game/flugschule.js';
+import { FLUG, tempoSchritt, tempoAlt, KurvenHilfe, FlatterStapel } from '../game/flugschule.js';
 
 const TAU = Math.PI * 2;
 // v2.5.1 Landen leichter: Fangbereich-Faktor gegenüber v2.5.0 (URL ?landen=<Faktor>, 1 = altes Verhalten ohne Einrasten)
@@ -38,7 +38,7 @@ export class Player {
     this.bounds = 108;
     this.critter = null;
     this.frozen = false;
-    this.diffId = 'mittel'; this.kurveH = new KurvenHilfe();
+    this.diffId = 'mittel'; this.kurveH = new KurvenHilfe(); this.flat = new FlatterStapel();
     // Blob-Schatten (v2.9: gerichteter Kontaktschatten, Quad 2×2 in xz, Größe/Richtung je Bild)
     if (KONTAKT_AN) {
       const g = new THREE.PlaneGeometry(2, 2); g.rotateX(-Math.PI / 2);
@@ -67,7 +67,7 @@ export class Player {
     this.landed = false; this.landSpot = null; this.landing = null; this.stunt = null; this.wetT = 0; this.dizzyT = 0; this.carry = null; this.showReset = true;
     this.airT = 9; this.seatTilt = null; this.seatOrbit = null;
     this.camInit = false; this.orbit = 0; this.hover = false; this.cheer = false; this.grandBlend = 0; this.camD = 1;
-    this.kurveH.reset();
+    this.kurveH.reset(); this.flat.reset();
   }
   emit(ev, a) { const f = this.on[ev]; if (f) f(a); }
   // o.grand = Sieger-Looping (länger, größerer Kreis, Seitenkamera)
@@ -124,6 +124,14 @@ export class Player {
     const z = S.mid.z + (S.def.kf ? 0 : S.L * p), x = S.mid.x;
     return out.set(S.start.x + rx * x + fx * z, S.start.y + S.mid.y + S.lift * liftAt(p, S), S.start.z + rz * x + fz * z);
   }
+  // v3.1 Flatter-Stoß (kurzer Tipp ▲): nur im freien Flug; true = neuer Stoß (Stapel bis 3)
+  flatter(t) {
+    if (this.frozen || this.landed || this.stunt || this.hover || (this.landing && !this.landing.done)) return false;
+    if (!this.flat.tipp(t)) return false;
+    this.critter && this.critter.bump(1.5);
+    this.emit('flap', this.flat.n);
+    return true;
+  }
   forward(out = _f) { const cp = Math.cos(this.pitch); return out.set(Math.sin(this.yaw) * cp, Math.sin(this.pitch), Math.cos(this.yaw) * cp); }
   push(v) { this.ext.add(v); }
 
@@ -135,6 +143,7 @@ export class Player {
     let visPitch = 0, visRoll = 0;
     this.wetT = Math.max(0, this.wetT - dt); this.dizzyT = Math.max(0, this.dizzyT - dt);
     if (!this.landed) this.airT += dt;
+    const vFlat = this.flat.schritt(dt);
 
     if (this.hover) {
       this.pitch *= Math.max(0, 1 - dt * 4); this.yawRate *= Math.max(0, 1 - dt * 4);
@@ -277,7 +286,8 @@ export class Player {
       else this.speed = tempoAlt(this.speed, this.baseSpeed * wet, this.pitch, dt, !!this.landing);
       this.forward(_v);
       this.pos.addScaledVector(_v, this.speed * dt);
-      visPitch = this.pitch * 0.8;
+      if (vFlat > 0 && !this.landing) this.pos.y += vFlat * dt; // v3.1 Flatter-Stoß hebt (klingt mit 2,5/s aus)
+      visPitch = this.pitch * 0.8 + Math.min(0.25, vFlat * 0.05);
       visRoll = KH.lage(this.yawRate); // v3.1 kräftigere Schräglage (?kurve=0: −0,36·Rate, höchstens 31°)
       // Boden & Decke
       const minY = height(this.pos.x, this.pos.z) + 0.9;
@@ -329,7 +339,7 @@ export class Player {
       if (!this.stunt && Math.abs(c.tilt.rotation.x) > Math.PI) c.tilt.rotation.x = 0;
       if (!this.stunt && Math.abs(c.tilt.rotation.z) > Math.PI) c.tilt.rotation.z = 0;
       }
-      c.update(dt, t, { speed01: THREE.MathUtils.clamp(this.speed / 10, 0, 1), landed: this.landed, climb: this.landed ? 0 : this.pitch, flapBoost: Math.max(0, climb), cheer: this.cheer });
+      c.update(dt, t, { speed01: THREE.MathUtils.clamp(this.speed / 10, 0, 1), landed: this.landed, climb: this.landed ? 0 : this.pitch, flapBoost: Math.max(0, climb), schlag: this.flat.schlag(), cheer: this.cheer });
     }
     this.updateShadow();
   }
@@ -353,6 +363,7 @@ export class Player {
     this.shadow.material.opacity = alpha ?? THREE.MathUtils.clamp(0.4 - hh * 0.012, 0.05, 0.4);
   }
   land(spot) {
+    this.flat.reset();
     this.landed = true; this.landSpot = spot; this.landing = null; this.landT = 0;
     this.pitch = 0; this.yawRate = 0; this.ext.set(0, 0, 0);
     // Sitz-Übergang (Blüte): Start = jetzige Lage/Blickrichtung/Neigung

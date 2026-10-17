@@ -80,3 +80,35 @@ test('Regler = 0 ergibt die v3.0-Flugbahn (±1 cm nach 10 s Eingabeskript)', () 
   const r = ref.mittel.at(-1), n = an.mittel.at(-1);
   assert.ok(Math.hypot(r.x - n.x, r.y - n.y, r.z - n.z) > 0.5);
 });
+
+test('Flatter-Stapel: 3 Tipps in 0,6 s → 3 Stöße, 4. Tipp 0,1 s danach → keiner; höchstens 3 gestapelt', () => {
+  const F = new FS.FlatterStapel();
+  assert.ok(F.tipp(0) && F.tipp(0.3) && F.tipp(0.6), '3 Stöße');
+  assert.equal(F.n, 3);
+  assert.equal(F.tipp(0.7), false, '4. Tipp zu knapp');
+  assert.ok(Math.abs(F.v - 3 * FLUG.flatter.stoss) < 1e-9, 'Steigstoß = Anzahl × Stoß');
+  assert.ok(F.tipp(0.95)); assert.equal(F.n, 3, 'voll: ältester wird erneuert');
+  // klingt aus und Einträge laufen nach 0,8 s ab
+  for (let i = 0; i < 120; i++) F.schritt(dt);
+  assert.equal(F.n, 0); assert.ok(F.v < 0.1);
+  // Rückmeldung je Stapelhöhe
+  const G = new FS.FlatterStapel(); G.tipp(0); assert.equal(G.schlag(), 1); G.tipp(0.3); assert.equal(G.schlag(), 1.27); G.tipp(0.6); assert.equal(G.schlag(), 1.6);
+  assert.deepEqual([G.summen(1), G.summen(2), G.summen(3)], [0.9, 1.1, 1.2]);
+});
+test('Tipp-Erkennung: Halten ≥ 0,2 s oder Schieben ist nie ein Tipp', () => {
+  assert.ok(FS.istTipp(0.12, 3));
+  assert.equal(FS.istTipp(0.2, 0), false); assert.equal(FS.istTipp(0.5, 0), false); assert.equal(FS.istTipp(0.1, 40), false);
+});
+
+// Messgröße 3 im echten Flugmodell (Player.update): 1 Tipp ≈ +1 m, 3 Tipps im Takt ≈ +4 m in 1,2 s, Halten wie v3.0 ±5 %
+const mess = JSON.parse(execFileSync(process.execPath, ['--import', './tests/node/umgebung.mjs', 'tests/node/flugschule_mess.mjs'], { stdio: 'pipe' }).toString());
+const MESS30 = { leicht: [2.219, 8.066], mittel: [2.465, 8.963], schwer: [2.747, 9.987] }; // v3.0 (tests/perf/2026-10-17_v31_mess_vorher.json)
+test('Flatter-Höhengewinn und Halten im Flugmodell', () => {
+  for (const s of ['leicht', 'mittel', 'schwer']) {
+    const m = mess[s];
+    assert.ok(m.tipp1.mitTipps > 0.8 && m.tipp1.mitTipps < 1.3, `${s}: 1 Tipp ${m.tipp1.mitTipps} m`);
+    assert.ok(m.tipp3.mitTipps > 3.3 && m.tipp3.mitTipps < 4.7, `${s}: 3 Tipps ${m.tipp3.mitTipps} m`);
+    assert.equal(m.tipp3.stoesse, 3); assert.equal(m.tipp4.stoesse, 3, '4. Tipp nach 0,1 s gibt keinen Stoß');
+    assert.ok(Math.abs(m.halten1s / MESS30[s][0] - 1) <= 0.05 && Math.abs(m.halten3s / MESS30[s][1] - 1) <= 0.05, `${s}: Halten ${m.halten1s}/${m.halten3s}`);
+  }
+});

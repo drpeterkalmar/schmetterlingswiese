@@ -845,7 +845,7 @@ export class Critter {
     const fl = st.speed01 ?? 0.6;
     const boost = st.flapBoost || 0;
     // Flügelschlag
-    const rate = landed ? 1.6 : (5 + fl * 5 + boost * 4);
+    const rate = landed ? 1.6 : (5 + fl * 5 + boost * 4) * (st.schlag || 1); // v3.1 Flatter-Stapel: ×1 / 1,27 / 1,6
     this.flapT += dt * rate;
     const sheet = this.kind === 'schmetterling' || this.kind === 'mondfalter' || this.kind === 'einhorn';
     for (const w of this.wings) {

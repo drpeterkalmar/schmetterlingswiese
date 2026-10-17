@@ -1,0 +1,100 @@
+{
+ "stand": "v3.0",
+ "regler": "",
+ "leicht": {
+  "sturz": {
+   "ende": 1.162,
+   "min": 1,
+   "max": 1.162,
+   "zurueck5": 0.87
+  },
+  "steigen": {
+   "ende": 0.838,
+   "min": 0.838,
+   "max": 1,
+   "zurueck5": 0.87
+  },
+  "halten1s": 2.219,
+  "halten3s": 8.066,
+  "tipp1": {
+   "mitTipps": 0.414,
+   "nurEingabe": 0.414,
+   "stoesse": 0
+  },
+  "tipp3": {
+   "mitTipps": 1.091,
+   "nurEingabe": 1.091,
+   "stoesse": 0
+  },
+  "tipp4": {
+   "mitTipps": 1.344,
+   "nurEingabe": 1.344,
+   "stoesse": 0
+  },
+  "aufwind": null
+ },
+ "mittel": {
+  "sturz": {
+   "ende": 1.162,
+   "min": 1,
+   "max": 1.162,
+   "zurueck5": 0.87
+  },
+  "steigen": {
+   "ende": 0.838,
+   "min": 0.838,
+   "max": 1,
+   "zurueck5": 0.87
+  },
+  "halten1s": 2.465,
+  "halten3s": 8.963,
+  "tipp1": {
+   "mitTipps": 0.46,
+   "nurEingabe": 0.46,
+   "stoesse": 0
+  },
+  "tipp3": {
+   "mitTipps": 1.213,
+   "nurEingabe": 1.213,
+   "stoesse": 0
+  },
+  "tipp4": {
+   "mitTipps": 1.494,
+   "nurEingabe": 1.494,
+   "stoesse": 0
+  },
+  "aufwind": null
+ },
+ "schwer": {
+  "sturz": {
+   "ende": 1.162,
+   "min": 1,
+   "max": 1.162,
+   "zurueck5": 0.87
+  },
+  "steigen": {
+   "ende": 0.838,
+   "min": 0.838,
+   "max": 1,
+   "zurueck5": 0.87
+  },
+  "halten1s": 2.747,
+  "halten3s": 9.987,
+  "tipp1": {
+   "mitTipps": 0.513,
+   "nurEingabe": 0.513,
+   "stoesse": 0
+  },
+  "tipp3": {
+   "mitTipps": 1.351,
+   "nurEingabe": 1.351,
+   "stoesse": 0
+  },
+  "tipp4": {
+   "mitTipps": 1.664,
+   "nurEingabe": 1.664,
+   "stoesse": 0
+  },
+  "aufwind": null
+ }
+}
