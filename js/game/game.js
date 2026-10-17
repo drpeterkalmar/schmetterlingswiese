@@ -8,6 +8,7 @@ import { makeTask, GlitterStar } from './objectives.js';
 import { DEKO } from '../engine/deko.js';
 import { DIFFS, worldOf, isRace, timeGoals } from './levels.js';
 import { FanCam, editAn } from './fancam.js';
+import { FLUG, RingKette } from './flugschule.js';
 import { pickStunt, stuntByKey, stuntName, stuntTitle, COOLDOWN, C as SC, ease, pickFinale, finaleByKey, ACCENT, SMOKE, FINALE_AMP, FINALE_DUR } from './stunts.js';
 
 const _v = new THREE.Vector3(), _w = new THREE.Vector3();
@@ -202,6 +203,7 @@ export class Game {
     }
     this.gustT = 8 + this.rnd() * 6; this.gust = null;
     // Zustand
+    this.kette = new RingKette();
     this.time = 0; this.combo = 0; this.maxCombo = 0; this.lastHit = -99; this.hits = 0; this.bumps = 0;
     const TG = timeGoals(level, D.id);
     this.limit = TG.limit; this.par = TG.par; this.blitz = TG.blitz;
@@ -255,13 +257,22 @@ export class Game {
     this.lastHit = this.time; this.hits++;
     this.maxCombo = Math.max(this.maxCombo, this.combo);
     const pan = this.app.screenPan(pos);
-    this.app.audio.collect(this.combo, pan, kind);
+    // v3.1 Ring-Schub + Ringkette: jeder Ring gibt Rückenwind; n Ringe im Kombo-Fenster → „Rückenwind!“ (länger, kräftiger)
+    let ringRate = 1, schub = false;
+    if (kind === 'ring') {
+      const K = this.kette || (this.kette = new RingKette());
+      const voll = K.ring(this.time, D.comboWin);
+      if (FLUG.kette.n > 0) ringRate = K.tonRate();
+      if (FLUG.ringschub.staerke > 0) { this.player.wind.stoss(FLUG.ringschub.staerke); schub = true; }
+      if (voll) this.rueckenwind(pos);
+    }
+    this.app.audio.collect(this.combo, pan, kind, ringRate);
     this.app.haptics.buzz(kind === 'ring' ? 'ring' : 'collect');
     this.bursts.emit({ n: 16 + Math.min(20, this.combo * 2), pos, colors: [col, 0xffffff, 0xfff3b0], shape: 1, size: 0.42, speed: 5, up: 1.5, life: 0.9, grav: -2 });
     this.bursts.emit({ n: 1, pos, colors: [col], shape: 5, size: 3.2, speed: 0, up: 0, life: 0.35, grav: 0, drag: 0 });
     const c = this.player.critter;
     if (c) { c.happyT = 0.7; c.squashV += 4; }
-    this.player.kick(2.5 + Math.min(4, this.combo * 0.5), 0.08);
+    if (schub) this.player.kick(0, 0.08); else this.player.kick(2.5 + Math.min(4, this.combo * 0.5), 0.08); // Ring: FOV kommt vom Rückenwind
     // Teilziel geschafft → automatische Freuden-Schraube (ersetzt den Schraube-Knopf)
     const last = this.tasks.length && this.tasks.every(tk => tk.done);
     if (!last) this.celebrateRoll(col, this.tasks.some(tk => tk.done && !tk._cheered && (tk._cheered = true)));
@@ -272,6 +283,21 @@ export class Game {
     if (kind === 'visit' || kind === 'deliver') this.app.stat('animals');
     this.app.discover(kind);
     this.app.ui.hudTasks(this.tasks);
+  }
+  // v3.1 Ringkette voll: Rückenwind 2 s +35 %, Blütenblatt-Wirbel um die Figur, Lob
+  rueckenwind(pos) {
+    const pl = this.player, K = FLUG.kette;
+    pl.wind.stoss(K.staerke, K.halten, 'kette');
+    // Wirbel reist mit der Figur (Fluggeschwindigkeit mitgegeben), Blätter kreisen tangential um sie herum
+    const fx = Math.sin(pl.yaw), fz = Math.cos(pl.yaw), vv = pl.tempo * 0.85;
+    for (let k = 0; k < 24; k++) {
+      const a = k / 24 * Math.PI * 2, r = 1.2 + (k % 2) * 0.35;
+      _v.set(pl.pos.x + Math.cos(a) * r, pl.pos.y + (k % 3 - 1) * 0.4, pl.pos.z + Math.sin(a) * r);
+      _w.set(-Math.sin(a) * 2.6 + fx * vv, 0.7, Math.cos(a) * 2.6 + fz * vv);
+      this.bursts.emit({ n: 1, pos: _v, vel: _w, colors: [0xff8fbf, 0xffb3cf, 0xffffff, 0xff6fa8], shape: k % 4 ? 2 : 1, size: k % 4 ? 0.75 : 0.5, speed: 0, up: 0, life: 1.5, grav: -0.2, drag: 0.35, spin: 6, spread: 0.1 });
+    }
+    this.app.audio.sfx('swoosh', 0, { gain: 0.8, rate: 1.1 });
+    this.app.ui.toast('🌬️ Rückenwind! ' + K.n + ' Ringe am Stück');
   }
   // Freuden-Schraube: Körper dreht um die Längsachse, Spiral-Glitzer, Woosh. Steuerung bleibt frei.
   // big = eine ganze Teilaufgabe fertig (z. B. alle Ringe) → Doppel-Schraube + Sternenring.

@@ -11,7 +11,8 @@ const _sd = [0, 1, 0];
 import { showOffset, showOrient, showLift, liftAt, showBounds } from '../game/stunts.js';
 import { kunstMitte, kunstRadius, kunstEnde } from '../game/kunstflug.js';
 // v3.1 Flugschule: Schwung, Kurvenhilfe … (eine Parametergruppe, je Mechanik ein URL-Regler, 0 = wie v3.0)
-import { FLUG, tempoSchritt, tempoAlt, KurvenHilfe, FlatterStapel } from '../game/flugschule.js';
+import { FLUG, tempoSchritt, tempoAlt, KurvenHilfe, FlatterStapel, Rueckenwind } from '../game/flugschule.js';
+import { RM as RM_FS } from '../engine/deko.js';
 
 const TAU = Math.PI * 2;
 // v2.5.1 Landen leichter: Fangbereich-Faktor gegenüber v2.5.0 (URL ?landen=<Faktor>, 1 = altes Verhalten ohne Einrasten)
@@ -38,7 +39,7 @@ export class Player {
     this.bounds = 108;
     this.critter = null;
     this.frozen = false;
-    this.diffId = 'mittel'; this.kurveH = new KurvenHilfe(); this.flat = new FlatterStapel();
+    this.diffId = 'mittel'; this.kurveH = new KurvenHilfe(); this.flat = new FlatterStapel(); this.wind = new Rueckenwind();
     // Blob-Schatten (v2.9: gerichteter Kontaktschatten, Quad 2×2 in xz, Größe/Richtung je Bild)
     if (KONTAKT_AN) {
       const g = new THREE.PlaneGeometry(2, 2); g.rotateX(-Math.PI / 2);
@@ -67,7 +68,7 @@ export class Player {
     this.landed = false; this.landSpot = null; this.landing = null; this.stunt = null; this.wetT = 0; this.dizzyT = 0; this.carry = null; this.showReset = true;
     this.airT = 9; this.seatTilt = null; this.seatOrbit = null;
     this.camInit = false; this.orbit = 0; this.hover = false; this.cheer = false; this.grandBlend = 0; this.camD = 1;
-    this.kurveH.reset(); this.flat.reset();
+    this.kurveH.reset(); this.flat.reset(); this.wind.reset();
   }
   emit(ev, a) { const f = this.on[ev]; if (f) f(a); }
   // o.grand = Sieger-Looping (länger, größerer Kreis, Seitenkamera)
@@ -132,6 +133,8 @@ export class Player {
     this.emit('flap', this.flat.n);
     return true;
   }
+  // Tempo samt Rückenwind (Anzeige/Messung: Ring-Schub-Verlauf)
+  get tempo() { return this.speed + this.wind.wert * this.baseSpeed; }
   forward(out = _f) { const cp = Math.cos(this.pitch); return out.set(Math.sin(this.yaw) * cp, Math.sin(this.pitch), Math.cos(this.yaw) * cp); }
   push(v) { this.ext.add(v); }
 
@@ -144,6 +147,7 @@ export class Player {
     this.wetT = Math.max(0, this.wetT - dt); this.dizzyT = Math.max(0, this.dizzyT - dt);
     if (!this.landed) this.airT += dt;
     const vFlat = this.flat.schritt(dt);
+    const vWind = this.wind.schritt(dt) * this.baseSpeed; // v3.1 Rückenwind (Ring-Schub, Ringkette), m/s zusätzlich
 
     if (this.hover) {
       this.pitch *= Math.max(0, 1 - dt * 4); this.yawRate *= Math.max(0, 1 - dt * 4);
@@ -285,7 +289,7 @@ export class Player {
       if (FLUG.schwung.an && !this.landing) this.speed = tempoSchritt(this.speed, this.baseSpeed * wet, this.pitch, dt, this.diffId === 'leicht');
       else this.speed = tempoAlt(this.speed, this.baseSpeed * wet, this.pitch, dt, !!this.landing);
       this.forward(_v);
-      this.pos.addScaledVector(_v, this.speed * dt);
+      this.pos.addScaledVector(_v, (this.speed + (this.landing ? 0 : vWind)) * dt);
       if (vFlat > 0 && !this.landing) this.pos.y += vFlat * dt; // v3.1 Flatter-Stoß hebt (klingt mit 2,5/s aus)
       visPitch = this.pitch * 0.8 + Math.min(0.25, vFlat * 0.05);
       visRoll = KH.lage(this.yawRate); // v3.1 kräftigere Schräglage (?kurve=0: −0,36·Rate, höchstens 31°)
@@ -468,7 +472,9 @@ export class Player {
     const bx = -_f.x * ca + _f.z * sa, bz = -_f.z * ca - _f.x * sa;
     // v3.0 Kunstflug: etwas weiter weg (ganze Figur samt Rauchspur im Bild), weich zurück beim Ausleiten
     this.camD = (this.camD || 1) + ((show && show.p < (show.kEnd || 0.8) ? show.def.camD || 1 : 1) - (this.camD || 1)) * Math.min(1, dt * 2.5);
-    const d = (this.landed || this.hover ? dist * 0.72 : dist) * (this.camD || 1);
+    // v3.1 Rückenwind: Kamera bis 8 % weiter weg, FOV bis +6° (reduzierte Bewegung +3°) statt Kombo-Kick
+    const RS = FLUG.ringschub, wk = this.stunt || this.landed ? 0 : this.wind.ring;
+    const d = (this.landed || this.hover ? dist * 0.72 : dist) * (this.camD || 1) * (1 + RS.camWeg * wk);
     const pitchLift = this.stunt ? (show ? 0.7 : 1.2) : THREE.MathUtils.clamp(-this.pitch * 2.2, -1.0, 2.0);
     const A = this.stunt && this.stunt.anchor ? this.stunt.anchor : this.pos; // Zufalls-Einlage: Kamera folgt der Fluglinie
     _v.set(A.x + bx * d, A.y + hgt + pitchLift - (this.landed || this.hover ? 0.7 : 0), A.z + bz * d);
@@ -494,7 +500,7 @@ export class Player {
     // FOV: Seitenverhältnis + Tempo + Kick
     const base = portrait ? THREE.MathUtils.clamp(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(33)) / aspect) * 180 / Math.PI, 60, 76) : 62;
     this.fovKick = Math.max(0, this.fovKick - dt * 12);
-    const fov = base + (this.stunt ? (show ? 3 : 7) : 0) + this.fovKick + (this.speed - this.baseSpeed) * 0.6;
+    const fov = base + (this.stunt ? (show ? 3 : 7) : 0) + this.fovKick + (this.speed - this.baseSpeed) * 0.6 + (RM_FS ? RS.fovRM : RS.fov) * wk;
     cam.fov += (fov - cam.fov) * Math.min(1, dt * 5);
     cam.updateProjectionMatrix();
   }

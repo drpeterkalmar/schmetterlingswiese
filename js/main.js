@@ -20,7 +20,7 @@ import { Takt, Darstellung } from './engine/takt.js';
 // v2.9 fester Simulationstakt im Spiel (60 Hz + Interpolation der Darstellung); ?takt=0 = variables dt wie bis v2.8
 const TAKT_AN = new URLSearchParams(location.search).get('takt') !== '0';
 
-export const VERSION = '3.1.0-e2';
+export const VERSION = '3.1.0-e3';
 
 class App {
   constructor() {

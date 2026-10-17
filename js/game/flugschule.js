@@ -174,7 +174,8 @@ export class RingKette {
 // Ein Schritt: Lage-Anteil zur Figur (Lerp 1 − e^(−k·dt)), fertig nach dauer
 export function saugSchritt(t, dt, P = FLUG.saugen) {
   const nt = t + dt;
-  return { t: nt, k: 1 - Math.exp(-P.k * dt), s: Math.max(0, 1 - nt / P.dauer), fertig: nt >= P.dauer - 1e-6, dreh: P.dreh * nt };
+  const fertig = nt >= P.dauer - 1e-6;
+  return { t: nt, k: 1 - Math.exp(-P.k * dt), s: fertig ? 0 : Math.max(0, 1 - nt / P.dauer), fertig, dreh: P.dreh * nt };
 }
 
 // ------------------------------------------------------------------ #3 Aufwind

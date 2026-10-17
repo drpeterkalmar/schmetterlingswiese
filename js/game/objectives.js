@@ -9,6 +9,7 @@ import { HeightField, seatWorld } from './seat.js';
 import { rivalOf } from './levels.js';
 import { DEKO } from '../engine/deko.js';
 import { huelle } from '../engine/huelle.js';
+import { FLUG, saugSchritt } from './flugschule.js';
 
 const _o = new THREE.Object3D();
 const _c = new THREE.Color();
@@ -177,7 +178,12 @@ class CollectTask extends Task {
     const R = D.pickR + 0.4;
     this.items.forEach((it, i) => {
       if (it.taken) { it.s = Math.max(0, it.s - dt * 5); }
-      else {
+      else if (it.suck != null) {
+        // v3.1 Einsaugen: die letzten 0,2 s fliegt das Ziel zur Figur, schrumpft und dreht – erst dann zählt es (Pling)
+        const S = saugSchritt(it.suck, dt); it.suck = S.t; it.spin = S.dreh;
+        it.pos.lerp(pl, S.k); it.s = S.s;
+        if (S.fertig) { it.pos.copy(pl); it.suck = null; this.pending--; this.take(it); }
+      } else {
         if (this.kind === 'fireflies') {
           it.pos.set(it.base.x + Math.sin(t * 0.5 + it.ph) * 3, it.base.y + Math.sin(t * 0.9 + it.ph * 2) * 0.8, it.base.z + Math.cos(t * 0.43 + it.ph) * 3);
           if (D.id === 'schwer') { _v.subVectors(it.base, pl); const d = _v.length(); if (d < 6) it.base.addScaledVector(_v.normalize(), dt * 1.6); }
@@ -196,11 +202,13 @@ class CollectTask extends Task {
           it.pos.addScaledVector(_v, k);
           if (this.kind === 'collect') it.base.addScaledVector(_v, k); else it.base.addScaledVector(_v, Math.min(1, dt * 3));
         }
-        if (d < R && this.cur < this.max) this.take(it);
+        if (d < R && this.cur + (this.pending || 0) < this.max) {
+          if (FLUG.saugen.an) { it.suck = 0; it.suckT0 = g.time; this.pending = (this.pending || 0) + 1; } else this.take(it);
+        }
         // v2.3: Nektartropfen glitzern (kleine Funkelsterne, sin-moduliert über die Emissionsrate)
         if (this.kind === 'collect' && !it.taken && Math.random() < dt * (0.9 + 0.8 * Math.sin(t * 2.3 + it.ph))) { GO.pos = it.pos; g.bursts.emit(GO); }
       }
-      const spin = this.kind === 'blossoms' ? t * 1.5 + it.ph : t * 1.6 + it.ph;
+      const spin = (this.kind === 'blossoms' ? t * 1.5 + it.ph : t * 1.6 + it.ph) + (it.spin || 0);
       const bl = this.kind === 'blossoms';
       const pulse = this.kind === 'fireflies' ? 0.8 + 0.4 * Math.sin(t * 3 + it.ph) : 1;
       this.pool.set(i, it.pos, bl ? 0.5 * Math.sin(t + it.ph) : 0, spin, bl ? 0.3 : 0, it.s * (this.kind === 'blossoms' ? 1.25 : 1.3), it.col, (this.kind === 'fireflies' ? 3.2 : 1.9) * pulse * (it.s > 0.01 ? 1 : 0));
@@ -208,15 +216,15 @@ class CollectTask extends Task {
     this.pool.flush();
   }
   take(it) {
-    it.taken = true; this.cur++;
+    it.taken = true; this.cur++; it.takeT = this.g.time;
     this.g.hit(it.pos, this.kind, it.col);
   }
   target() {
     let best = null, bd = 1e9; const pl = this.g.player.pos;
-    for (const it of this.items) if (!it.taken) { const d = it.pos.distanceToSquared(pl); if (d < bd) { bd = d; best = it.pos; } }
+    for (const it of this.items) if (!it.taken && it.suck == null) { const d = it.pos.distanceToSquared(pl); if (d < bd) { bd = d; best = it.pos; } }
     return this.done ? null : best;
   }
-  debugNext() { const it = this.items.find(i => !i.taken); if (it) { this.g.player.pos.copy(it.pos); } }
+  debugNext() { const it = this.items.find(i => !i.taken && i.suck == null); if (it) { this.g.player.pos.copy(it.pos); } }
   // v2.5: Punkte + Radius (m), die der Zielpfeil nie verdecken darf
   marks(o) { for (const it of this.items) if (!it.taken) o.push(it.pos, 0.7); }
   dispose() { this.pool.dispose(); }

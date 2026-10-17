@@ -25,6 +25,15 @@ STEP = """(([n, turn, climb, acts]) => { const a = __app, dt = 1 / 60;
   const p = a.player; return { y: +p.pos.y.toFixed(2), v: +p.speed.toFixed(2), fov: +a.camera.fov.toFixed(1), roll: +(p.critter ? p.critter.tilt.rotation.z : 0).toFixed(2) };
 })"""
 
+# Autopilot in Echtzeit (die Hauptschleife rechnet und zeichnet wie im Spiel), danach wieder eingefroren
+def auto_bis(s, cond, sek=60):
+    s.ev("(() => { __app.autopilot = true; window.__freeze = undefined; })()")
+    try: s.pg.wait_for_function(cond, timeout=sek * 1000, polling=16)
+    finally: s.ev("(() => { window.__freeze = 1; __app.autopilot = false; })()")
+def auto(s, sek):
+    t0 = s.ev("__app.t")
+    if sek > 0: auto_bis(s, f"__app.t - {t0} >= {sek}", sek * 20 + 10)
+
 def step(s, sek, turn=0, climb=0, acts=None):
     return s.ev(STEP, [int(round(sek * 60)), turn, climb, acts or []])
 
@@ -79,6 +88,29 @@ def sz_flatter(s, f):
     r = step(s, 0.6); out.append((bild(s, 'fl4'), f'danach: Höhe {r["y"]}'))
     return out
 
+def sz_ringschub(s, f):
+    start(s, '1-3', 'mittel', 5); out = []
+    auto_bis(s, "__app.game.tasks[0].cur >= 1", 40)
+    for k, (sek, txt) in enumerate([(0.0, 'Ring durchflogen'), (0.25, '+0,25 s'), (0.6, '+0,85 s'), (1.05, '+1,9 s')]):
+        auto(s, sek); w = s.ev("({ w: __app.player.wind.wert, f: __app.camera.fov })")
+        out.append((bild(s, f'rs{k}'), f'{txt}: Rückenwind +{w["w"] * 100:.0f} %, FOV {w["f"]:.1f}°'))
+    return out
+def sz_kette(s, f):
+    start(s, '2-2', 'leicht', 4); out = []
+    auto_bis(s, "__app.game.tasks[0].cur >= 5", 60)
+    for k, sek in enumerate([0.05, 0.4, 1.2, 2.4]):
+        auto(s, sek); w = s.ev("__app.player.wind.wert")
+        out.append((bild(s, f'ke{k}'), f'Kette voll +{sum([0.05, 0.4, 1.2, 2.4][:k + 1]):.1f} s: +{w * 100:.0f} %'))
+    return out
+def sz_saugen(s, f):
+    start(s, '1-1', 'leicht', 4); out = []
+    auto_bis(s, "__app.game.tasks[0].items.some(i => i.suck != null)", 40)
+    for k in range(4):
+        r = s.ev("(() => { const it = __app.game.tasks[0].items.find(i => i.suck != null) || __app.game.tasks[0].items.filter(i => i.taken).at(-1); return { t: it.suck, s: it.s, d: it.pos.distanceTo(__app.player.pos) }; })()")
+        out.append((bild(s, f'sa{k}'), (f'Einsaugen {r["t"]:.2f} s' if r['t'] is not None else 'gezählt') + f' · Größe {r["s"]:.2f} · {r["d"]:.2f} m'))
+        step(s, 0.05)
+    return out
+
 SZENEN = {'kurve': sz_kurve, 'sturz': sz_sturz, 'flatter': sz_flatter}
 for extra in ['ringschub', 'kette', 'saugen', 'aufwind', 'schweif', 'landen', 'rolle']:
     fn = globals().get('sz_' + extra)
@@ -93,6 +125,7 @@ if __name__ == '__main__':
             s.tap('#title'); s.pg.fill('input.name', 'Bildprobe'); s.tap('[data-a=create]')
             s.ev("window.__H = (x, z) => __app.world.heightAt ? __app.world.heightAt(x, z) : 0")
             s.ev("(async () => { const T = await import('./js/world/terrain.js'); window.__H = T.height; })()")
+            s.ev("__game.setQuality(1)")  # feste Stufe Mittel (lange Rechenblöcke würden die Grafik-Automatik sonst herunterregeln)
             for n in (namen or SZENEN.keys()):
                 if n not in SZENEN: continue
                 r = SZENEN[n](s, fmt)

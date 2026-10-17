@@ -112,3 +112,33 @@ test('Flatter-Höhengewinn und Halten im Flugmodell', () => {
     assert.ok(Math.abs(m.halten1s / MESS30[s][0] - 1) <= 0.05 && Math.abs(m.halten3s / MESS30[s][1] - 1) <= 0.05, `${s}: Halten ${m.halten1s}/${m.halten3s}`);
   }
 });
+
+test('Ring-Schub: +20 % nach 0,25 s, zurück unter 2 % nach 1,9 s; neuer Stoß lässt nie absacken', () => {
+  const W = new FS.Rueckenwind(), A = FLUG.ringschub.staerke;
+  W.stoss(A); let t = 0, w025 = 0, w19 = 0;
+  for (let i = 0; i < 200; i++) { t += dt; const w = W.schritt(dt); if (Math.abs(t - 0.25) < dt / 2) w025 = w; if (Math.abs(t - 1.9) < dt / 2) w19 = w; }
+  assert.ok(Math.abs(w025 - 0.2) < 0.005, 'nach 0,25 s: ' + w025);
+  assert.ok(w19 < 0.02 * 1, 'nach 1,9 s: ' + w19);
+  // zwei Ringe kurz nacheinander: kein Einbruch zwischen den Stößen
+  const V = new FS.Rueckenwind(); V.stoss(A); let min = 1, tt = 0;
+  for (let i = 0; i < 120; i++) { tt += dt; if (Math.abs(tt - 0.7) < dt / 2) V.stoss(A); const w = V.schritt(dt); if (tt > 0.3 && tt < 1.5) min = Math.min(min, w); }
+  assert.ok(min > 0.19, 'Einbruch ' + min);
+  // Kette: 2 s halten mit +35 %
+  const K = new FS.Rueckenwind(); K.stoss(FLUG.kette.staerke, FLUG.kette.halten); let k2 = 0; tt = 0;
+  for (let i = 0; i < 140; i++) { tt += dt; const w = K.schritt(dt); if (Math.abs(tt - 2.2) < dt / 2) k2 = w; }
+  assert.ok(Math.abs(k2 - 0.35) < 1e-9);
+});
+test('Ringkette: 5 Ringe im Kombo-Fenster → voll; Pause zu lang → neu; Ton +1 Halbton je Glied', () => {
+  const K = new FS.RingKette(); const r = [];
+  for (let i = 0; i < 5; i++) r.push(K.ring(i * 3, 4.2));
+  assert.deepEqual(r, [false, false, false, false, true]);
+  assert.ok(Math.abs(K.tonRate() - Math.pow(2, 4 / 12)) < 1e-12);
+  assert.equal(K.ring(20, 4.2), false); assert.equal(K.n, 1, 'zu lange Pause beginnt neu');
+});
+test('Einsaugen: Ziel erreicht die Figur in 0,15–0,25 s, schrumpft auf 0, dreht 300°/s', () => {
+  let t = 0, n = 0, S, pos = 2.0; // 2 m entfernt (Fangradius Leicht)
+  do { S = FS.saugSchritt(t, dt); t = S.t; pos *= 1 - S.k; n++; } while (!S.fertig && n < 100);
+  assert.ok(t >= 0.15 && t <= 0.25, 'Dauer ' + t);
+  assert.equal(S.s, 0); assert.ok(pos < 0.25, 'Rest vor dem Einrasten ' + pos);
+  assert.ok(Math.abs(S.dreh - 300 * Math.PI / 180 * t) < 1e-9);
+});

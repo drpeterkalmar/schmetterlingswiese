@@ -226,11 +226,11 @@ export class AudioEngine {
   }
   keyRate() { const k = this.music ? this.music.key : 0; return Math.pow(2, k / 12); }
   // Sammel-Pling: steigt mit der Kombo die Skala hoch, in der Tonart der Musik
-  collect(combo, pan, kind) {
+  collect(combo, pan, kind, ringRate = 1) {
     const d = Math.min(11, Math.max(0, combo - 1));
     const buf = this.pick('pling' + d);
     if (buf) this.play(buf, { gain: MIX.pling * Math.pow(10, ((Math.random() - 0.5) * 2) / 20), rate: this.keyRate() * (1 + (Math.random() - 0.5) * 0.004), pan });
-    if (kind === 'ring') this.sfx('ring', pan);
+    if (kind === 'ring') this.sfx('ring', pan, ringRate !== 1 ? { rate: ringRate } : {}); // v3.1 Ringkette: +1 Halbton je Glied
     if (kind === 'visit' || kind === 'deliver') this.sfx('aww', pan);
     if (kind === 'land') this.sfx('sip', pan);
     if (combo === 5 || combo === 10 || combo === 15 || combo === 20) this.sfx('combo', pan);
