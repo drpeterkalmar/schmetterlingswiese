@@ -150,7 +150,7 @@ export class Game {
     this.spawnYaw = Math.atan2(-this.spawn.x, -this.spawn.z) + (this.rnd() - 0.5) * 0.6;
     if (P0[2] > 1) this.spawnYaw += 0.9;
     const D = this.diffCfg;
-    this.player.baseSpeed = D.speed; this.player.turnRate = D.turn; this.player.speed = D.speed;
+    this.player.baseSpeed = D.speed; this.player.turnRate = D.turn; this.player.speed = D.speed; this.player.diffId = D.id;
     this.player.reset(this.spawn, this.spawnYaw);
     // Tiere
     const specs = [];

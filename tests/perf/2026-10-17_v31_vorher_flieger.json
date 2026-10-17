@@ -1,0 +1,9668 @@
+{
+ "1-1_leicht_frei#0": {
+  "state": "won",
+  "t": 57.4,
+  "stars": 2,
+  "steps": 3445,
+  "tasks": [
+   "collect 8/8"
+  ]
+ },
+ "1-1_leicht_frei#1": {
+  "state": "won",
+  "t": 57.4,
+  "stars": 2,
+  "steps": 3445,
+  "tasks": [
+   "collect 8/8"
+  ]
+ },
+ "1-1_leicht_frei#2": {
+  "state": "won",
+  "t": 57.4,
+  "stars": 2,
+  "steps": 3445,
+  "tasks": [
+   "collect 8/8"
+  ]
+ },
+ "1-1_leicht_frei#3": {
+  "state": "won",
+  "t": 57.4,
+  "stars": 2,
+  "steps": 3445,
+  "tasks": [
+   "collect 8/8"
+  ]
+ },
+ "1-1_leicht_frei#4": {
+  "state": "won",
+  "t": 57.4,
+  "stars": 2,
+  "steps": 3445,
+  "tasks": [
+   "collect 8/8"
+  ]
+ },
+ "1-1_leicht_frei": {
+  "state": "won",
+  "t": 57.4,
+  "stars": 2,
+  "steps": 3445,
+  "tasks": [
+   "collect 8/8"
+  ],
+  "ts": [
+   57.4,
+   57.4,
+   57.4,
+   57.4,
+   57.4
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-1_mittel_frei#0": {
+  "state": "won",
+  "t": 52.8,
+  "stars": 2,
+  "steps": 3167,
+  "tasks": [
+   "collect 8/8"
+  ]
+ },
+ "1-1_mittel_frei#1": {
+  "state": "won",
+  "t": 52.8,
+  "stars": 2,
+  "steps": 3167,
+  "tasks": [
+   "collect 8/8"
+  ]
+ },
+ "1-1_mittel_frei#2": {
+  "state": "won",
+  "t": 52.8,
+  "stars": 2,
+  "steps": 3167,
+  "tasks": [
+   "collect 8/8"
+  ]
+ },
+ "1-1_mittel_frei#3": {
+  "state": "won",
+  "t": 52.8,
+  "stars": 2,
+  "steps": 3167,
+  "tasks": [
+   "collect 8/8"
+  ]
+ },
+ "1-1_mittel_frei#4": {
+  "state": "won",
+  "t": 52.8,
+  "stars": 2,
+  "steps": 3167,
+  "tasks": [
+   "collect 8/8"
+  ]
+ },
+ "1-1_mittel_frei": {
+  "state": "won",
+  "t": 52.8,
+  "stars": 2,
+  "steps": 3167,
+  "tasks": [
+   "collect 8/8"
+  ],
+  "ts": [
+   52.8,
+   52.8,
+   52.8,
+   52.8,
+   52.8
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-1_schwer_frei#0": {
+  "state": "won",
+  "t": 52,
+  "stars": 2,
+  "steps": 3122,
+  "tasks": [
+   "collect 8/8"
+  ]
+ },
+ "1-1_schwer_frei#1": {
+  "state": "won",
+  "t": 52.2,
+  "stars": 2,
+  "steps": 3131,
+  "tasks": [
+   "collect 8/8"
+  ]
+ },
+ "1-1_schwer_frei#2": {
+  "state": "won",
+  "t": 52,
+  "stars": 2,
+  "steps": 3122,
+  "tasks": [
+   "collect 8/8"
+  ]
+ },
+ "1-1_schwer_frei#3": {
+  "state": "won",
+  "t": 52,
+  "stars": 2,
+  "steps": 3122,
+  "tasks": [
+   "collect 8/8"
+  ]
+ },
+ "1-1_schwer_frei#4": {
+  "state": "won",
+  "t": 52,
+  "stars": 2,
+  "steps": 3122,
+  "tasks": [
+   "collect 8/8"
+  ]
+ },
+ "1-1_schwer_frei": {
+  "state": "won",
+  "t": 52,
+  "stars": 2,
+  "steps": 3122,
+  "tasks": [
+   "collect 8/8"
+  ],
+  "ts": [
+   52,
+   52.2,
+   52,
+   52,
+   52
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-2_leicht_frei#0": {
+  "state": "won",
+  "t": 141.6,
+  "stars": 2,
+  "steps": 8497,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "1-2_leicht_frei#1": {
+  "state": "won",
+  "t": 120,
+  "stars": 2,
+  "steps": 7202,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "1-2_leicht_frei#2": {
+  "state": "won",
+  "t": 133.4,
+  "stars": 2,
+  "steps": 8007,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "1-2_leicht_frei#3": {
+  "state": "won",
+  "t": 119.4,
+  "stars": 2,
+  "steps": 7162,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "1-2_leicht_frei#4": {
+  "state": "won",
+  "t": 108.9,
+  "stars": 2,
+  "steps": 6534,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "1-2_leicht_frei": {
+  "state": "won",
+  "t": 120,
+  "stars": 2,
+  "steps": 8497,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ],
+  "ts": [
+   141.6,
+   120,
+   133.4,
+   119.4,
+   108.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-2_mittel_frei#0": {
+  "state": "won",
+  "t": 154.9,
+  "stars": 1,
+  "steps": 9293,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "1-2_mittel_frei#1": {
+  "state": "won",
+  "t": 144.3,
+  "stars": 1,
+  "steps": 8656,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "1-2_mittel_frei#2": {
+  "state": "won",
+  "t": 151.2,
+  "stars": 1,
+  "steps": 9071,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "1-2_mittel_frei#3": {
+  "state": "won",
+  "t": 147.3,
+  "stars": 1,
+  "steps": 8835,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "1-2_mittel_frei#4": {
+  "state": "won",
+  "t": 155.1,
+  "stars": 1,
+  "steps": 9305,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "1-2_mittel_frei": {
+  "state": "won",
+  "t": 151.2,
+  "stars": 1,
+  "steps": 9293,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ],
+  "ts": [
+   154.9,
+   144.3,
+   151.2,
+   147.3,
+   155.1
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-2_schwer_frei#0": {
+  "state": "won",
+  "t": 89.9,
+  "stars": 2,
+  "steps": 5393,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "1-2_schwer_frei#1": {
+  "state": "won",
+  "t": 89.7,
+  "stars": 2,
+  "steps": 5380,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "1-2_schwer_frei#2": {
+  "state": "won",
+  "t": 88,
+  "stars": 2,
+  "steps": 5282,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "1-2_schwer_frei#3": {
+  "state": "won",
+  "t": 91,
+  "stars": 2,
+  "steps": 5463,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "1-2_schwer_frei#4": {
+  "state": "won",
+  "t": 91.2,
+  "stars": 2,
+  "steps": 5471,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "1-2_schwer_frei": {
+  "state": "won",
+  "t": 89.9,
+  "stars": 2,
+  "steps": 5393,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ],
+  "ts": [
+   89.9,
+   89.7,
+   88,
+   91,
+   91.2
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-3_leicht_frei#0": {
+  "state": "won",
+  "t": 74.4,
+  "stars": 2,
+  "steps": 4462,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ]
+ },
+ "1-3_leicht_frei#1": {
+  "state": "won",
+  "t": 74.4,
+  "stars": 2,
+  "steps": 4462,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ]
+ },
+ "1-3_leicht_frei#2": {
+  "state": "won",
+  "t": 74.4,
+  "stars": 2,
+  "steps": 4462,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ]
+ },
+ "1-3_leicht_frei#3": {
+  "state": "won",
+  "t": 74.4,
+  "stars": 2,
+  "steps": 4462,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ]
+ },
+ "1-3_leicht_frei#4": {
+  "state": "won",
+  "t": 74.4,
+  "stars": 2,
+  "steps": 4462,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ]
+ },
+ "1-3_leicht_frei": {
+  "state": "won",
+  "t": 74.4,
+  "stars": 2,
+  "steps": 4462,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ],
+  "ts": [
+   74.4,
+   74.4,
+   74.4,
+   74.4,
+   74.4
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-3_mittel_frei#0": {
+  "state": "won",
+  "t": 71.4,
+  "stars": 2,
+  "steps": 4286,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ]
+ },
+ "1-3_mittel_frei#1": {
+  "state": "won",
+  "t": 71.4,
+  "stars": 2,
+  "steps": 4286,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ]
+ },
+ "1-3_mittel_frei#2": {
+  "state": "won",
+  "t": 71.4,
+  "stars": 2,
+  "steps": 4286,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ]
+ },
+ "1-3_mittel_frei#3": {
+  "state": "won",
+  "t": 71.4,
+  "stars": 2,
+  "steps": 4286,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ]
+ },
+ "1-3_mittel_frei#4": {
+  "state": "won",
+  "t": 71.4,
+  "stars": 2,
+  "steps": 4286,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ]
+ },
+ "1-3_mittel_frei": {
+  "state": "won",
+  "t": 71.4,
+  "stars": 2,
+  "steps": 4286,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ],
+  "ts": [
+   71.4,
+   71.4,
+   71.4,
+   71.4,
+   71.4
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-3_schwer_frei#0": {
+  "state": "won",
+  "t": 85.3,
+  "stars": 3,
+  "steps": 5117,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ]
+ },
+ "1-3_schwer_frei#1": {
+  "state": "won",
+  "t": 85.3,
+  "stars": 3,
+  "steps": 5117,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ]
+ },
+ "1-3_schwer_frei#2": {
+  "state": "won",
+  "t": 85.3,
+  "stars": 3,
+  "steps": 5117,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ]
+ },
+ "1-3_schwer_frei#3": {
+  "state": "won",
+  "t": 85.3,
+  "stars": 3,
+  "steps": 5117,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ]
+ },
+ "1-3_schwer_frei#4": {
+  "state": "won",
+  "t": 85.3,
+  "stars": 3,
+  "steps": 5117,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ]
+ },
+ "1-3_schwer_frei": {
+  "state": "won",
+  "t": 85.3,
+  "stars": 3,
+  "steps": 5117,
+  "tasks": [
+   "rings 8/8",
+   "collect 4/4"
+  ],
+  "ts": [
+   85.3,
+   85.3,
+   85.3,
+   85.3,
+   85.3
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-4_leicht_frei#0": {
+  "state": "won",
+  "t": 70.7,
+  "stars": 3,
+  "steps": 4240,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ]
+ },
+ "1-4_leicht_frei#1": {
+  "state": "won",
+  "t": 70.9,
+  "stars": 3,
+  "steps": 4254,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ]
+ },
+ "1-4_leicht_frei#2": {
+  "state": "won",
+  "t": 75.6,
+  "stars": 3,
+  "steps": 4534,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ]
+ },
+ "1-4_leicht_frei#3": {
+  "state": "won",
+  "t": 74.4,
+  "stars": 3,
+  "steps": 4462,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ]
+ },
+ "1-4_leicht_frei#4": {
+  "state": "won",
+  "t": 72,
+  "stars": 3,
+  "steps": 4318,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ]
+ },
+ "1-4_leicht_frei": {
+  "state": "won",
+  "t": 72,
+  "stars": 3,
+  "steps": 4240,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ],
+  "ts": [
+   70.7,
+   70.9,
+   75.6,
+   74.4,
+   72
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-4_mittel_frei#0": {
+  "state": "won",
+  "t": 48.8,
+  "stars": 2,
+  "steps": 2926,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ]
+ },
+ "1-4_mittel_frei#1": {
+  "state": "won",
+  "t": 51.1,
+  "stars": 2,
+  "steps": 3066,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ]
+ },
+ "1-4_mittel_frei#2": {
+  "state": "won",
+  "t": 51.4,
+  "stars": 2,
+  "steps": 3085,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ]
+ },
+ "1-4_mittel_frei#3": {
+  "state": "won",
+  "t": 50.6,
+  "stars": 2,
+  "steps": 3039,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ]
+ },
+ "1-4_mittel_frei#4": {
+  "state": "won",
+  "t": 55.5,
+  "stars": 2,
+  "steps": 3330,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ]
+ },
+ "1-4_mittel_frei": {
+  "state": "won",
+  "t": 51.1,
+  "stars": 2,
+  "steps": 2926,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ],
+  "ts": [
+   48.8,
+   51.1,
+   51.4,
+   50.6,
+   55.5
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-4_schwer_frei#0": {
+  "state": "won",
+  "t": 46.1,
+  "stars": 2,
+  "steps": 2766,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ]
+ },
+ "1-4_schwer_frei#1": {
+  "state": "won",
+  "t": 57,
+  "stars": 2,
+  "steps": 3423,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ]
+ },
+ "1-4_schwer_frei#2": {
+  "state": "won",
+  "t": 58.4,
+  "stars": 2,
+  "steps": 3502,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ]
+ },
+ "1-4_schwer_frei#3": {
+  "state": "won",
+  "t": 58,
+  "stars": 2,
+  "steps": 3480,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ]
+ },
+ "1-4_schwer_frei#4": {
+  "state": "won",
+  "t": 70,
+  "stars": 2,
+  "steps": 4198,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ]
+ },
+ "1-4_schwer_frei": {
+  "state": "won",
+  "t": 58,
+  "stars": 2,
+  "steps": 2766,
+  "tasks": [
+   "stunts 3/3",
+   "collect 6/6"
+  ],
+  "ts": [
+   46.1,
+   57,
+   58.4,
+   58,
+   70
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-5_leicht_frei#0": {
+  "state": "won",
+  "t": 97.9,
+  "stars": 2,
+  "steps": 5877,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ]
+ },
+ "1-5_leicht_frei#1": {
+  "state": "won",
+  "t": 101.1,
+  "stars": 2,
+  "steps": 6066,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ]
+ },
+ "1-5_leicht_frei#2": {
+  "state": "won",
+  "t": 103,
+  "stars": 2,
+  "steps": 6178,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ]
+ },
+ "1-5_leicht_frei#3": {
+  "state": "won",
+  "t": 109.3,
+  "stars": 2,
+  "steps": 6558,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ]
+ },
+ "1-5_leicht_frei#4": {
+  "state": "won",
+  "t": 91.3,
+  "stars": 2,
+  "steps": 5478,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ]
+ },
+ "1-5_leicht_frei": {
+  "state": "won",
+  "t": 101.1,
+  "stars": 2,
+  "steps": 5877,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ],
+  "ts": [
+   97.9,
+   101.1,
+   103,
+   109.3,
+   91.3
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-5_mittel_frei#0": {
+  "state": "won",
+  "t": 53.1,
+  "stars": 2,
+  "steps": 3187,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ]
+ },
+ "1-5_mittel_frei#1": {
+  "state": "won",
+  "t": 54.6,
+  "stars": 2,
+  "steps": 3278,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ]
+ },
+ "1-5_mittel_frei#2": {
+  "state": "won",
+  "t": 54.4,
+  "stars": 2,
+  "steps": 3266,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ]
+ },
+ "1-5_mittel_frei#3": {
+  "state": "won",
+  "t": 54.1,
+  "stars": 2,
+  "steps": 3245,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ]
+ },
+ "1-5_mittel_frei#4": {
+  "state": "won",
+  "t": 53,
+  "stars": 2,
+  "steps": 3179,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ]
+ },
+ "1-5_mittel_frei": {
+  "state": "won",
+  "t": 54.1,
+  "stars": 2,
+  "steps": 3187,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ],
+  "ts": [
+   53.1,
+   54.6,
+   54.4,
+   54.1,
+   53
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-5_schwer_frei#0": {
+  "state": "won",
+  "t": 52.2,
+  "stars": 2,
+  "steps": 3132,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ]
+ },
+ "1-5_schwer_frei#1": {
+  "state": "won",
+  "t": 51.5,
+  "stars": 2,
+  "steps": 3092,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ]
+ },
+ "1-5_schwer_frei#2": {
+  "state": "won",
+  "t": 54.9,
+  "stars": 2,
+  "steps": 3295,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ]
+ },
+ "1-5_schwer_frei#3": {
+  "state": "won",
+  "t": 49.9,
+  "stars": 2,
+  "steps": 2996,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ]
+ },
+ "1-5_schwer_frei#4": {
+  "state": "won",
+  "t": 47.8,
+  "stars": 2,
+  "steps": 2868,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ]
+ },
+ "1-5_schwer_frei": {
+  "state": "won",
+  "t": 51.5,
+  "stars": 2,
+  "steps": 3132,
+  "tasks": [
+   "visit 3/3",
+   "rings 6/6"
+  ],
+  "ts": [
+   52.2,
+   51.5,
+   54.9,
+   49.9,
+   47.8
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-6_leicht_frei#0": {
+  "state": "won",
+  "t": 138.1,
+  "stars": 2,
+  "steps": 8288,
+  "tasks": [
+   "deliver 3/3"
+  ]
+ },
+ "1-6_leicht_frei#1": {
+  "state": "won",
+  "t": 136.1,
+  "stars": 2,
+  "steps": 8164,
+  "tasks": [
+   "deliver 3/3"
+  ]
+ },
+ "1-6_leicht_frei#2": {
+  "state": "won",
+  "t": 137.6,
+  "stars": 2,
+  "steps": 8256,
+  "tasks": [
+   "deliver 3/3"
+  ]
+ },
+ "1-6_leicht_frei#3": {
+  "state": "won",
+  "t": 141.3,
+  "stars": 2,
+  "steps": 8478,
+  "tasks": [
+   "deliver 3/3"
+  ]
+ },
+ "1-6_leicht_frei#4": {
+  "state": "won",
+  "t": 132.7,
+  "stars": 2,
+  "steps": 7962,
+  "tasks": [
+   "deliver 3/3"
+  ]
+ },
+ "1-6_leicht_frei": {
+  "state": "won",
+  "t": 137.6,
+  "stars": 2,
+  "steps": 8288,
+  "tasks": [
+   "deliver 3/3"
+  ],
+  "ts": [
+   138.1,
+   136.1,
+   137.6,
+   141.3,
+   132.7
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-6_mittel_frei#0": {
+  "state": "won",
+  "t": 100.2,
+  "stars": 2,
+  "steps": 6014,
+  "tasks": [
+   "deliver 3/3"
+  ]
+ },
+ "1-6_mittel_frei#1": {
+  "state": "won",
+  "t": 96.2,
+  "stars": 2,
+  "steps": 5770,
+  "tasks": [
+   "deliver 3/3"
+  ]
+ },
+ "1-6_mittel_frei#2": {
+  "state": "won",
+  "t": 93.4,
+  "stars": 2,
+  "steps": 5604,
+  "tasks": [
+   "deliver 3/3"
+  ]
+ },
+ "1-6_mittel_frei#3": {
+  "state": "won",
+  "t": 90.7,
+  "stars": 2,
+  "steps": 5444,
+  "tasks": [
+   "deliver 3/3"
+  ]
+ },
+ "1-6_mittel_frei#4": {
+  "state": "won",
+  "t": 95.2,
+  "stars": 2,
+  "steps": 5713,
+  "tasks": [
+   "deliver 3/3"
+  ]
+ },
+ "1-6_mittel_frei": {
+  "state": "won",
+  "t": 95.2,
+  "stars": 2,
+  "steps": 6014,
+  "tasks": [
+   "deliver 3/3"
+  ],
+  "ts": [
+   100.2,
+   96.2,
+   93.4,
+   90.7,
+   95.2
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-6_schwer_frei#0": {
+  "state": "won",
+  "t": 79.3,
+  "stars": 2,
+  "steps": 4756,
+  "tasks": [
+   "deliver 3/3"
+  ]
+ },
+ "1-6_schwer_frei#1": {
+  "state": "won",
+  "t": 87.8,
+  "stars": 2,
+  "steps": 5266,
+  "tasks": [
+   "deliver 3/3"
+  ]
+ },
+ "1-6_schwer_frei#2": {
+  "state": "won",
+  "t": 92.3,
+  "stars": 2,
+  "steps": 5539,
+  "tasks": [
+   "deliver 3/3"
+  ]
+ },
+ "1-6_schwer_frei#3": {
+  "state": "won",
+  "t": 83.3,
+  "stars": 2,
+  "steps": 4999,
+  "tasks": [
+   "deliver 3/3"
+  ]
+ },
+ "1-6_schwer_frei#4": {
+  "state": "won",
+  "t": 124.9,
+  "stars": 1,
+  "steps": 7495,
+  "tasks": [
+   "deliver 3/3"
+  ]
+ },
+ "1-6_schwer_frei": {
+  "state": "won",
+  "t": 87.8,
+  "stars": 2,
+  "steps": 4756,
+  "tasks": [
+   "deliver 3/3"
+  ],
+  "ts": [
+   79.3,
+   87.8,
+   92.3,
+   83.3,
+   124.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-7_leicht_frei#0": {
+  "state": "won",
+  "t": 73.8,
+  "stars": 2,
+  "steps": 4430,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "1-7_leicht_frei#1": {
+  "state": "won",
+  "t": 73.8,
+  "stars": 2,
+  "steps": 4430,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "1-7_leicht_frei#2": {
+  "state": "won",
+  "t": 73.8,
+  "stars": 2,
+  "steps": 4430,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "1-7_leicht_frei#3": {
+  "state": "won",
+  "t": 73.8,
+  "stars": 2,
+  "steps": 4430,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "1-7_leicht_frei#4": {
+  "state": "won",
+  "t": 73.8,
+  "stars": 2,
+  "steps": 4430,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "1-7_leicht_frei": {
+  "state": "won",
+  "t": 73.8,
+  "stars": 2,
+  "steps": 4430,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ],
+  "ts": [
+   73.8,
+   73.8,
+   73.8,
+   73.8,
+   73.8
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-7_mittel_frei#0": {
+  "state": "won",
+  "t": 88.1,
+  "stars": 2,
+  "steps": 5287,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "1-7_mittel_frei#1": {
+  "state": "won",
+  "t": 88.1,
+  "stars": 2,
+  "steps": 5287,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "1-7_mittel_frei#2": {
+  "state": "won",
+  "t": 88.1,
+  "stars": 2,
+  "steps": 5287,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "1-7_mittel_frei#3": {
+  "state": "won",
+  "t": 88.1,
+  "stars": 2,
+  "steps": 5287,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "1-7_mittel_frei#4": {
+  "state": "won",
+  "t": 88.1,
+  "stars": 2,
+  "steps": 5287,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "1-7_mittel_frei": {
+  "state": "won",
+  "t": 88.1,
+  "stars": 2,
+  "steps": 5287,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ],
+  "ts": [
+   88.1,
+   88.1,
+   88.1,
+   88.1,
+   88.1
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-7_schwer_frei#0": {
+  "state": "won",
+  "t": 62.9,
+  "stars": 3,
+  "steps": 3777,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "1-7_schwer_frei#1": {
+  "state": "won",
+  "t": 62.9,
+  "stars": 3,
+  "steps": 3777,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "1-7_schwer_frei#2": {
+  "state": "won",
+  "t": 62.9,
+  "stars": 3,
+  "steps": 3777,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "1-7_schwer_frei#3": {
+  "state": "won",
+  "t": 62.9,
+  "stars": 3,
+  "steps": 3777,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "1-7_schwer_frei#4": {
+  "state": "won",
+  "t": 62.9,
+  "stars": 3,
+  "steps": 3777,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "1-7_schwer_frei": {
+  "state": "won",
+  "t": 62.9,
+  "stars": 3,
+  "steps": 3777,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ],
+  "ts": [
+   62.9,
+   62.9,
+   62.9,
+   62.9,
+   62.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-8_leicht_frei#0": {
+  "state": "won",
+  "t": 32.2,
+  "stars": 3,
+  "steps": 2122,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_leicht_frei#1": {
+  "state": "won",
+  "t": 32.2,
+  "stars": 3,
+  "steps": 2122,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_leicht_frei#2": {
+  "state": "won",
+  "t": 32.2,
+  "stars": 3,
+  "steps": 2122,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_leicht_frei#3": {
+  "state": "won",
+  "t": 32.2,
+  "stars": 3,
+  "steps": 2122,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_leicht_frei#4": {
+  "state": "won",
+  "t": 32.2,
+  "stars": 3,
+  "steps": 2122,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_leicht_frei": {
+  "state": "won",
+  "t": 32.2,
+  "stars": 3,
+  "steps": 2122,
+  "tasks": [
+   "race 10/10"
+  ],
+  "ts": [
+   32.2,
+   32.2,
+   32.2,
+   32.2,
+   32.2
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-8_leicht_rennen#0": {
+  "state": "won",
+  "t": 32.2,
+  "stars": 3,
+  "steps": 2122,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_leicht_rennen#1": {
+  "state": "won",
+  "t": 32.2,
+  "stars": 3,
+  "steps": 2122,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_leicht_rennen#2": {
+  "state": "won",
+  "t": 32.2,
+  "stars": 3,
+  "steps": 2122,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_leicht_rennen#3": {
+  "state": "won",
+  "t": 32.2,
+  "stars": 3,
+  "steps": 2122,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_leicht_rennen#4": {
+  "state": "won",
+  "t": 32.2,
+  "stars": 3,
+  "steps": 2122,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_leicht_rennen": {
+  "state": "won",
+  "t": 32.2,
+  "stars": 3,
+  "steps": 2122,
+  "tasks": [
+   "race 10/10"
+  ],
+  "ts": [
+   32.2,
+   32.2,
+   32.2,
+   32.2,
+   32.2
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-8_mittel_frei#0": {
+  "state": "won",
+  "t": 28,
+  "stars": 3,
+  "steps": 1870,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_mittel_frei#1": {
+  "state": "won",
+  "t": 28,
+  "stars": 3,
+  "steps": 1870,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_mittel_frei#2": {
+  "state": "won",
+  "t": 28,
+  "stars": 3,
+  "steps": 1870,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_mittel_frei#3": {
+  "state": "won",
+  "t": 28,
+  "stars": 3,
+  "steps": 1870,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_mittel_frei#4": {
+  "state": "won",
+  "t": 28,
+  "stars": 3,
+  "steps": 1870,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_mittel_frei": {
+  "state": "won",
+  "t": 28,
+  "stars": 3,
+  "steps": 1870,
+  "tasks": [
+   "race 10/10"
+  ],
+  "ts": [
+   28,
+   28,
+   28,
+   28,
+   28
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-8_mittel_rennen#0": {
+  "state": "won",
+  "t": 28,
+  "stars": 3,
+  "steps": 1870,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_mittel_rennen#1": {
+  "state": "won",
+  "t": 28,
+  "stars": 3,
+  "steps": 1870,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_mittel_rennen#2": {
+  "state": "won",
+  "t": 28,
+  "stars": 3,
+  "steps": 1870,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_mittel_rennen#3": {
+  "state": "won",
+  "t": 28,
+  "stars": 3,
+  "steps": 1870,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_mittel_rennen#4": {
+  "state": "won",
+  "t": 28,
+  "stars": 3,
+  "steps": 1870,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_mittel_rennen": {
+  "state": "won",
+  "t": 28,
+  "stars": 3,
+  "steps": 1870,
+  "tasks": [
+   "race 10/10"
+  ],
+  "ts": [
+   28,
+   28,
+   28,
+   28,
+   28
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-8_schwer_frei#0": {
+  "state": "won",
+  "t": 24.7,
+  "stars": 3,
+  "steps": 1672,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_schwer_frei#1": {
+  "state": "won",
+  "t": 24.7,
+  "stars": 3,
+  "steps": 1672,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_schwer_frei#2": {
+  "state": "won",
+  "t": 24.7,
+  "stars": 3,
+  "steps": 1672,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_schwer_frei#3": {
+  "state": "won",
+  "t": 24.7,
+  "stars": 3,
+  "steps": 1672,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_schwer_frei#4": {
+  "state": "won",
+  "t": 24.7,
+  "stars": 3,
+  "steps": 1672,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "1-8_schwer_frei": {
+  "state": "won",
+  "t": 24.7,
+  "stars": 3,
+  "steps": 1672,
+  "tasks": [
+   "race 10/10"
+  ],
+  "ts": [
+   24.7,
+   24.7,
+   24.7,
+   24.7,
+   24.7
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "1-8_schwer_rennen#0": {
+  "state": "failed",
+  "t": 23.6,
+  "stars": 3,
+  "steps": 1606,
+  "tasks": [
+   "race 9/10"
+  ]
+ },
+ "1-8_schwer_rennen#1": {
+  "state": "failed",
+  "t": 23.6,
+  "stars": 3,
+  "steps": 1606,
+  "tasks": [
+   "race 9/10"
+  ]
+ },
+ "1-8_schwer_rennen#2": {
+  "state": "failed",
+  "t": 23.6,
+  "stars": 3,
+  "steps": 1606,
+  "tasks": [
+   "race 9/10"
+  ]
+ },
+ "1-8_schwer_rennen#3": {
+  "state": "failed",
+  "t": 23.6,
+  "stars": 3,
+  "steps": 1606,
+  "tasks": [
+   "race 9/10"
+  ]
+ },
+ "1-8_schwer_rennen#4": {
+  "state": "failed",
+  "t": 23.6,
+  "stars": 3,
+  "steps": 1606,
+  "tasks": [
+   "race 9/10"
+  ]
+ },
+ "1-8_schwer_rennen": {
+  "state": "failed",
+  "t": 23.6,
+  "stars": 3,
+  "steps": 1606,
+  "tasks": [
+   "race 9/10"
+  ],
+  "ts": [
+   23.6,
+   23.6,
+   23.6,
+   23.6,
+   23.6
+  ],
+  "states": [
+   "failed",
+   "failed",
+   "failed",
+   "failed",
+   "failed"
+  ]
+ },
+ "2-1_leicht_frei#0": {
+  "state": "won",
+  "t": 73.6,
+  "stars": 2,
+  "steps": 4415,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "2-1_leicht_frei#1": {
+  "state": "won",
+  "t": 73.6,
+  "stars": 2,
+  "steps": 4415,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "2-1_leicht_frei#2": {
+  "state": "won",
+  "t": 73.6,
+  "stars": 2,
+  "steps": 4415,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "2-1_leicht_frei#3": {
+  "state": "won",
+  "t": 73.6,
+  "stars": 2,
+  "steps": 4415,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "2-1_leicht_frei#4": {
+  "state": "won",
+  "t": 73.6,
+  "stars": 2,
+  "steps": 4415,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "2-1_leicht_frei": {
+  "state": "won",
+  "t": 73.6,
+  "stars": 2,
+  "steps": 4415,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ],
+  "ts": [
+   73.6,
+   73.6,
+   73.6,
+   73.6,
+   73.6
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-1_mittel_frei#0": {
+  "state": "won",
+  "t": 81.2,
+  "stars": 2,
+  "steps": 4875,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "2-1_mittel_frei#1": {
+  "state": "won",
+  "t": 81.2,
+  "stars": 2,
+  "steps": 4875,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "2-1_mittel_frei#2": {
+  "state": "won",
+  "t": 81.2,
+  "stars": 2,
+  "steps": 4875,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "2-1_mittel_frei#3": {
+  "state": "won",
+  "t": 81.2,
+  "stars": 2,
+  "steps": 4875,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "2-1_mittel_frei#4": {
+  "state": "won",
+  "t": 81.2,
+  "stars": 2,
+  "steps": 4875,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "2-1_mittel_frei": {
+  "state": "won",
+  "t": 81.2,
+  "stars": 2,
+  "steps": 4875,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ],
+  "ts": [
+   81.2,
+   81.2,
+   81.2,
+   81.2,
+   81.2
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-1_schwer_frei#0": {
+  "state": "won",
+  "t": 66.6,
+  "stars": 2,
+  "steps": 3994,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "2-1_schwer_frei#1": {
+  "state": "won",
+  "t": 66.6,
+  "stars": 2,
+  "steps": 3994,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "2-1_schwer_frei#2": {
+  "state": "won",
+  "t": 66.6,
+  "stars": 2,
+  "steps": 3994,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "2-1_schwer_frei#3": {
+  "state": "won",
+  "t": 66.6,
+  "stars": 2,
+  "steps": 3994,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "2-1_schwer_frei#4": {
+  "state": "won",
+  "t": 66.6,
+  "stars": 2,
+  "steps": 3994,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "2-1_schwer_frei": {
+  "state": "won",
+  "t": 66.6,
+  "stars": 2,
+  "steps": 3994,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ],
+  "ts": [
+   66.6,
+   66.6,
+   66.6,
+   66.6,
+   66.6
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-2_leicht_frei#0": {
+  "state": "won",
+  "t": 31.4,
+  "stars": 2,
+  "steps": 1885,
+  "tasks": [
+   "rings 10/10"
+  ]
+ },
+ "2-2_leicht_frei#1": {
+  "state": "won",
+  "t": 31.4,
+  "stars": 2,
+  "steps": 1885,
+  "tasks": [
+   "rings 10/10"
+  ]
+ },
+ "2-2_leicht_frei#2": {
+  "state": "won",
+  "t": 31.4,
+  "stars": 2,
+  "steps": 1885,
+  "tasks": [
+   "rings 10/10"
+  ]
+ },
+ "2-2_leicht_frei#3": {
+  "state": "won",
+  "t": 31.4,
+  "stars": 2,
+  "steps": 1885,
+  "tasks": [
+   "rings 10/10"
+  ]
+ },
+ "2-2_leicht_frei#4": {
+  "state": "won",
+  "t": 31.4,
+  "stars": 2,
+  "steps": 1885,
+  "tasks": [
+   "rings 10/10"
+  ]
+ },
+ "2-2_leicht_frei": {
+  "state": "won",
+  "t": 31.4,
+  "stars": 2,
+  "steps": 1885,
+  "tasks": [
+   "rings 10/10"
+  ],
+  "ts": [
+   31.4,
+   31.4,
+   31.4,
+   31.4,
+   31.4
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-2_mittel_frei#0": {
+  "state": "won",
+  "t": 30.4,
+  "stars": 2,
+  "steps": 1825,
+  "tasks": [
+   "rings 10/10"
+  ]
+ },
+ "2-2_mittel_frei#1": {
+  "state": "won",
+  "t": 30.4,
+  "stars": 2,
+  "steps": 1825,
+  "tasks": [
+   "rings 10/10"
+  ]
+ },
+ "2-2_mittel_frei#2": {
+  "state": "won",
+  "t": 30.4,
+  "stars": 2,
+  "steps": 1825,
+  "tasks": [
+   "rings 10/10"
+  ]
+ },
+ "2-2_mittel_frei#3": {
+  "state": "won",
+  "t": 30.4,
+  "stars": 2,
+  "steps": 1825,
+  "tasks": [
+   "rings 10/10"
+  ]
+ },
+ "2-2_mittel_frei#4": {
+  "state": "won",
+  "t": 30.7,
+  "stars": 2,
+  "steps": 1844,
+  "tasks": [
+   "rings 10/10"
+  ]
+ },
+ "2-2_mittel_frei": {
+  "state": "won",
+  "t": 30.4,
+  "stars": 2,
+  "steps": 1825,
+  "tasks": [
+   "rings 10/10"
+  ],
+  "ts": [
+   30.4,
+   30.4,
+   30.4,
+   30.4,
+   30.7
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-2_schwer_frei#0": {
+  "state": "won",
+  "t": 25.7,
+  "stars": 3,
+  "steps": 1541,
+  "tasks": [
+   "rings 10/10"
+  ]
+ },
+ "2-2_schwer_frei#1": {
+  "state": "won",
+  "t": 25.7,
+  "stars": 3,
+  "steps": 1541,
+  "tasks": [
+   "rings 10/10"
+  ]
+ },
+ "2-2_schwer_frei#2": {
+  "state": "won",
+  "t": 25.7,
+  "stars": 3,
+  "steps": 1541,
+  "tasks": [
+   "rings 10/10"
+  ]
+ },
+ "2-2_schwer_frei#3": {
+  "state": "won",
+  "t": 25.7,
+  "stars": 3,
+  "steps": 1541,
+  "tasks": [
+   "rings 10/10"
+  ]
+ },
+ "2-2_schwer_frei#4": {
+  "state": "won",
+  "t": 25.7,
+  "stars": 3,
+  "steps": 1541,
+  "tasks": [
+   "rings 10/10"
+  ]
+ },
+ "2-2_schwer_frei": {
+  "state": "won",
+  "t": 25.7,
+  "stars": 3,
+  "steps": 1541,
+  "tasks": [
+   "rings 10/10"
+  ],
+  "ts": [
+   25.7,
+   25.7,
+   25.7,
+   25.7,
+   25.7
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-3_leicht_frei#0": {
+  "state": "won",
+  "t": 26.9,
+  "stars": 3,
+  "steps": 1808,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_leicht_frei#1": {
+  "state": "won",
+  "t": 26.9,
+  "stars": 3,
+  "steps": 1808,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_leicht_frei#2": {
+  "state": "won",
+  "t": 26.9,
+  "stars": 3,
+  "steps": 1808,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_leicht_frei#3": {
+  "state": "won",
+  "t": 26.9,
+  "stars": 3,
+  "steps": 1808,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_leicht_frei#4": {
+  "state": "won",
+  "t": 26.9,
+  "stars": 3,
+  "steps": 1808,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_leicht_frei": {
+  "state": "won",
+  "t": 26.9,
+  "stars": 3,
+  "steps": 1808,
+  "tasks": [
+   "race 9/9"
+  ],
+  "ts": [
+   26.9,
+   26.9,
+   26.9,
+   26.9,
+   26.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-3_leicht_rennen#0": {
+  "state": "won",
+  "t": 26.9,
+  "stars": 3,
+  "steps": 1808,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_leicht_rennen#1": {
+  "state": "won",
+  "t": 26.9,
+  "stars": 3,
+  "steps": 1808,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_leicht_rennen#2": {
+  "state": "won",
+  "t": 26.9,
+  "stars": 3,
+  "steps": 1808,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_leicht_rennen#3": {
+  "state": "won",
+  "t": 26.9,
+  "stars": 3,
+  "steps": 1808,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_leicht_rennen#4": {
+  "state": "won",
+  "t": 26.9,
+  "stars": 3,
+  "steps": 1808,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_leicht_rennen": {
+  "state": "won",
+  "t": 26.9,
+  "stars": 3,
+  "steps": 1808,
+  "tasks": [
+   "race 9/9"
+  ],
+  "ts": [
+   26.9,
+   26.9,
+   26.9,
+   26.9,
+   26.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-3_mittel_frei#0": {
+  "state": "won",
+  "t": 26.1,
+  "stars": 3,
+  "steps": 1759,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_mittel_frei#1": {
+  "state": "won",
+  "t": 26.1,
+  "stars": 3,
+  "steps": 1759,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_mittel_frei#2": {
+  "state": "won",
+  "t": 26.1,
+  "stars": 3,
+  "steps": 1759,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_mittel_frei#3": {
+  "state": "won",
+  "t": 26.1,
+  "stars": 3,
+  "steps": 1759,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_mittel_frei#4": {
+  "state": "won",
+  "t": 26.1,
+  "stars": 3,
+  "steps": 1759,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_mittel_frei": {
+  "state": "won",
+  "t": 26.1,
+  "stars": 3,
+  "steps": 1759,
+  "tasks": [
+   "race 9/9"
+  ],
+  "ts": [
+   26.1,
+   26.1,
+   26.1,
+   26.1,
+   26.1
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-3_mittel_rennen#0": {
+  "state": "won",
+  "t": 26.1,
+  "stars": 3,
+  "steps": 1759,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_mittel_rennen#1": {
+  "state": "won",
+  "t": 26.1,
+  "stars": 3,
+  "steps": 1759,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_mittel_rennen#2": {
+  "state": "won",
+  "t": 26.1,
+  "stars": 3,
+  "steps": 1759,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_mittel_rennen#3": {
+  "state": "won",
+  "t": 26.1,
+  "stars": 3,
+  "steps": 1759,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_mittel_rennen#4": {
+  "state": "won",
+  "t": 26.1,
+  "stars": 3,
+  "steps": 1759,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_mittel_rennen": {
+  "state": "won",
+  "t": 26.1,
+  "stars": 3,
+  "steps": 1759,
+  "tasks": [
+   "race 9/9"
+  ],
+  "ts": [
+   26.1,
+   26.1,
+   26.1,
+   26.1,
+   26.1
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-3_schwer_frei#0": {
+  "state": "won",
+  "t": 23.5,
+  "stars": 3,
+  "steps": 1605,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_schwer_frei#1": {
+  "state": "won",
+  "t": 23.5,
+  "stars": 3,
+  "steps": 1605,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_schwer_frei#2": {
+  "state": "won",
+  "t": 23.5,
+  "stars": 3,
+  "steps": 1605,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_schwer_frei#3": {
+  "state": "won",
+  "t": 23.5,
+  "stars": 3,
+  "steps": 1605,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_schwer_frei#4": {
+  "state": "won",
+  "t": 23.5,
+  "stars": 3,
+  "steps": 1605,
+  "tasks": [
+   "race 9/9"
+  ]
+ },
+ "2-3_schwer_frei": {
+  "state": "won",
+  "t": 23.5,
+  "stars": 3,
+  "steps": 1605,
+  "tasks": [
+   "race 9/9"
+  ],
+  "ts": [
+   23.5,
+   23.5,
+   23.5,
+   23.5,
+   23.5
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-3_schwer_rennen#0": {
+  "state": "failed",
+  "t": 22.2,
+  "stars": 3,
+  "steps": 1522,
+  "tasks": [
+   "race 8/9"
+  ]
+ },
+ "2-3_schwer_rennen#1": {
+  "state": "failed",
+  "t": 22.2,
+  "stars": 3,
+  "steps": 1522,
+  "tasks": [
+   "race 8/9"
+  ]
+ },
+ "2-3_schwer_rennen#2": {
+  "state": "failed",
+  "t": 22.2,
+  "stars": 3,
+  "steps": 1522,
+  "tasks": [
+   "race 8/9"
+  ]
+ },
+ "2-3_schwer_rennen#3": {
+  "state": "failed",
+  "t": 22.2,
+  "stars": 3,
+  "steps": 1522,
+  "tasks": [
+   "race 8/9"
+  ]
+ },
+ "2-3_schwer_rennen#4": {
+  "state": "failed",
+  "t": 22.2,
+  "stars": 3,
+  "steps": 1522,
+  "tasks": [
+   "race 8/9"
+  ]
+ },
+ "2-3_schwer_rennen": {
+  "state": "failed",
+  "t": 22.2,
+  "stars": 3,
+  "steps": 1522,
+  "tasks": [
+   "race 8/9"
+  ],
+  "ts": [
+   22.2,
+   22.2,
+   22.2,
+   22.2,
+   22.2
+  ],
+  "states": [
+   "failed",
+   "failed",
+   "failed",
+   "failed",
+   "failed"
+  ]
+ },
+ "2-4_leicht_frei#0": {
+  "state": "won",
+  "t": 62.7,
+  "stars": 2,
+  "steps": 3764,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ]
+ },
+ "2-4_leicht_frei#1": {
+  "state": "won",
+  "t": 62.7,
+  "stars": 2,
+  "steps": 3764,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ]
+ },
+ "2-4_leicht_frei#2": {
+  "state": "won",
+  "t": 62.7,
+  "stars": 2,
+  "steps": 3764,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ]
+ },
+ "2-4_leicht_frei#3": {
+  "state": "won",
+  "t": 62.7,
+  "stars": 2,
+  "steps": 3764,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ]
+ },
+ "2-4_leicht_frei#4": {
+  "state": "won",
+  "t": 62.7,
+  "stars": 2,
+  "steps": 3764,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ]
+ },
+ "2-4_leicht_frei": {
+  "state": "won",
+  "t": 62.7,
+  "stars": 2,
+  "steps": 3764,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ],
+  "ts": [
+   62.7,
+   62.7,
+   62.7,
+   62.7,
+   62.7
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-4_mittel_frei#0": {
+  "state": "won",
+  "t": 54.5,
+  "stars": 2,
+  "steps": 3271,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ]
+ },
+ "2-4_mittel_frei#1": {
+  "state": "won",
+  "t": 54.5,
+  "stars": 2,
+  "steps": 3271,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ]
+ },
+ "2-4_mittel_frei#2": {
+  "state": "won",
+  "t": 54.5,
+  "stars": 2,
+  "steps": 3271,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ]
+ },
+ "2-4_mittel_frei#3": {
+  "state": "won",
+  "t": 54.5,
+  "stars": 2,
+  "steps": 3271,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ]
+ },
+ "2-4_mittel_frei#4": {
+  "state": "won",
+  "t": 54.5,
+  "stars": 2,
+  "steps": 3271,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ]
+ },
+ "2-4_mittel_frei": {
+  "state": "won",
+  "t": 54.5,
+  "stars": 2,
+  "steps": 3271,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ],
+  "ts": [
+   54.5,
+   54.5,
+   54.5,
+   54.5,
+   54.5
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-4_schwer_frei#0": {
+  "state": "won",
+  "t": 53.7,
+  "stars": 2,
+  "steps": 3220,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ]
+ },
+ "2-4_schwer_frei#1": {
+  "state": "won",
+  "t": 53.7,
+  "stars": 2,
+  "steps": 3223,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ]
+ },
+ "2-4_schwer_frei#2": {
+  "state": "won",
+  "t": 53.7,
+  "stars": 2,
+  "steps": 3223,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ]
+ },
+ "2-4_schwer_frei#3": {
+  "state": "won",
+  "t": 53.7,
+  "stars": 2,
+  "steps": 3223,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ]
+ },
+ "2-4_schwer_frei#4": {
+  "state": "won",
+  "t": 53.7,
+  "stars": 2,
+  "steps": 3223,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ]
+ },
+ "2-4_schwer_frei": {
+  "state": "won",
+  "t": 53.7,
+  "stars": 2,
+  "steps": 3220,
+  "tasks": [
+   "land 4/4",
+   "rings 6/6"
+  ],
+  "ts": [
+   53.7,
+   53.7,
+   53.7,
+   53.7,
+   53.7
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-5_leicht_frei#0": {
+  "state": "won",
+  "t": 220.3,
+  "stars": 2,
+  "steps": 13215,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "2-5_leicht_frei#1": {
+  "state": "won",
+  "t": 232.8,
+  "stars": 2,
+  "steps": 13970,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "2-5_leicht_frei#2": {
+  "state": "won",
+  "t": 230.8,
+  "stars": 2,
+  "steps": 13848,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "2-5_leicht_frei#3": {
+  "state": "won",
+  "t": 223.5,
+  "stars": 2,
+  "steps": 13408,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "2-5_leicht_frei#4": {
+  "state": "won",
+  "t": 233.9,
+  "stars": 2,
+  "steps": 14034,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "2-5_leicht_frei": {
+  "state": "won",
+  "t": 230.8,
+  "stars": 2,
+  "steps": 13215,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ],
+  "ts": [
+   220.3,
+   232.8,
+   230.8,
+   223.5,
+   233.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-5_mittel_frei#0": {
+  "state": "won",
+  "t": 113.7,
+  "stars": 2,
+  "steps": 6821,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "2-5_mittel_frei#1": {
+  "state": "won",
+  "t": 117.2,
+  "stars": 2,
+  "steps": 7031,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "2-5_mittel_frei#2": {
+  "state": "won",
+  "t": 119.8,
+  "stars": 2,
+  "steps": 7189,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "2-5_mittel_frei#3": {
+  "state": "won",
+  "t": 116.5,
+  "stars": 2,
+  "steps": 6993,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "2-5_mittel_frei#4": {
+  "state": "won",
+  "t": 113.5,
+  "stars": 2,
+  "steps": 6811,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "2-5_mittel_frei": {
+  "state": "won",
+  "t": 116.5,
+  "stars": 2,
+  "steps": 6821,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ],
+  "ts": [
+   113.7,
+   117.2,
+   119.8,
+   116.5,
+   113.5
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-5_schwer_frei#0": {
+  "state": "won",
+  "t": 198.2,
+  "stars": 1,
+  "steps": 11889,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "2-5_schwer_frei#1": {
+  "state": "won",
+  "t": 199.1,
+  "stars": 1,
+  "steps": 11943,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "2-5_schwer_frei#2": {
+  "state": "won",
+  "t": 200.1,
+  "stars": 1,
+  "steps": 12006,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "2-5_schwer_frei#3": {
+  "state": "won",
+  "t": 193,
+  "stars": 1,
+  "steps": 11578,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "2-5_schwer_frei#4": {
+  "state": "won",
+  "t": 149,
+  "stars": 2,
+  "steps": 8940,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ]
+ },
+ "2-5_schwer_frei": {
+  "state": "won",
+  "t": 198.2,
+  "stars": 1,
+  "steps": 11889,
+  "tasks": [
+   "visit 4/4",
+   "collect 6/6"
+  ],
+  "ts": [
+   198.2,
+   199.1,
+   200.1,
+   193,
+   149
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-6_leicht_frei#0": {
+  "state": "won",
+  "t": 45.5,
+  "stars": 2,
+  "steps": 2730,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ]
+ },
+ "2-6_leicht_frei#1": {
+  "state": "won",
+  "t": 43.2,
+  "stars": 2,
+  "steps": 2592,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ]
+ },
+ "2-6_leicht_frei#2": {
+  "state": "won",
+  "t": 43.2,
+  "stars": 2,
+  "steps": 2594,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ]
+ },
+ "2-6_leicht_frei#3": {
+  "state": "won",
+  "t": 43.6,
+  "stars": 2,
+  "steps": 2614,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ]
+ },
+ "2-6_leicht_frei#4": {
+  "state": "won",
+  "t": 44.4,
+  "stars": 2,
+  "steps": 2664,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ]
+ },
+ "2-6_leicht_frei": {
+  "state": "won",
+  "t": 43.6,
+  "stars": 2,
+  "steps": 2730,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ],
+  "ts": [
+   45.5,
+   43.2,
+   43.2,
+   43.6,
+   44.4
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-6_mittel_frei#0": {
+  "state": "won",
+  "t": 30.6,
+  "stars": 2,
+  "steps": 1836,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ]
+ },
+ "2-6_mittel_frei#1": {
+  "state": "won",
+  "t": 31.7,
+  "stars": 2,
+  "steps": 1902,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ]
+ },
+ "2-6_mittel_frei#2": {
+  "state": "won",
+  "t": 32,
+  "stars": 2,
+  "steps": 1919,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ]
+ },
+ "2-6_mittel_frei#3": {
+  "state": "won",
+  "t": 31.4,
+  "stars": 2,
+  "steps": 1885,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ]
+ },
+ "2-6_mittel_frei#4": {
+  "state": "won",
+  "t": 30.9,
+  "stars": 2,
+  "steps": 1853,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ]
+ },
+ "2-6_mittel_frei": {
+  "state": "won",
+  "t": 31.4,
+  "stars": 2,
+  "steps": 1836,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ],
+  "ts": [
+   30.6,
+   31.7,
+   32,
+   31.4,
+   30.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-6_schwer_frei#0": {
+  "state": "won",
+  "t": 35.6,
+  "stars": 2,
+  "steps": 2139,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ]
+ },
+ "2-6_schwer_frei#1": {
+  "state": "won",
+  "t": 37.1,
+  "stars": 2,
+  "steps": 2227,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ]
+ },
+ "2-6_schwer_frei#2": {
+  "state": "won",
+  "t": 37.1,
+  "stars": 2,
+  "steps": 2225,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ]
+ },
+ "2-6_schwer_frei#3": {
+  "state": "won",
+  "t": 37.5,
+  "stars": 2,
+  "steps": 2248,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ]
+ },
+ "2-6_schwer_frei#4": {
+  "state": "won",
+  "t": 35.2,
+  "stars": 2,
+  "steps": 2110,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ]
+ },
+ "2-6_schwer_frei": {
+  "state": "won",
+  "t": 37.1,
+  "stars": 2,
+  "steps": 2139,
+  "tasks": [
+   "stunts 3/3",
+   "land 3/3"
+  ],
+  "ts": [
+   35.6,
+   37.1,
+   37.1,
+   37.5,
+   35.2
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-7_leicht_frei#0": {
+  "state": "won",
+  "t": 115.2,
+  "stars": 2,
+  "steps": 6910,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ]
+ },
+ "2-7_leicht_frei#1": {
+  "state": "won",
+  "t": 120.3,
+  "stars": 2,
+  "steps": 7218,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ]
+ },
+ "2-7_leicht_frei#2": {
+  "state": "won",
+  "t": 113.4,
+  "stars": 2,
+  "steps": 6803,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ]
+ },
+ "2-7_leicht_frei#3": {
+  "state": "won",
+  "t": 132.6,
+  "stars": 2,
+  "steps": 7959,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ]
+ },
+ "2-7_leicht_frei#4": {
+  "state": "won",
+  "t": 121.3,
+  "stars": 2,
+  "steps": 7280,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ]
+ },
+ "2-7_leicht_frei": {
+  "state": "won",
+  "t": 120.3,
+  "stars": 2,
+  "steps": 6910,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ],
+  "ts": [
+   115.2,
+   120.3,
+   113.4,
+   132.6,
+   121.3
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-7_mittel_frei#0": {
+  "state": "won",
+  "t": 175.3,
+  "stars": 2,
+  "steps": 10518,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ]
+ },
+ "2-7_mittel_frei#1": {
+  "state": "won",
+  "t": 155.9,
+  "stars": 2,
+  "steps": 9352,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ]
+ },
+ "2-7_mittel_frei#2": {
+  "state": "won",
+  "t": 179.9,
+  "stars": 2,
+  "steps": 10794,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ]
+ },
+ "2-7_mittel_frei#3": {
+  "state": "won",
+  "t": 173,
+  "stars": 2,
+  "steps": 10379,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ]
+ },
+ "2-7_mittel_frei#4": {
+  "state": "won",
+  "t": 180.6,
+  "stars": 2,
+  "steps": 10833,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ]
+ },
+ "2-7_mittel_frei": {
+  "state": "won",
+  "t": 175.3,
+  "stars": 2,
+  "steps": 10518,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ],
+  "ts": [
+   175.3,
+   155.9,
+   179.9,
+   173,
+   180.6
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-7_schwer_frei#0": {
+  "state": "won",
+  "t": 110.2,
+  "stars": 3,
+  "steps": 6614,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ]
+ },
+ "2-7_schwer_frei#1": {
+  "state": "won",
+  "t": 114.8,
+  "stars": 3,
+  "steps": 6888,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ]
+ },
+ "2-7_schwer_frei#2": {
+  "state": "won",
+  "t": 117.6,
+  "stars": 3,
+  "steps": 7054,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ]
+ },
+ "2-7_schwer_frei#3": {
+  "state": "won",
+  "t": 114.6,
+  "stars": 3,
+  "steps": 6874,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ]
+ },
+ "2-7_schwer_frei#4": {
+  "state": "won",
+  "t": 114.8,
+  "stars": 3,
+  "steps": 6886,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ]
+ },
+ "2-7_schwer_frei": {
+  "state": "won",
+  "t": 114.8,
+  "stars": 3,
+  "steps": 6614,
+  "tasks": [
+   "deliver 3/3",
+   "rings 6/6"
+  ],
+  "ts": [
+   110.2,
+   114.8,
+   117.6,
+   114.6,
+   114.8
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-8_leicht_frei#0": {
+  "state": "won",
+  "t": 79,
+  "stars": 2,
+  "steps": 4743,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ]
+ },
+ "2-8_leicht_frei#1": {
+  "state": "won",
+  "t": 79,
+  "stars": 2,
+  "steps": 4743,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ]
+ },
+ "2-8_leicht_frei#2": {
+  "state": "won",
+  "t": 79,
+  "stars": 2,
+  "steps": 4743,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ]
+ },
+ "2-8_leicht_frei#3": {
+  "state": "won",
+  "t": 79,
+  "stars": 2,
+  "steps": 4743,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ]
+ },
+ "2-8_leicht_frei#4": {
+  "state": "won",
+  "t": 79,
+  "stars": 2,
+  "steps": 4743,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ]
+ },
+ "2-8_leicht_frei": {
+  "state": "won",
+  "t": 79,
+  "stars": 2,
+  "steps": 4743,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ],
+  "ts": [
+   79,
+   79,
+   79,
+   79,
+   79
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-8_mittel_frei#0": {
+  "state": "won",
+  "t": 59.1,
+  "stars": 2,
+  "steps": 3545,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ]
+ },
+ "2-8_mittel_frei#1": {
+  "state": "won",
+  "t": 59.1,
+  "stars": 2,
+  "steps": 3545,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ]
+ },
+ "2-8_mittel_frei#2": {
+  "state": "won",
+  "t": 59.1,
+  "stars": 2,
+  "steps": 3545,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ]
+ },
+ "2-8_mittel_frei#3": {
+  "state": "won",
+  "t": 59.1,
+  "stars": 2,
+  "steps": 3545,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ]
+ },
+ "2-8_mittel_frei#4": {
+  "state": "won",
+  "t": 59.1,
+  "stars": 2,
+  "steps": 3545,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ]
+ },
+ "2-8_mittel_frei": {
+  "state": "won",
+  "t": 59.1,
+  "stars": 2,
+  "steps": 3545,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ],
+  "ts": [
+   59.1,
+   59.1,
+   59.1,
+   59.1,
+   59.1
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "2-8_schwer_frei#0": {
+  "state": "won",
+  "t": 67.2,
+  "stars": 3,
+  "steps": 4030,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ]
+ },
+ "2-8_schwer_frei#1": {
+  "state": "won",
+  "t": 67.2,
+  "stars": 3,
+  "steps": 4030,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ]
+ },
+ "2-8_schwer_frei#2": {
+  "state": "won",
+  "t": 67.2,
+  "stars": 3,
+  "steps": 4030,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ]
+ },
+ "2-8_schwer_frei#3": {
+  "state": "won",
+  "t": 67.2,
+  "stars": 3,
+  "steps": 4030,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ]
+ },
+ "2-8_schwer_frei#4": {
+  "state": "won",
+  "t": 67.2,
+  "stars": 3,
+  "steps": 4030,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ]
+ },
+ "2-8_schwer_frei": {
+  "state": "won",
+  "t": 67.2,
+  "stars": 3,
+  "steps": 4030,
+  "tasks": [
+   "rings 14/14",
+   "land 3/3"
+  ],
+  "ts": [
+   67.2,
+   67.2,
+   67.2,
+   67.2,
+   67.2
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-1_leicht_frei#0": {
+  "state": "won",
+  "t": 32.5,
+  "stars": 2,
+  "steps": 1950,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "3-1_leicht_frei#1": {
+  "state": "won",
+  "t": 32.5,
+  "stars": 2,
+  "steps": 1950,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "3-1_leicht_frei#2": {
+  "state": "won",
+  "t": 32.5,
+  "stars": 2,
+  "steps": 1950,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "3-1_leicht_frei#3": {
+  "state": "won",
+  "t": 32.5,
+  "stars": 2,
+  "steps": 1950,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "3-1_leicht_frei#4": {
+  "state": "won",
+  "t": 32.5,
+  "stars": 2,
+  "steps": 1950,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "3-1_leicht_frei": {
+  "state": "won",
+  "t": 32.5,
+  "stars": 2,
+  "steps": 1950,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ],
+  "ts": [
+   32.5,
+   32.5,
+   32.5,
+   32.5,
+   32.5
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-1_mittel_frei#0": {
+  "state": "won",
+  "t": 38.7,
+  "stars": 2,
+  "steps": 2323,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "3-1_mittel_frei#1": {
+  "state": "won",
+  "t": 38.7,
+  "stars": 2,
+  "steps": 2323,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "3-1_mittel_frei#2": {
+  "state": "won",
+  "t": 38.7,
+  "stars": 2,
+  "steps": 2323,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "3-1_mittel_frei#3": {
+  "state": "won",
+  "t": 38.7,
+  "stars": 2,
+  "steps": 2323,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "3-1_mittel_frei#4": {
+  "state": "won",
+  "t": 38.7,
+  "stars": 2,
+  "steps": 2323,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "3-1_mittel_frei": {
+  "state": "won",
+  "t": 38.7,
+  "stars": 2,
+  "steps": 2323,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ],
+  "ts": [
+   38.7,
+   38.7,
+   38.7,
+   38.7,
+   38.7
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-1_schwer_frei#0": {
+  "state": "won",
+  "t": 39.4,
+  "stars": 3,
+  "steps": 2365,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "3-1_schwer_frei#1": {
+  "state": "won",
+  "t": 39.4,
+  "stars": 3,
+  "steps": 2365,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "3-1_schwer_frei#2": {
+  "state": "won",
+  "t": 39.4,
+  "stars": 3,
+  "steps": 2365,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "3-1_schwer_frei#3": {
+  "state": "won",
+  "t": 39.4,
+  "stars": 3,
+  "steps": 2365,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "3-1_schwer_frei#4": {
+  "state": "won",
+  "t": 39.4,
+  "stars": 3,
+  "steps": 2365,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ]
+ },
+ "3-1_schwer_frei": {
+  "state": "won",
+  "t": 39.4,
+  "stars": 3,
+  "steps": 2365,
+  "tasks": [
+   "land 5/5",
+   "collect 6/6"
+  ],
+  "ts": [
+   39.4,
+   39.4,
+   39.4,
+   39.4,
+   39.4
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-2_leicht_frei#0": {
+  "state": "won",
+  "t": 92.7,
+  "stars": 2,
+  "steps": 5561,
+  "tasks": [
+   "deliver 4/4"
+  ]
+ },
+ "3-2_leicht_frei#1": {
+  "state": "won",
+  "t": 97.5,
+  "stars": 2,
+  "steps": 5852,
+  "tasks": [
+   "deliver 4/4"
+  ]
+ },
+ "3-2_leicht_frei#2": {
+  "state": "won",
+  "t": 90.5,
+  "stars": 2,
+  "steps": 5431,
+  "tasks": [
+   "deliver 4/4"
+  ]
+ },
+ "3-2_leicht_frei#3": {
+  "state": "won",
+  "t": 98.7,
+  "stars": 2,
+  "steps": 5920,
+  "tasks": [
+   "deliver 4/4"
+  ]
+ },
+ "3-2_leicht_frei#4": {
+  "state": "won",
+  "t": 85.6,
+  "stars": 2,
+  "steps": 5137,
+  "tasks": [
+   "deliver 4/4"
+  ]
+ },
+ "3-2_leicht_frei": {
+  "state": "won",
+  "t": 92.7,
+  "stars": 2,
+  "steps": 5561,
+  "tasks": [
+   "deliver 4/4"
+  ],
+  "ts": [
+   92.7,
+   97.5,
+   90.5,
+   98.7,
+   85.6
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-2_mittel_frei#0": {
+  "state": "won",
+  "t": 175.3,
+  "stars": 2,
+  "steps": 10515,
+  "tasks": [
+   "deliver 4/4"
+  ]
+ },
+ "3-2_mittel_frei#1": {
+  "state": "won",
+  "t": 189.9,
+  "stars": 1,
+  "steps": 11396,
+  "tasks": [
+   "deliver 4/4"
+  ]
+ },
+ "3-2_mittel_frei#2": {
+  "state": "won",
+  "t": 190.4,
+  "stars": 1,
+  "steps": 11426,
+  "tasks": [
+   "deliver 4/4"
+  ]
+ },
+ "3-2_mittel_frei#3": {
+  "state": "won",
+  "t": 172.8,
+  "stars": 2,
+  "steps": 10365,
+  "tasks": [
+   "deliver 4/4"
+  ]
+ },
+ "3-2_mittel_frei#4": {
+  "state": "won",
+  "t": 191.9,
+  "stars": 1,
+  "steps": 11512,
+  "tasks": [
+   "deliver 4/4"
+  ]
+ },
+ "3-2_mittel_frei": {
+  "state": "won",
+  "t": 189.9,
+  "stars": 2,
+  "steps": 10515,
+  "tasks": [
+   "deliver 4/4"
+  ],
+  "ts": [
+   175.3,
+   189.9,
+   190.4,
+   172.8,
+   191.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-2_schwer_frei#0": {
+  "state": "won",
+  "t": 183.8,
+  "stars": 1,
+  "steps": 11026,
+  "tasks": [
+   "deliver 4/4"
+  ]
+ },
+ "3-2_schwer_frei#1": {
+  "state": "won",
+  "t": 168.1,
+  "stars": 1,
+  "steps": 10085,
+  "tasks": [
+   "deliver 4/4"
+  ]
+ },
+ "3-2_schwer_frei#2": {
+  "state": "won",
+  "t": 173.8,
+  "stars": 1,
+  "steps": 10426,
+  "tasks": [
+   "deliver 4/4"
+  ]
+ },
+ "3-2_schwer_frei#3": {
+  "state": "won",
+  "t": 181.6,
+  "stars": 1,
+  "steps": 10895,
+  "tasks": [
+   "deliver 4/4"
+  ]
+ },
+ "3-2_schwer_frei#4": {
+  "state": "won",
+  "t": 175,
+  "stars": 1,
+  "steps": 10497,
+  "tasks": [
+   "deliver 4/4"
+  ]
+ },
+ "3-2_schwer_frei": {
+  "state": "won",
+  "t": 175,
+  "stars": 1,
+  "steps": 11026,
+  "tasks": [
+   "deliver 4/4"
+  ],
+  "ts": [
+   183.8,
+   168.1,
+   173.8,
+   181.6,
+   175
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-3_leicht_frei#0": {
+  "state": "won",
+  "t": 32.6,
+  "stars": 3,
+  "steps": 2148,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_leicht_frei#1": {
+  "state": "won",
+  "t": 32.6,
+  "stars": 3,
+  "steps": 2148,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_leicht_frei#2": {
+  "state": "won",
+  "t": 32.6,
+  "stars": 3,
+  "steps": 2148,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_leicht_frei#3": {
+  "state": "won",
+  "t": 32.6,
+  "stars": 3,
+  "steps": 2148,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_leicht_frei#4": {
+  "state": "won",
+  "t": 32.6,
+  "stars": 3,
+  "steps": 2148,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_leicht_frei": {
+  "state": "won",
+  "t": 32.6,
+  "stars": 3,
+  "steps": 2148,
+  "tasks": [
+   "race 10/10"
+  ],
+  "ts": [
+   32.6,
+   32.6,
+   32.6,
+   32.6,
+   32.6
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-3_leicht_rennen#0": {
+  "state": "won",
+  "t": 32.6,
+  "stars": 3,
+  "steps": 2148,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_leicht_rennen#1": {
+  "state": "won",
+  "t": 32.6,
+  "stars": 3,
+  "steps": 2148,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_leicht_rennen#2": {
+  "state": "won",
+  "t": 32.6,
+  "stars": 3,
+  "steps": 2148,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_leicht_rennen#3": {
+  "state": "won",
+  "t": 32.6,
+  "stars": 3,
+  "steps": 2148,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_leicht_rennen#4": {
+  "state": "won",
+  "t": 32.6,
+  "stars": 3,
+  "steps": 2148,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_leicht_rennen": {
+  "state": "won",
+  "t": 32.6,
+  "stars": 3,
+  "steps": 2148,
+  "tasks": [
+   "race 10/10"
+  ],
+  "ts": [
+   32.6,
+   32.6,
+   32.6,
+   32.6,
+   32.6
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-3_mittel_frei#0": {
+  "state": "won",
+  "t": 28.8,
+  "stars": 3,
+  "steps": 1921,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_mittel_frei#1": {
+  "state": "won",
+  "t": 28.8,
+  "stars": 3,
+  "steps": 1921,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_mittel_frei#2": {
+  "state": "won",
+  "t": 28.8,
+  "stars": 3,
+  "steps": 1921,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_mittel_frei#3": {
+  "state": "won",
+  "t": 28.8,
+  "stars": 3,
+  "steps": 1921,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_mittel_frei#4": {
+  "state": "won",
+  "t": 28.8,
+  "stars": 3,
+  "steps": 1921,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_mittel_frei": {
+  "state": "won",
+  "t": 28.8,
+  "stars": 3,
+  "steps": 1921,
+  "tasks": [
+   "race 10/10"
+  ],
+  "ts": [
+   28.8,
+   28.8,
+   28.8,
+   28.8,
+   28.8
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-3_mittel_rennen#0": {
+  "state": "won",
+  "t": 28.8,
+  "stars": 3,
+  "steps": 1921,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_mittel_rennen#1": {
+  "state": "won",
+  "t": 28.8,
+  "stars": 3,
+  "steps": 1921,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_mittel_rennen#2": {
+  "state": "won",
+  "t": 28.8,
+  "stars": 3,
+  "steps": 1921,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_mittel_rennen#3": {
+  "state": "won",
+  "t": 28.8,
+  "stars": 3,
+  "steps": 1921,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_mittel_rennen#4": {
+  "state": "won",
+  "t": 28.8,
+  "stars": 3,
+  "steps": 1921,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_mittel_rennen": {
+  "state": "won",
+  "t": 28.8,
+  "stars": 3,
+  "steps": 1921,
+  "tasks": [
+   "race 10/10"
+  ],
+  "ts": [
+   28.8,
+   28.8,
+   28.8,
+   28.8,
+   28.8
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-3_schwer_frei#0": {
+  "state": "won",
+  "t": 26.3,
+  "stars": 3,
+  "steps": 1768,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_schwer_frei#1": {
+  "state": "won",
+  "t": 26.3,
+  "stars": 3,
+  "steps": 1768,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_schwer_frei#2": {
+  "state": "won",
+  "t": 26.3,
+  "stars": 3,
+  "steps": 1768,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_schwer_frei#3": {
+  "state": "won",
+  "t": 26.3,
+  "stars": 3,
+  "steps": 1768,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_schwer_frei#4": {
+  "state": "won",
+  "t": 26.3,
+  "stars": 3,
+  "steps": 1768,
+  "tasks": [
+   "race 10/10"
+  ]
+ },
+ "3-3_schwer_frei": {
+  "state": "won",
+  "t": 26.3,
+  "stars": 3,
+  "steps": 1768,
+  "tasks": [
+   "race 10/10"
+  ],
+  "ts": [
+   26.3,
+   26.3,
+   26.3,
+   26.3,
+   26.3
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-3_schwer_rennen#0": {
+  "state": "failed",
+  "t": 28.9,
+  "stars": 3,
+  "steps": 1928,
+  "tasks": [
+   "race 9/10"
+  ]
+ },
+ "3-3_schwer_rennen#1": {
+  "state": "failed",
+  "t": 24.3,
+  "stars": 3,
+  "steps": 1651,
+  "tasks": [
+   "race 9/10"
+  ]
+ },
+ "3-3_schwer_rennen#2": {
+  "state": "failed",
+  "t": 24.3,
+  "stars": 3,
+  "steps": 1651,
+  "tasks": [
+   "race 9/10"
+  ]
+ },
+ "3-3_schwer_rennen#3": {
+  "state": "failed",
+  "t": 24.3,
+  "stars": 3,
+  "steps": 1651,
+  "tasks": [
+   "race 9/10"
+  ]
+ },
+ "3-3_schwer_rennen#4": {
+  "state": "failed",
+  "t": 24.3,
+  "stars": 3,
+  "steps": 1651,
+  "tasks": [
+   "race 9/10"
+  ]
+ },
+ "3-3_schwer_rennen": {
+  "state": "failed",
+  "t": 28.9,
+  "stars": 3,
+  "steps": 1928,
+  "tasks": [
+   "race 9/10"
+  ],
+  "ts": [
+   28.9,
+   24.3,
+   24.3,
+   24.3,
+   24.3
+  ],
+  "states": [
+   "failed",
+   "failed",
+   "failed",
+   "failed",
+   "failed"
+  ]
+ },
+ "3-4_leicht_frei#0": {
+  "state": "won",
+  "t": 27.2,
+  "stars": 2,
+  "steps": 1633,
+  "tasks": [
+   "collect 10/10"
+  ]
+ },
+ "3-4_leicht_frei#1": {
+  "state": "won",
+  "t": 27.2,
+  "stars": 2,
+  "steps": 1633,
+  "tasks": [
+   "collect 10/10"
+  ]
+ },
+ "3-4_leicht_frei#2": {
+  "state": "won",
+  "t": 27.2,
+  "stars": 2,
+  "steps": 1633,
+  "tasks": [
+   "collect 10/10"
+  ]
+ },
+ "3-4_leicht_frei#3": {
+  "state": "won",
+  "t": 27.2,
+  "stars": 2,
+  "steps": 1633,
+  "tasks": [
+   "collect 10/10"
+  ]
+ },
+ "3-4_leicht_frei#4": {
+  "state": "won",
+  "t": 27.2,
+  "stars": 2,
+  "steps": 1633,
+  "tasks": [
+   "collect 10/10"
+  ]
+ },
+ "3-4_leicht_frei": {
+  "state": "won",
+  "t": 27.2,
+  "stars": 2,
+  "steps": 1633,
+  "tasks": [
+   "collect 10/10"
+  ],
+  "ts": [
+   27.2,
+   27.2,
+   27.2,
+   27.2,
+   27.2
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-4_mittel_frei#0": {
+  "state": "won",
+  "t": 26.5,
+  "stars": 2,
+  "steps": 1588,
+  "tasks": [
+   "collect 10/10"
+  ]
+ },
+ "3-4_mittel_frei#1": {
+  "state": "won",
+  "t": 26.5,
+  "stars": 2,
+  "steps": 1588,
+  "tasks": [
+   "collect 10/10"
+  ]
+ },
+ "3-4_mittel_frei#2": {
+  "state": "won",
+  "t": 26.5,
+  "stars": 2,
+  "steps": 1592,
+  "tasks": [
+   "collect 10/10"
+  ]
+ },
+ "3-4_mittel_frei#3": {
+  "state": "won",
+  "t": 26.5,
+  "stars": 2,
+  "steps": 1588,
+  "tasks": [
+   "collect 10/10"
+  ]
+ },
+ "3-4_mittel_frei#4": {
+  "state": "won",
+  "t": 26.5,
+  "stars": 2,
+  "steps": 1588,
+  "tasks": [
+   "collect 10/10"
+  ]
+ },
+ "3-4_mittel_frei": {
+  "state": "won",
+  "t": 26.5,
+  "stars": 2,
+  "steps": 1588,
+  "tasks": [
+   "collect 10/10"
+  ],
+  "ts": [
+   26.5,
+   26.5,
+   26.5,
+   26.5,
+   26.5
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-4_schwer_frei#0": {
+  "state": "won",
+  "t": 25,
+  "stars": 3,
+  "steps": 1498,
+  "tasks": [
+   "collect 10/10"
+  ]
+ },
+ "3-4_schwer_frei#1": {
+  "state": "won",
+  "t": 24.8,
+  "stars": 3,
+  "steps": 1487,
+  "tasks": [
+   "collect 10/10"
+  ]
+ },
+ "3-4_schwer_frei#2": {
+  "state": "won",
+  "t": 24.9,
+  "stars": 3,
+  "steps": 1493,
+  "tasks": [
+   "collect 10/10"
+  ]
+ },
+ "3-4_schwer_frei#3": {
+  "state": "won",
+  "t": 24.8,
+  "stars": 3,
+  "steps": 1487,
+  "tasks": [
+   "collect 10/10"
+  ]
+ },
+ "3-4_schwer_frei#4": {
+  "state": "won",
+  "t": 24.8,
+  "stars": 3,
+  "steps": 1487,
+  "tasks": [
+   "collect 10/10"
+  ]
+ },
+ "3-4_schwer_frei": {
+  "state": "won",
+  "t": 24.8,
+  "stars": 3,
+  "steps": 1498,
+  "tasks": [
+   "collect 10/10"
+  ],
+  "ts": [
+   25,
+   24.8,
+   24.9,
+   24.8,
+   24.8
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-5_leicht_frei#0": {
+  "state": "won",
+  "t": 86.3,
+  "stars": 2,
+  "steps": 5177,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ]
+ },
+ "3-5_leicht_frei#1": {
+  "state": "won",
+  "t": 85.7,
+  "stars": 2,
+  "steps": 5141,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ]
+ },
+ "3-5_leicht_frei#2": {
+  "state": "won",
+  "t": 87.1,
+  "stars": 2,
+  "steps": 5227,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ]
+ },
+ "3-5_leicht_frei#3": {
+  "state": "won",
+  "t": 83.1,
+  "stars": 2,
+  "steps": 4989,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ]
+ },
+ "3-5_leicht_frei#4": {
+  "state": "won",
+  "t": 86.6,
+  "stars": 2,
+  "steps": 5195,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ]
+ },
+ "3-5_leicht_frei": {
+  "state": "won",
+  "t": 86.3,
+  "stars": 2,
+  "steps": 5177,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ],
+  "ts": [
+   86.3,
+   85.7,
+   87.1,
+   83.1,
+   86.6
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-5_mittel_frei#0": {
+  "state": "won",
+  "t": 47.9,
+  "stars": 2,
+  "steps": 2875,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ]
+ },
+ "3-5_mittel_frei#1": {
+  "state": "won",
+  "t": 51.1,
+  "stars": 2,
+  "steps": 3064,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ]
+ },
+ "3-5_mittel_frei#2": {
+  "state": "won",
+  "t": 50.3,
+  "stars": 2,
+  "steps": 3018,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ]
+ },
+ "3-5_mittel_frei#3": {
+  "state": "won",
+  "t": 51.1,
+  "stars": 2,
+  "steps": 3065,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ]
+ },
+ "3-5_mittel_frei#4": {
+  "state": "won",
+  "t": 45.4,
+  "stars": 2,
+  "steps": 2725,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ]
+ },
+ "3-5_mittel_frei": {
+  "state": "won",
+  "t": 50.3,
+  "stars": 2,
+  "steps": 2875,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ],
+  "ts": [
+   47.9,
+   51.1,
+   50.3,
+   51.1,
+   45.4
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-5_schwer_frei#0": {
+  "state": "won",
+  "t": 42.3,
+  "stars": 2,
+  "steps": 2537,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ]
+ },
+ "3-5_schwer_frei#1": {
+  "state": "won",
+  "t": 46.3,
+  "stars": 2,
+  "steps": 2776,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ]
+ },
+ "3-5_schwer_frei#2": {
+  "state": "won",
+  "t": 43.7,
+  "stars": 2,
+  "steps": 2622,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ]
+ },
+ "3-5_schwer_frei#3": {
+  "state": "won",
+  "t": 44,
+  "stars": 2,
+  "steps": 2640,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ]
+ },
+ "3-5_schwer_frei#4": {
+  "state": "won",
+  "t": 42.6,
+  "stars": 2,
+  "steps": 2559,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ]
+ },
+ "3-5_schwer_frei": {
+  "state": "won",
+  "t": 43.7,
+  "stars": 2,
+  "steps": 2537,
+  "tasks": [
+   "visit 4/4",
+   "land 3/3"
+  ],
+  "ts": [
+   42.3,
+   46.3,
+   43.7,
+   44,
+   42.6
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-6_leicht_frei#0": {
+  "state": "won",
+  "t": 187.7,
+  "stars": 2,
+  "steps": 11260,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ]
+ },
+ "3-6_leicht_frei#1": {
+  "state": "won",
+  "t": 183,
+  "stars": 2,
+  "steps": 10978,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ]
+ },
+ "3-6_leicht_frei#2": {
+  "state": "won",
+  "t": 177,
+  "stars": 2,
+  "steps": 10620,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ]
+ },
+ "3-6_leicht_frei#3": {
+  "state": "won",
+  "t": 182.5,
+  "stars": 2,
+  "steps": 10952,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ]
+ },
+ "3-6_leicht_frei#4": {
+  "state": "won",
+  "t": 173.1,
+  "stars": 2,
+  "steps": 10387,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ]
+ },
+ "3-6_leicht_frei": {
+  "state": "won",
+  "t": 182.5,
+  "stars": 2,
+  "steps": 11260,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ],
+  "ts": [
+   187.7,
+   183,
+   177,
+   182.5,
+   173.1
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-6_mittel_frei#0": {
+  "state": "won",
+  "t": 137.8,
+  "stars": 2,
+  "steps": 8269,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ]
+ },
+ "3-6_mittel_frei#1": {
+  "state": "won",
+  "t": 143.8,
+  "stars": 2,
+  "steps": 8626,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ]
+ },
+ "3-6_mittel_frei#2": {
+  "state": "won",
+  "t": 151.3,
+  "stars": 2,
+  "steps": 9076,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ]
+ },
+ "3-6_mittel_frei#3": {
+  "state": "won",
+  "t": 137.4,
+  "stars": 2,
+  "steps": 8243,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ]
+ },
+ "3-6_mittel_frei#4": {
+  "state": "won",
+  "t": 142,
+  "stars": 2,
+  "steps": 8518,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ]
+ },
+ "3-6_mittel_frei": {
+  "state": "won",
+  "t": 142,
+  "stars": 2,
+  "steps": 8269,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ],
+  "ts": [
+   137.8,
+   143.8,
+   151.3,
+   137.4,
+   142
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-6_schwer_frei#0": {
+  "state": "won",
+  "t": 72,
+  "stars": 2,
+  "steps": 4321,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ]
+ },
+ "3-6_schwer_frei#1": {
+  "state": "won",
+  "t": 74.3,
+  "stars": 2,
+  "steps": 4456,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ]
+ },
+ "3-6_schwer_frei#2": {
+  "state": "won",
+  "t": 71.3,
+  "stars": 2,
+  "steps": 4278,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ]
+ },
+ "3-6_schwer_frei#3": {
+  "state": "won",
+  "t": 81.1,
+  "stars": 2,
+  "steps": 4869,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ]
+ },
+ "3-6_schwer_frei#4": {
+  "state": "won",
+  "t": 84.5,
+  "stars": 2,
+  "steps": 5073,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ]
+ },
+ "3-6_schwer_frei": {
+  "state": "won",
+  "t": 74.3,
+  "stars": 2,
+  "steps": 4321,
+  "tasks": [
+   "deliver 3/3",
+   "land 3/3"
+  ],
+  "ts": [
+   72,
+   74.3,
+   71.3,
+   81.1,
+   84.5
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-7_leicht_frei#0": {
+  "state": "won",
+  "t": 59,
+  "stars": 2,
+  "steps": 3538,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "3-7_leicht_frei#1": {
+  "state": "won",
+  "t": 59,
+  "stars": 2,
+  "steps": 3538,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "3-7_leicht_frei#2": {
+  "state": "won",
+  "t": 59,
+  "stars": 2,
+  "steps": 3538,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "3-7_leicht_frei#3": {
+  "state": "won",
+  "t": 59,
+  "stars": 2,
+  "steps": 3538,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "3-7_leicht_frei#4": {
+  "state": "won",
+  "t": 59,
+  "stars": 2,
+  "steps": 3538,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "3-7_leicht_frei": {
+  "state": "won",
+  "t": 59,
+  "stars": 2,
+  "steps": 3538,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ],
+  "ts": [
+   59,
+   59,
+   59,
+   59,
+   59
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-7_mittel_frei#0": {
+  "state": "won",
+  "t": 78.9,
+  "stars": 2,
+  "steps": 4737,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "3-7_mittel_frei#1": {
+  "state": "won",
+  "t": 78.9,
+  "stars": 2,
+  "steps": 4737,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "3-7_mittel_frei#2": {
+  "state": "won",
+  "t": 78.9,
+  "stars": 2,
+  "steps": 4737,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "3-7_mittel_frei#3": {
+  "state": "won",
+  "t": 78.9,
+  "stars": 2,
+  "steps": 4737,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "3-7_mittel_frei#4": {
+  "state": "won",
+  "t": 78.9,
+  "stars": 2,
+  "steps": 4737,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "3-7_mittel_frei": {
+  "state": "won",
+  "t": 78.9,
+  "stars": 2,
+  "steps": 4737,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ],
+  "ts": [
+   78.9,
+   78.9,
+   78.9,
+   78.9,
+   78.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-7_schwer_frei#0": {
+  "state": "won",
+  "t": 46.2,
+  "stars": 2,
+  "steps": 2773,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "3-7_schwer_frei#1": {
+  "state": "won",
+  "t": 46.2,
+  "stars": 2,
+  "steps": 2773,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "3-7_schwer_frei#2": {
+  "state": "won",
+  "t": 46.2,
+  "stars": 2,
+  "steps": 2773,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "3-7_schwer_frei#3": {
+  "state": "won",
+  "t": 46.2,
+  "stars": 2,
+  "steps": 2773,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "3-7_schwer_frei#4": {
+  "state": "won",
+  "t": 46.2,
+  "stars": 2,
+  "steps": 2773,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ]
+ },
+ "3-7_schwer_frei": {
+  "state": "won",
+  "t": 46.2,
+  "stars": 2,
+  "steps": 2773,
+  "tasks": [
+   "rings 10/10",
+   "collect 5/5"
+  ],
+  "ts": [
+   46.2,
+   46.2,
+   46.2,
+   46.2,
+   46.2
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-8_leicht_frei#0": {
+  "state": "won",
+  "t": 64.7,
+  "stars": 2,
+  "steps": 3882,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ]
+ },
+ "3-8_leicht_frei#1": {
+  "state": "won",
+  "t": 64.7,
+  "stars": 2,
+  "steps": 3882,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ]
+ },
+ "3-8_leicht_frei#2": {
+  "state": "won",
+  "t": 64.7,
+  "stars": 2,
+  "steps": 3882,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ]
+ },
+ "3-8_leicht_frei#3": {
+  "state": "won",
+  "t": 64.7,
+  "stars": 2,
+  "steps": 3882,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ]
+ },
+ "3-8_leicht_frei#4": {
+  "state": "won",
+  "t": 64.7,
+  "stars": 2,
+  "steps": 3882,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ]
+ },
+ "3-8_leicht_frei": {
+  "state": "won",
+  "t": 64.7,
+  "stars": 2,
+  "steps": 3882,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ],
+  "ts": [
+   64.7,
+   64.7,
+   64.7,
+   64.7,
+   64.7
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-8_mittel_frei#0": {
+  "state": "won",
+  "t": 58.3,
+  "stars": 2,
+  "steps": 3499,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ]
+ },
+ "3-8_mittel_frei#1": {
+  "state": "won",
+  "t": 58.3,
+  "stars": 2,
+  "steps": 3499,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ]
+ },
+ "3-8_mittel_frei#2": {
+  "state": "won",
+  "t": 58.3,
+  "stars": 2,
+  "steps": 3499,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ]
+ },
+ "3-8_mittel_frei#3": {
+  "state": "won",
+  "t": 58.3,
+  "stars": 2,
+  "steps": 3499,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ]
+ },
+ "3-8_mittel_frei#4": {
+  "state": "won",
+  "t": 58.3,
+  "stars": 2,
+  "steps": 3499,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ]
+ },
+ "3-8_mittel_frei": {
+  "state": "won",
+  "t": 58.3,
+  "stars": 2,
+  "steps": 3499,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ],
+  "ts": [
+   58.3,
+   58.3,
+   58.3,
+   58.3,
+   58.3
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "3-8_schwer_frei#0": {
+  "state": "won",
+  "t": 58.5,
+  "stars": 2,
+  "steps": 3511,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ]
+ },
+ "3-8_schwer_frei#1": {
+  "state": "won",
+  "t": 58.5,
+  "stars": 2,
+  "steps": 3511,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ]
+ },
+ "3-8_schwer_frei#2": {
+  "state": "won",
+  "t": 58.5,
+  "stars": 2,
+  "steps": 3511,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ]
+ },
+ "3-8_schwer_frei#3": {
+  "state": "won",
+  "t": 58.5,
+  "stars": 2,
+  "steps": 3511,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ]
+ },
+ "3-8_schwer_frei#4": {
+  "state": "won",
+  "t": 58.5,
+  "stars": 2,
+  "steps": 3511,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ]
+ },
+ "3-8_schwer_frei": {
+  "state": "won",
+  "t": 58.5,
+  "stars": 2,
+  "steps": 3511,
+  "tasks": [
+   "rings 12/12",
+   "land 4/4"
+  ],
+  "ts": [
+   58.5,
+   58.5,
+   58.5,
+   58.5,
+   58.5
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-1_leicht_frei#0": {
+  "state": "won",
+  "t": 56.9,
+  "stars": 2,
+  "steps": 3417,
+  "tasks": [
+   "blossoms 14/14"
+  ]
+ },
+ "4-1_leicht_frei#1": {
+  "state": "won",
+  "t": 56.9,
+  "stars": 2,
+  "steps": 3417,
+  "tasks": [
+   "blossoms 14/14"
+  ]
+ },
+ "4-1_leicht_frei#2": {
+  "state": "won",
+  "t": 56.9,
+  "stars": 2,
+  "steps": 3417,
+  "tasks": [
+   "blossoms 14/14"
+  ]
+ },
+ "4-1_leicht_frei#3": {
+  "state": "won",
+  "t": 56.9,
+  "stars": 2,
+  "steps": 3417,
+  "tasks": [
+   "blossoms 14/14"
+  ]
+ },
+ "4-1_leicht_frei#4": {
+  "state": "won",
+  "t": 56.9,
+  "stars": 2,
+  "steps": 3417,
+  "tasks": [
+   "blossoms 14/14"
+  ]
+ },
+ "4-1_leicht_frei": {
+  "state": "won",
+  "t": 56.9,
+  "stars": 2,
+  "steps": 3417,
+  "tasks": [
+   "blossoms 14/14"
+  ],
+  "ts": [
+   56.9,
+   56.9,
+   56.9,
+   56.9,
+   56.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-1_mittel_frei#0": {
+  "state": "won",
+  "t": 50.1,
+  "stars": 2,
+  "steps": 3004,
+  "tasks": [
+   "blossoms 14/14"
+  ]
+ },
+ "4-1_mittel_frei#1": {
+  "state": "won",
+  "t": 49.8,
+  "stars": 3,
+  "steps": 2989,
+  "tasks": [
+   "blossoms 14/14"
+  ]
+ },
+ "4-1_mittel_frei#2": {
+  "state": "won",
+  "t": 49.8,
+  "stars": 3,
+  "steps": 2989,
+  "tasks": [
+   "blossoms 14/14"
+  ]
+ },
+ "4-1_mittel_frei#3": {
+  "state": "won",
+  "t": 55.6,
+  "stars": 3,
+  "steps": 3335,
+  "tasks": [
+   "blossoms 14/14"
+  ]
+ },
+ "4-1_mittel_frei#4": {
+  "state": "won",
+  "t": 49.8,
+  "stars": 3,
+  "steps": 2989,
+  "tasks": [
+   "blossoms 14/14"
+  ]
+ },
+ "4-1_mittel_frei": {
+  "state": "won",
+  "t": 49.8,
+  "stars": 2,
+  "steps": 3004,
+  "tasks": [
+   "blossoms 14/14"
+  ],
+  "ts": [
+   50.1,
+   49.8,
+   49.8,
+   55.6,
+   49.8
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-1_schwer_frei#0": {
+  "state": "won",
+  "t": 51.8,
+  "stars": 2,
+  "steps": 3106,
+  "tasks": [
+   "blossoms 14/14"
+  ]
+ },
+ "4-1_schwer_frei#1": {
+  "state": "won",
+  "t": 51.8,
+  "stars": 2,
+  "steps": 3106,
+  "tasks": [
+   "blossoms 14/14"
+  ]
+ },
+ "4-1_schwer_frei#2": {
+  "state": "won",
+  "t": 51.8,
+  "stars": 2,
+  "steps": 3106,
+  "tasks": [
+   "blossoms 14/14"
+  ]
+ },
+ "4-1_schwer_frei#3": {
+  "state": "won",
+  "t": 51.8,
+  "stars": 2,
+  "steps": 3106,
+  "tasks": [
+   "blossoms 14/14"
+  ]
+ },
+ "4-1_schwer_frei#4": {
+  "state": "won",
+  "t": 51.8,
+  "stars": 2,
+  "steps": 3106,
+  "tasks": [
+   "blossoms 14/14"
+  ]
+ },
+ "4-1_schwer_frei": {
+  "state": "won",
+  "t": 51.8,
+  "stars": 2,
+  "steps": 3106,
+  "tasks": [
+   "blossoms 14/14"
+  ],
+  "ts": [
+   51.8,
+   51.8,
+   51.8,
+   51.8,
+   51.8
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-2_leicht_frei#0": {
+  "state": "won",
+  "t": 240.3,
+  "stars": 1,
+  "steps": 14416,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ]
+ },
+ "4-2_leicht_frei#1": {
+  "state": "won",
+  "t": 240,
+  "stars": 1,
+  "steps": 14398,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ]
+ },
+ "4-2_leicht_frei#2": {
+  "state": "won",
+  "t": 232.2,
+  "stars": 1,
+  "steps": 13929,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ]
+ },
+ "4-2_leicht_frei#3": {
+  "state": "won",
+  "t": 227.8,
+  "stars": 1,
+  "steps": 13665,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ]
+ },
+ "4-2_leicht_frei#4": {
+  "state": "won",
+  "t": 232.9,
+  "stars": 1,
+  "steps": 13975,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ]
+ },
+ "4-2_leicht_frei": {
+  "state": "won",
+  "t": 232.9,
+  "stars": 1,
+  "steps": 14416,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ],
+  "ts": [
+   240.3,
+   240,
+   232.2,
+   227.8,
+   232.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-2_mittel_frei#0": {
+  "state": "won",
+  "t": 110.9,
+  "stars": 2,
+  "steps": 6653,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ]
+ },
+ "4-2_mittel_frei#1": {
+  "state": "won",
+  "t": 120.7,
+  "stars": 2,
+  "steps": 7242,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ]
+ },
+ "4-2_mittel_frei#2": {
+  "state": "won",
+  "t": 83.7,
+  "stars": 2,
+  "steps": 5021,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ]
+ },
+ "4-2_mittel_frei#3": {
+  "state": "won",
+  "t": 111.4,
+  "stars": 2,
+  "steps": 6684,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ]
+ },
+ "4-2_mittel_frei#4": {
+  "state": "won",
+  "t": 110.8,
+  "stars": 2,
+  "steps": 6650,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ]
+ },
+ "4-2_mittel_frei": {
+  "state": "won",
+  "t": 110.9,
+  "stars": 2,
+  "steps": 6653,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ],
+  "ts": [
+   110.9,
+   120.7,
+   83.7,
+   111.4,
+   110.8
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-2_schwer_frei#0": {
+  "state": "won",
+  "t": 76.5,
+  "stars": 3,
+  "steps": 4593,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ]
+ },
+ "4-2_schwer_frei#1": {
+  "state": "won",
+  "t": 77.6,
+  "stars": 3,
+  "steps": 4658,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ]
+ },
+ "4-2_schwer_frei#2": {
+  "state": "won",
+  "t": 81.1,
+  "stars": 3,
+  "steps": 4864,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ]
+ },
+ "4-2_schwer_frei#3": {
+  "state": "won",
+  "t": 83.7,
+  "stars": 3,
+  "steps": 5024,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ]
+ },
+ "4-2_schwer_frei#4": {
+  "state": "won",
+  "t": 82.6,
+  "stars": 3,
+  "steps": 4956,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ]
+ },
+ "4-2_schwer_frei": {
+  "state": "won",
+  "t": 81.1,
+  "stars": 3,
+  "steps": 4593,
+  "tasks": [
+   "rings 9/9",
+   "visit 3/3"
+  ],
+  "ts": [
+   76.5,
+   77.6,
+   81.1,
+   83.7,
+   82.6
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-3_leicht_frei#0": {
+  "state": "won",
+  "t": 38.1,
+  "stars": 2,
+  "steps": 2286,
+  "tasks": [
+   "rings 12/12"
+  ]
+ },
+ "4-3_leicht_frei#1": {
+  "state": "won",
+  "t": 38.1,
+  "stars": 2,
+  "steps": 2286,
+  "tasks": [
+   "rings 12/12"
+  ]
+ },
+ "4-3_leicht_frei#2": {
+  "state": "won",
+  "t": 38.1,
+  "stars": 2,
+  "steps": 2286,
+  "tasks": [
+   "rings 12/12"
+  ]
+ },
+ "4-3_leicht_frei#3": {
+  "state": "won",
+  "t": 38.1,
+  "stars": 2,
+  "steps": 2286,
+  "tasks": [
+   "rings 12/12"
+  ]
+ },
+ "4-3_leicht_frei#4": {
+  "state": "won",
+  "t": 38.1,
+  "stars": 2,
+  "steps": 2286,
+  "tasks": [
+   "rings 12/12"
+  ]
+ },
+ "4-3_leicht_frei": {
+  "state": "won",
+  "t": 38.1,
+  "stars": 2,
+  "steps": 2286,
+  "tasks": [
+   "rings 12/12"
+  ],
+  "ts": [
+   38.1,
+   38.1,
+   38.1,
+   38.1,
+   38.1
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-3_mittel_frei#0": {
+  "state": "won",
+  "t": 34.6,
+  "stars": 2,
+  "steps": 2075,
+  "tasks": [
+   "rings 12/12"
+  ]
+ },
+ "4-3_mittel_frei#1": {
+  "state": "won",
+  "t": 34.6,
+  "stars": 2,
+  "steps": 2075,
+  "tasks": [
+   "rings 12/12"
+  ]
+ },
+ "4-3_mittel_frei#2": {
+  "state": "won",
+  "t": 34.6,
+  "stars": 2,
+  "steps": 2075,
+  "tasks": [
+   "rings 12/12"
+  ]
+ },
+ "4-3_mittel_frei#3": {
+  "state": "won",
+  "t": 34.6,
+  "stars": 2,
+  "steps": 2075,
+  "tasks": [
+   "rings 12/12"
+  ]
+ },
+ "4-3_mittel_frei#4": {
+  "state": "won",
+  "t": 34.6,
+  "stars": 2,
+  "steps": 2075,
+  "tasks": [
+   "rings 12/12"
+  ]
+ },
+ "4-3_mittel_frei": {
+  "state": "won",
+  "t": 34.6,
+  "stars": 2,
+  "steps": 2075,
+  "tasks": [
+   "rings 12/12"
+  ],
+  "ts": [
+   34.6,
+   34.6,
+   34.6,
+   34.6,
+   34.6
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-3_schwer_frei#0": {
+  "state": "won",
+  "t": 33.5,
+  "stars": 3,
+  "steps": 2011,
+  "tasks": [
+   "rings 12/12"
+  ]
+ },
+ "4-3_schwer_frei#1": {
+  "state": "won",
+  "t": 33.5,
+  "stars": 3,
+  "steps": 2011,
+  "tasks": [
+   "rings 12/12"
+  ]
+ },
+ "4-3_schwer_frei#2": {
+  "state": "won",
+  "t": 33.5,
+  "stars": 3,
+  "steps": 2011,
+  "tasks": [
+   "rings 12/12"
+  ]
+ },
+ "4-3_schwer_frei#3": {
+  "state": "won",
+  "t": 33.9,
+  "stars": 2,
+  "steps": 2032,
+  "tasks": [
+   "rings 12/12"
+  ]
+ },
+ "4-3_schwer_frei#4": {
+  "state": "won",
+  "t": 33.5,
+  "stars": 3,
+  "steps": 2011,
+  "tasks": [
+   "rings 12/12"
+  ]
+ },
+ "4-3_schwer_frei": {
+  "state": "won",
+  "t": 33.5,
+  "stars": 3,
+  "steps": 2011,
+  "tasks": [
+   "rings 12/12"
+  ],
+  "ts": [
+   33.5,
+   33.5,
+   33.5,
+   33.9,
+   33.5
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-4_leicht_frei#0": {
+  "state": "won",
+  "t": 50.2,
+  "stars": 2,
+  "steps": 3014,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ]
+ },
+ "4-4_leicht_frei#1": {
+  "state": "won",
+  "t": 50.1,
+  "stars": 2,
+  "steps": 3008,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ]
+ },
+ "4-4_leicht_frei#2": {
+  "state": "won",
+  "t": 49.5,
+  "stars": 2,
+  "steps": 2972,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ]
+ },
+ "4-4_leicht_frei#3": {
+  "state": "won",
+  "t": 49.4,
+  "stars": 2,
+  "steps": 2966,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ]
+ },
+ "4-4_leicht_frei#4": {
+  "state": "won",
+  "t": 49.8,
+  "stars": 2,
+  "steps": 2990,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ]
+ },
+ "4-4_leicht_frei": {
+  "state": "won",
+  "t": 49.8,
+  "stars": 2,
+  "steps": 3014,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ],
+  "ts": [
+   50.2,
+   50.1,
+   49.5,
+   49.4,
+   49.8
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-4_mittel_frei#0": {
+  "state": "won",
+  "t": 64.6,
+  "stars": 2,
+  "steps": 3875,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ]
+ },
+ "4-4_mittel_frei#1": {
+  "state": "won",
+  "t": 65.6,
+  "stars": 2,
+  "steps": 3935,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ]
+ },
+ "4-4_mittel_frei#2": {
+  "state": "won",
+  "t": 64.6,
+  "stars": 2,
+  "steps": 3875,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ]
+ },
+ "4-4_mittel_frei#3": {
+  "state": "won",
+  "t": 63.6,
+  "stars": 2,
+  "steps": 3815,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ]
+ },
+ "4-4_mittel_frei#4": {
+  "state": "won",
+  "t": 64.4,
+  "stars": 2,
+  "steps": 3863,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ]
+ },
+ "4-4_mittel_frei": {
+  "state": "won",
+  "t": 64.6,
+  "stars": 2,
+  "steps": 3875,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ],
+  "ts": [
+   64.6,
+   65.6,
+   64.6,
+   63.6,
+   64.4
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-4_schwer_frei#0": {
+  "state": "won",
+  "t": 80.1,
+  "stars": 2,
+  "steps": 4804,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ]
+ },
+ "4-4_schwer_frei#1": {
+  "state": "won",
+  "t": 79.2,
+  "stars": 2,
+  "steps": 4750,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ]
+ },
+ "4-4_schwer_frei#2": {
+  "state": "won",
+  "t": 79.7,
+  "stars": 2,
+  "steps": 4780,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ]
+ },
+ "4-4_schwer_frei#3": {
+  "state": "won",
+  "t": 79.7,
+  "stars": 2,
+  "steps": 4780,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ]
+ },
+ "4-4_schwer_frei#4": {
+  "state": "won",
+  "t": 79,
+  "stars": 2,
+  "steps": 4738,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ]
+ },
+ "4-4_schwer_frei": {
+  "state": "won",
+  "t": 79.7,
+  "stars": 2,
+  "steps": 4804,
+  "tasks": [
+   "blossoms 10/10",
+   "stunts 3/3"
+  ],
+  "ts": [
+   80.1,
+   79.2,
+   79.7,
+   79.7,
+   79
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-5_leicht_frei#0": {
+  "state": "won",
+  "t": 181.1,
+  "stars": 2,
+  "steps": 10866,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ]
+ },
+ "4-5_leicht_frei#1": {
+  "state": "won",
+  "t": 182.2,
+  "stars": 2,
+  "steps": 10933,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ]
+ },
+ "4-5_leicht_frei#2": {
+  "state": "won",
+  "t": 168.2,
+  "stars": 2,
+  "steps": 10094,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ]
+ },
+ "4-5_leicht_frei#3": {
+  "state": "won",
+  "t": 184.4,
+  "stars": 2,
+  "steps": 11065,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ]
+ },
+ "4-5_leicht_frei#4": {
+  "state": "won",
+  "t": 163.3,
+  "stars": 2,
+  "steps": 9799,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ]
+ },
+ "4-5_leicht_frei": {
+  "state": "won",
+  "t": 181.1,
+  "stars": 2,
+  "steps": 10866,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ],
+  "ts": [
+   181.1,
+   182.2,
+   168.2,
+   184.4,
+   163.3
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-5_mittel_frei#0": {
+  "state": "won",
+  "t": 169.9,
+  "stars": 2,
+  "steps": 10194,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ]
+ },
+ "4-5_mittel_frei#1": {
+  "state": "won",
+  "t": 197.2,
+  "stars": 2,
+  "steps": 11833,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ]
+ },
+ "4-5_mittel_frei#2": {
+  "state": "won",
+  "t": 182.5,
+  "stars": 2,
+  "steps": 10948,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ]
+ },
+ "4-5_mittel_frei#3": {
+  "state": "won",
+  "t": 186.5,
+  "stars": 2,
+  "steps": 11192,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ]
+ },
+ "4-5_mittel_frei#4": {
+  "state": "won",
+  "t": 175.6,
+  "stars": 2,
+  "steps": 10533,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ]
+ },
+ "4-5_mittel_frei": {
+  "state": "won",
+  "t": 182.5,
+  "stars": 2,
+  "steps": 10194,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ],
+  "ts": [
+   169.9,
+   197.2,
+   182.5,
+   186.5,
+   175.6
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-5_schwer_frei#0": {
+  "state": "won",
+  "t": 79.7,
+  "stars": 2,
+  "steps": 4780,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ]
+ },
+ "4-5_schwer_frei#1": {
+  "state": "won",
+  "t": 71.3,
+  "stars": 2,
+  "steps": 4280,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ]
+ },
+ "4-5_schwer_frei#2": {
+  "state": "won",
+  "t": 79.5,
+  "stars": 2,
+  "steps": 4768,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ]
+ },
+ "4-5_schwer_frei#3": {
+  "state": "won",
+  "t": 73.1,
+  "stars": 2,
+  "steps": 4387,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ]
+ },
+ "4-5_schwer_frei#4": {
+  "state": "won",
+  "t": 103.3,
+  "stars": 2,
+  "steps": 6199,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ]
+ },
+ "4-5_schwer_frei": {
+  "state": "won",
+  "t": 79.5,
+  "stars": 2,
+  "steps": 4780,
+  "tasks": [
+   "deliver 3/3",
+   "blossoms 8/8"
+  ],
+  "ts": [
+   79.7,
+   71.3,
+   79.5,
+   73.1,
+   103.3
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-6_leicht_frei#0": {
+  "state": "won",
+  "t": 98.9,
+  "stars": 2,
+  "steps": 5937,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ]
+ },
+ "4-6_leicht_frei#1": {
+  "state": "won",
+  "t": 98.9,
+  "stars": 2,
+  "steps": 5937,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ]
+ },
+ "4-6_leicht_frei#2": {
+  "state": "won",
+  "t": 98.9,
+  "stars": 2,
+  "steps": 5937,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ]
+ },
+ "4-6_leicht_frei#3": {
+  "state": "won",
+  "t": 98.9,
+  "stars": 2,
+  "steps": 5937,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ]
+ },
+ "4-6_leicht_frei#4": {
+  "state": "won",
+  "t": 98.9,
+  "stars": 2,
+  "steps": 5937,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ]
+ },
+ "4-6_leicht_frei": {
+  "state": "won",
+  "t": 98.9,
+  "stars": 2,
+  "steps": 5937,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ],
+  "ts": [
+   98.9,
+   98.9,
+   98.9,
+   98.9,
+   98.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-6_mittel_frei#0": {
+  "state": "won",
+  "t": 64.1,
+  "stars": 2,
+  "steps": 3846,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ]
+ },
+ "4-6_mittel_frei#1": {
+  "state": "won",
+  "t": 64.1,
+  "stars": 2,
+  "steps": 3846,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ]
+ },
+ "4-6_mittel_frei#2": {
+  "state": "won",
+  "t": 64.1,
+  "stars": 2,
+  "steps": 3846,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ]
+ },
+ "4-6_mittel_frei#3": {
+  "state": "won",
+  "t": 64.1,
+  "stars": 2,
+  "steps": 3846,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ]
+ },
+ "4-6_mittel_frei#4": {
+  "state": "won",
+  "t": 64.1,
+  "stars": 2,
+  "steps": 3846,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ]
+ },
+ "4-6_mittel_frei": {
+  "state": "won",
+  "t": 64.1,
+  "stars": 2,
+  "steps": 3846,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ],
+  "ts": [
+   64.1,
+   64.1,
+   64.1,
+   64.1,
+   64.1
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-6_schwer_frei#0": {
+  "state": "won",
+  "t": 99.7,
+  "stars": 2,
+  "steps": 5980,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ]
+ },
+ "4-6_schwer_frei#1": {
+  "state": "won",
+  "t": 104.3,
+  "stars": 2,
+  "steps": 6256,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ]
+ },
+ "4-6_schwer_frei#2": {
+  "state": "won",
+  "t": 99.7,
+  "stars": 2,
+  "steps": 5980,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ]
+ },
+ "4-6_schwer_frei#3": {
+  "state": "won",
+  "t": 99.7,
+  "stars": 2,
+  "steps": 5980,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ]
+ },
+ "4-6_schwer_frei#4": {
+  "state": "won",
+  "t": 99.7,
+  "stars": 2,
+  "steps": 5980,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ]
+ },
+ "4-6_schwer_frei": {
+  "state": "won",
+  "t": 99.7,
+  "stars": 2,
+  "steps": 5980,
+  "tasks": [
+   "collect 6/6",
+   "blossoms 8/8"
+  ],
+  "ts": [
+   99.7,
+   104.3,
+   99.7,
+   99.7,
+   99.7
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-7_leicht_frei#0": {
+  "state": "won",
+  "t": 90,
+  "stars": 3,
+  "steps": 5403,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ]
+ },
+ "4-7_leicht_frei#1": {
+  "state": "won",
+  "t": 90,
+  "stars": 3,
+  "steps": 5403,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ]
+ },
+ "4-7_leicht_frei#2": {
+  "state": "won",
+  "t": 90,
+  "stars": 3,
+  "steps": 5403,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ]
+ },
+ "4-7_leicht_frei#3": {
+  "state": "won",
+  "t": 90,
+  "stars": 3,
+  "steps": 5403,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ]
+ },
+ "4-7_leicht_frei#4": {
+  "state": "won",
+  "t": 90,
+  "stars": 3,
+  "steps": 5403,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ]
+ },
+ "4-7_leicht_frei": {
+  "state": "won",
+  "t": 90,
+  "stars": 3,
+  "steps": 5403,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ],
+  "ts": [
+   90,
+   90,
+   90,
+   90,
+   90
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-7_mittel_frei#0": {
+  "state": "won",
+  "t": 83.5,
+  "stars": 2,
+  "steps": 5009,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ]
+ },
+ "4-7_mittel_frei#1": {
+  "state": "won",
+  "t": 83.5,
+  "stars": 2,
+  "steps": 5009,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ]
+ },
+ "4-7_mittel_frei#2": {
+  "state": "won",
+  "t": 83.5,
+  "stars": 2,
+  "steps": 5009,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ]
+ },
+ "4-7_mittel_frei#3": {
+  "state": "won",
+  "t": 83.5,
+  "stars": 2,
+  "steps": 5009,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ]
+ },
+ "4-7_mittel_frei#4": {
+  "state": "won",
+  "t": 83.5,
+  "stars": 2,
+  "steps": 5009,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ]
+ },
+ "4-7_mittel_frei": {
+  "state": "won",
+  "t": 83.5,
+  "stars": 2,
+  "steps": 5009,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ],
+  "ts": [
+   83.5,
+   83.5,
+   83.5,
+   83.5,
+   83.5
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-7_schwer_frei#0": {
+  "state": "won",
+  "t": 75.9,
+  "stars": 2,
+  "steps": 4554,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ]
+ },
+ "4-7_schwer_frei#1": {
+  "state": "won",
+  "t": 75.9,
+  "stars": 2,
+  "steps": 4554,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ]
+ },
+ "4-7_schwer_frei#2": {
+  "state": "won",
+  "t": 75.9,
+  "stars": 2,
+  "steps": 4554,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ]
+ },
+ "4-7_schwer_frei#3": {
+  "state": "won",
+  "t": 75.9,
+  "stars": 2,
+  "steps": 4554,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ]
+ },
+ "4-7_schwer_frei#4": {
+  "state": "won",
+  "t": 75.9,
+  "stars": 2,
+  "steps": 4554,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ]
+ },
+ "4-7_schwer_frei": {
+  "state": "won",
+  "t": 75.9,
+  "stars": 2,
+  "steps": 4554,
+  "tasks": [
+   "rings 10/10",
+   "blossoms 10/10"
+  ],
+  "ts": [
+   75.9,
+   75.9,
+   75.9,
+   75.9,
+   75.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-8_leicht_frei#0": {
+  "state": "won",
+  "t": 35.9,
+  "stars": 3,
+  "steps": 2346,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_leicht_frei#1": {
+  "state": "won",
+  "t": 35.9,
+  "stars": 3,
+  "steps": 2346,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_leicht_frei#2": {
+  "state": "won",
+  "t": 35.9,
+  "stars": 3,
+  "steps": 2346,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_leicht_frei#3": {
+  "state": "won",
+  "t": 35.9,
+  "stars": 3,
+  "steps": 2346,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_leicht_frei#4": {
+  "state": "won",
+  "t": 35.9,
+  "stars": 3,
+  "steps": 2346,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_leicht_frei": {
+  "state": "won",
+  "t": 35.9,
+  "stars": 3,
+  "steps": 2346,
+  "tasks": [
+   "race 11/11"
+  ],
+  "ts": [
+   35.9,
+   35.9,
+   35.9,
+   35.9,
+   35.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-8_leicht_rennen#0": {
+  "state": "won",
+  "t": 35.9,
+  "stars": 3,
+  "steps": 2346,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_leicht_rennen#1": {
+  "state": "won",
+  "t": 35.9,
+  "stars": 3,
+  "steps": 2346,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_leicht_rennen#2": {
+  "state": "won",
+  "t": 35.9,
+  "stars": 3,
+  "steps": 2346,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_leicht_rennen#3": {
+  "state": "won",
+  "t": 35.9,
+  "stars": 3,
+  "steps": 2346,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_leicht_rennen#4": {
+  "state": "won",
+  "t": 35.9,
+  "stars": 3,
+  "steps": 2346,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_leicht_rennen": {
+  "state": "won",
+  "t": 35.9,
+  "stars": 3,
+  "steps": 2346,
+  "tasks": [
+   "race 11/11"
+  ],
+  "ts": [
+   35.9,
+   35.9,
+   35.9,
+   35.9,
+   35.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-8_mittel_frei#0": {
+  "state": "won",
+  "t": 34.5,
+  "stars": 3,
+  "steps": 2264,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_mittel_frei#1": {
+  "state": "won",
+  "t": 34.5,
+  "stars": 3,
+  "steps": 2264,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_mittel_frei#2": {
+  "state": "won",
+  "t": 34.5,
+  "stars": 3,
+  "steps": 2264,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_mittel_frei#3": {
+  "state": "won",
+  "t": 34.5,
+  "stars": 3,
+  "steps": 2264,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_mittel_frei#4": {
+  "state": "won",
+  "t": 34.5,
+  "stars": 3,
+  "steps": 2264,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_mittel_frei": {
+  "state": "won",
+  "t": 34.5,
+  "stars": 3,
+  "steps": 2264,
+  "tasks": [
+   "race 11/11"
+  ],
+  "ts": [
+   34.5,
+   34.5,
+   34.5,
+   34.5,
+   34.5
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-8_mittel_rennen#0": {
+  "state": "won",
+  "t": 34.5,
+  "stars": 3,
+  "steps": 2264,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_mittel_rennen#1": {
+  "state": "won",
+  "t": 34.5,
+  "stars": 3,
+  "steps": 2264,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_mittel_rennen#2": {
+  "state": "won",
+  "t": 34.5,
+  "stars": 3,
+  "steps": 2264,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_mittel_rennen#3": {
+  "state": "won",
+  "t": 34.5,
+  "stars": 3,
+  "steps": 2264,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_mittel_rennen#4": {
+  "state": "won",
+  "t": 34.5,
+  "stars": 3,
+  "steps": 2264,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_mittel_rennen": {
+  "state": "won",
+  "t": 34.5,
+  "stars": 3,
+  "steps": 2264,
+  "tasks": [
+   "race 11/11"
+  ],
+  "ts": [
+   34.5,
+   34.5,
+   34.5,
+   34.5,
+   34.5
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-8_schwer_frei#0": {
+  "state": "won",
+  "t": 28,
+  "stars": 3,
+  "steps": 1872,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_schwer_frei#1": {
+  "state": "won",
+  "t": 28.5,
+  "stars": 3,
+  "steps": 1900,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_schwer_frei#2": {
+  "state": "won",
+  "t": 28,
+  "stars": 3,
+  "steps": 1872,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_schwer_frei#3": {
+  "state": "won",
+  "t": 28,
+  "stars": 3,
+  "steps": 1872,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_schwer_frei#4": {
+  "state": "won",
+  "t": 28.4,
+  "stars": 3,
+  "steps": 1894,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "4-8_schwer_frei": {
+  "state": "won",
+  "t": 28,
+  "stars": 3,
+  "steps": 1872,
+  "tasks": [
+   "race 11/11"
+  ],
+  "ts": [
+   28,
+   28.5,
+   28,
+   28,
+   28.4
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "4-8_schwer_rennen#0": {
+  "state": "failed",
+  "t": 30.6,
+  "stars": 3,
+  "steps": 2029,
+  "tasks": [
+   "race 10/11"
+  ]
+ },
+ "4-8_schwer_rennen#1": {
+  "state": "failed",
+  "t": 26.3,
+  "stars": 3,
+  "steps": 1772,
+  "tasks": [
+   "race 10/11"
+  ]
+ },
+ "4-8_schwer_rennen#2": {
+  "state": "failed",
+  "t": 26.3,
+  "stars": 3,
+  "steps": 1772,
+  "tasks": [
+   "race 10/11"
+  ]
+ },
+ "4-8_schwer_rennen#3": {
+  "state": "failed",
+  "t": 26.3,
+  "stars": 3,
+  "steps": 1772,
+  "tasks": [
+   "race 10/11"
+  ]
+ },
+ "4-8_schwer_rennen#4": {
+  "state": "failed",
+  "t": 26.3,
+  "stars": 3,
+  "steps": 1772,
+  "tasks": [
+   "race 10/11"
+  ]
+ },
+ "4-8_schwer_rennen": {
+  "state": "failed",
+  "t": 30.6,
+  "stars": 3,
+  "steps": 2029,
+  "tasks": [
+   "race 10/11"
+  ],
+  "ts": [
+   30.6,
+   26.3,
+   26.3,
+   26.3,
+   26.3
+  ],
+  "states": [
+   "failed",
+   "failed",
+   "failed",
+   "failed",
+   "failed"
+  ]
+ },
+ "5-1_leicht_frei#0": {
+  "state": "won",
+  "t": 95.7,
+  "stars": 2,
+  "steps": 5740,
+  "tasks": [
+   "fireflies 12/12"
+  ]
+ },
+ "5-1_leicht_frei#1": {
+  "state": "won",
+  "t": 95.7,
+  "stars": 2,
+  "steps": 5740,
+  "tasks": [
+   "fireflies 12/12"
+  ]
+ },
+ "5-1_leicht_frei#2": {
+  "state": "won",
+  "t": 95.7,
+  "stars": 2,
+  "steps": 5740,
+  "tasks": [
+   "fireflies 12/12"
+  ]
+ },
+ "5-1_leicht_frei#3": {
+  "state": "won",
+  "t": 95.7,
+  "stars": 2,
+  "steps": 5740,
+  "tasks": [
+   "fireflies 12/12"
+  ]
+ },
+ "5-1_leicht_frei#4": {
+  "state": "won",
+  "t": 95.7,
+  "stars": 2,
+  "steps": 5740,
+  "tasks": [
+   "fireflies 12/12"
+  ]
+ },
+ "5-1_leicht_frei": {
+  "state": "won",
+  "t": 95.7,
+  "stars": 2,
+  "steps": 5740,
+  "tasks": [
+   "fireflies 12/12"
+  ],
+  "ts": [
+   95.7,
+   95.7,
+   95.7,
+   95.7,
+   95.7
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-1_mittel_frei#0": {
+  "state": "won",
+  "t": 63.9,
+  "stars": 2,
+  "steps": 3832,
+  "tasks": [
+   "fireflies 12/12"
+  ]
+ },
+ "5-1_mittel_frei#1": {
+  "state": "won",
+  "t": 63.9,
+  "stars": 2,
+  "steps": 3832,
+  "tasks": [
+   "fireflies 12/12"
+  ]
+ },
+ "5-1_mittel_frei#2": {
+  "state": "won",
+  "t": 63.9,
+  "stars": 2,
+  "steps": 3832,
+  "tasks": [
+   "fireflies 12/12"
+  ]
+ },
+ "5-1_mittel_frei#3": {
+  "state": "won",
+  "t": 63.9,
+  "stars": 2,
+  "steps": 3832,
+  "tasks": [
+   "fireflies 12/12"
+  ]
+ },
+ "5-1_mittel_frei#4": {
+  "state": "won",
+  "t": 63.9,
+  "stars": 2,
+  "steps": 3832,
+  "tasks": [
+   "fireflies 12/12"
+  ]
+ },
+ "5-1_mittel_frei": {
+  "state": "won",
+  "t": 63.9,
+  "stars": 2,
+  "steps": 3832,
+  "tasks": [
+   "fireflies 12/12"
+  ],
+  "ts": [
+   63.9,
+   63.9,
+   63.9,
+   63.9,
+   63.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-1_schwer_frei#0": {
+  "state": "won",
+  "t": 84.4,
+  "stars": 2,
+  "steps": 5066,
+  "tasks": [
+   "fireflies 12/12"
+  ]
+ },
+ "5-1_schwer_frei#1": {
+  "state": "won",
+  "t": 82.1,
+  "stars": 2,
+  "steps": 4927,
+  "tasks": [
+   "fireflies 12/12"
+  ]
+ },
+ "5-1_schwer_frei#2": {
+  "state": "won",
+  "t": 82.3,
+  "stars": 2,
+  "steps": 4939,
+  "tasks": [
+   "fireflies 12/12"
+  ]
+ },
+ "5-1_schwer_frei#3": {
+  "state": "won",
+  "t": 82.1,
+  "stars": 2,
+  "steps": 4927,
+  "tasks": [
+   "fireflies 12/12"
+  ]
+ },
+ "5-1_schwer_frei#4": {
+  "state": "won",
+  "t": 82.1,
+  "stars": 2,
+  "steps": 4927,
+  "tasks": [
+   "fireflies 12/12"
+  ]
+ },
+ "5-1_schwer_frei": {
+  "state": "won",
+  "t": 82.1,
+  "stars": 2,
+  "steps": 5066,
+  "tasks": [
+   "fireflies 12/12"
+  ],
+  "ts": [
+   84.4,
+   82.1,
+   82.3,
+   82.1,
+   82.1
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-2_leicht_frei#0": {
+  "state": "won",
+  "t": 193.6,
+  "stars": 2,
+  "steps": 11617,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ]
+ },
+ "5-2_leicht_frei#1": {
+  "state": "won",
+  "t": 193.6,
+  "stars": 2,
+  "steps": 11617,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ]
+ },
+ "5-2_leicht_frei#2": {
+  "state": "won",
+  "t": 193.6,
+  "stars": 2,
+  "steps": 11617,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ]
+ },
+ "5-2_leicht_frei#3": {
+  "state": "won",
+  "t": 193.6,
+  "stars": 2,
+  "steps": 11617,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ]
+ },
+ "5-2_leicht_frei#4": {
+  "state": "won",
+  "t": 193.6,
+  "stars": 2,
+  "steps": 11617,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ]
+ },
+ "5-2_leicht_frei": {
+  "state": "won",
+  "t": 193.6,
+  "stars": 2,
+  "steps": 11617,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ],
+  "ts": [
+   193.6,
+   193.6,
+   193.6,
+   193.6,
+   193.6
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-2_mittel_frei#0": {
+  "state": "won",
+  "t": 148.7,
+  "stars": 2,
+  "steps": 8924,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ]
+ },
+ "5-2_mittel_frei#1": {
+  "state": "won",
+  "t": 148.7,
+  "stars": 2,
+  "steps": 8924,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ]
+ },
+ "5-2_mittel_frei#2": {
+  "state": "won",
+  "t": 148.7,
+  "stars": 2,
+  "steps": 8924,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ]
+ },
+ "5-2_mittel_frei#3": {
+  "state": "won",
+  "t": 148.7,
+  "stars": 2,
+  "steps": 8924,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ]
+ },
+ "5-2_mittel_frei#4": {
+  "state": "won",
+  "t": 148.7,
+  "stars": 2,
+  "steps": 8924,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ]
+ },
+ "5-2_mittel_frei": {
+  "state": "won",
+  "t": 148.7,
+  "stars": 2,
+  "steps": 8924,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ],
+  "ts": [
+   148.7,
+   148.7,
+   148.7,
+   148.7,
+   148.7
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-2_schwer_frei#0": {
+  "state": "won",
+  "t": 133.3,
+  "stars": 2,
+  "steps": 7998,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ]
+ },
+ "5-2_schwer_frei#1": {
+  "state": "won",
+  "t": 133,
+  "stars": 2,
+  "steps": 7981,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ]
+ },
+ "5-2_schwer_frei#2": {
+  "state": "won",
+  "t": 133,
+  "stars": 2,
+  "steps": 7981,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ]
+ },
+ "5-2_schwer_frei#3": {
+  "state": "won",
+  "t": 133,
+  "stars": 2,
+  "steps": 7981,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ]
+ },
+ "5-2_schwer_frei#4": {
+  "state": "won",
+  "t": 133,
+  "stars": 2,
+  "steps": 7981,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ]
+ },
+ "5-2_schwer_frei": {
+  "state": "won",
+  "t": 133,
+  "stars": 2,
+  "steps": 7998,
+  "tasks": [
+   "visit 5/5",
+   "land 3/3"
+  ],
+  "ts": [
+   133.3,
+   133,
+   133,
+   133,
+   133
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-3_leicht_frei#0": {
+  "state": "won",
+  "t": 96.6,
+  "stars": 2,
+  "steps": 5797,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ]
+ },
+ "5-3_leicht_frei#1": {
+  "state": "won",
+  "t": 96.6,
+  "stars": 2,
+  "steps": 5797,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ]
+ },
+ "5-3_leicht_frei#2": {
+  "state": "won",
+  "t": 96.6,
+  "stars": 2,
+  "steps": 5797,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ]
+ },
+ "5-3_leicht_frei#3": {
+  "state": "won",
+  "t": 96.6,
+  "stars": 2,
+  "steps": 5797,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ]
+ },
+ "5-3_leicht_frei#4": {
+  "state": "won",
+  "t": 96.6,
+  "stars": 2,
+  "steps": 5797,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ]
+ },
+ "5-3_leicht_frei": {
+  "state": "won",
+  "t": 96.6,
+  "stars": 2,
+  "steps": 5797,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ],
+  "ts": [
+   96.6,
+   96.6,
+   96.6,
+   96.6,
+   96.6
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-3_mittel_frei#0": {
+  "state": "won",
+  "t": 81.6,
+  "stars": 2,
+  "steps": 4895,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ]
+ },
+ "5-3_mittel_frei#1": {
+  "state": "won",
+  "t": 81.6,
+  "stars": 2,
+  "steps": 4895,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ]
+ },
+ "5-3_mittel_frei#2": {
+  "state": "won",
+  "t": 81.6,
+  "stars": 2,
+  "steps": 4895,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ]
+ },
+ "5-3_mittel_frei#3": {
+  "state": "won",
+  "t": 81.6,
+  "stars": 2,
+  "steps": 4895,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ]
+ },
+ "5-3_mittel_frei#4": {
+  "state": "won",
+  "t": 81.6,
+  "stars": 2,
+  "steps": 4895,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ]
+ },
+ "5-3_mittel_frei": {
+  "state": "won",
+  "t": 81.6,
+  "stars": 2,
+  "steps": 4895,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ],
+  "ts": [
+   81.6,
+   81.6,
+   81.6,
+   81.6,
+   81.6
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-3_schwer_frei#0": {
+  "state": "won",
+  "t": 77.1,
+  "stars": 3,
+  "steps": 4628,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ]
+ },
+ "5-3_schwer_frei#1": {
+  "state": "won",
+  "t": 77.1,
+  "stars": 3,
+  "steps": 4628,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ]
+ },
+ "5-3_schwer_frei#2": {
+  "state": "won",
+  "t": 77.1,
+  "stars": 3,
+  "steps": 4628,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ]
+ },
+ "5-3_schwer_frei#3": {
+  "state": "won",
+  "t": 77.1,
+  "stars": 3,
+  "steps": 4628,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ]
+ },
+ "5-3_schwer_frei#4": {
+  "state": "won",
+  "t": 77.1,
+  "stars": 3,
+  "steps": 4628,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ]
+ },
+ "5-3_schwer_frei": {
+  "state": "won",
+  "t": 77.1,
+  "stars": 3,
+  "steps": 4628,
+  "tasks": [
+   "rings 10/10",
+   "fireflies 8/8"
+  ],
+  "ts": [
+   77.1,
+   77.1,
+   77.1,
+   77.1,
+   77.1
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-4_leicht_frei#0": {
+  "state": "won",
+  "t": 88.9,
+  "stars": 2,
+  "steps": 5335,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ]
+ },
+ "5-4_leicht_frei#1": {
+  "state": "won",
+  "t": 88.9,
+  "stars": 2,
+  "steps": 5335,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ]
+ },
+ "5-4_leicht_frei#2": {
+  "state": "won",
+  "t": 88.9,
+  "stars": 2,
+  "steps": 5335,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ]
+ },
+ "5-4_leicht_frei#3": {
+  "state": "won",
+  "t": 88.9,
+  "stars": 2,
+  "steps": 5335,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ]
+ },
+ "5-4_leicht_frei#4": {
+  "state": "won",
+  "t": 88.9,
+  "stars": 2,
+  "steps": 5335,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ]
+ },
+ "5-4_leicht_frei": {
+  "state": "won",
+  "t": 88.9,
+  "stars": 2,
+  "steps": 5335,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ],
+  "ts": [
+   88.9,
+   88.9,
+   88.9,
+   88.9,
+   88.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-4_mittel_frei#0": {
+  "state": "won",
+  "t": 123.5,
+  "stars": 2,
+  "steps": 7412,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ]
+ },
+ "5-4_mittel_frei#1": {
+  "state": "won",
+  "t": 123.5,
+  "stars": 2,
+  "steps": 7412,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ]
+ },
+ "5-4_mittel_frei#2": {
+  "state": "won",
+  "t": 123.5,
+  "stars": 2,
+  "steps": 7412,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ]
+ },
+ "5-4_mittel_frei#3": {
+  "state": "won",
+  "t": 123.5,
+  "stars": 2,
+  "steps": 7412,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ]
+ },
+ "5-4_mittel_frei#4": {
+  "state": "won",
+  "t": 123.5,
+  "stars": 2,
+  "steps": 7412,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ]
+ },
+ "5-4_mittel_frei": {
+  "state": "won",
+  "t": 123.5,
+  "stars": 2,
+  "steps": 7412,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ],
+  "ts": [
+   123.5,
+   123.5,
+   123.5,
+   123.5,
+   123.5
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-4_schwer_frei#0": {
+  "state": "won",
+  "t": 90.1,
+  "stars": 2,
+  "steps": 5405,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ]
+ },
+ "5-4_schwer_frei#1": {
+  "state": "won",
+  "t": 89.9,
+  "stars": 2,
+  "steps": 5393,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ]
+ },
+ "5-4_schwer_frei#2": {
+  "state": "won",
+  "t": 89.9,
+  "stars": 2,
+  "steps": 5393,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ]
+ },
+ "5-4_schwer_frei#3": {
+  "state": "won",
+  "t": 89.9,
+  "stars": 2,
+  "steps": 5393,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ]
+ },
+ "5-4_schwer_frei#4": {
+  "state": "won",
+  "t": 89.9,
+  "stars": 2,
+  "steps": 5393,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ]
+ },
+ "5-4_schwer_frei": {
+  "state": "won",
+  "t": 89.9,
+  "stars": 2,
+  "steps": 5405,
+  "tasks": [
+   "land 5/5",
+   "fireflies 6/6"
+  ],
+  "ts": [
+   90.1,
+   89.9,
+   89.9,
+   89.9,
+   89.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-5_leicht_frei#0": {
+  "state": "won",
+  "t": 75.2,
+  "stars": 2,
+  "steps": 4510,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ]
+ },
+ "5-5_leicht_frei#1": {
+  "state": "won",
+  "t": 93.1,
+  "stars": 2,
+  "steps": 5584,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ]
+ },
+ "5-5_leicht_frei#2": {
+  "state": "won",
+  "t": 75.8,
+  "stars": 2,
+  "steps": 4547,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ]
+ },
+ "5-5_leicht_frei#3": {
+  "state": "won",
+  "t": 96.4,
+  "stars": 2,
+  "steps": 5784,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ]
+ },
+ "5-5_leicht_frei#4": {
+  "state": "won",
+  "t": 74.6,
+  "stars": 2,
+  "steps": 4479,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ]
+ },
+ "5-5_leicht_frei": {
+  "state": "won",
+  "t": 75.8,
+  "stars": 2,
+  "steps": 4510,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ],
+  "ts": [
+   75.2,
+   93.1,
+   75.8,
+   96.4,
+   74.6
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-5_mittel_frei#0": {
+  "state": "won",
+  "t": 68.3,
+  "stars": 2,
+  "steps": 4101,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ]
+ },
+ "5-5_mittel_frei#1": {
+  "state": "won",
+  "t": 70.1,
+  "stars": 2,
+  "steps": 4206,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ]
+ },
+ "5-5_mittel_frei#2": {
+  "state": "won",
+  "t": 67,
+  "stars": 2,
+  "steps": 4018,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ]
+ },
+ "5-5_mittel_frei#3": {
+  "state": "won",
+  "t": 69.6,
+  "stars": 2,
+  "steps": 4174,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ]
+ },
+ "5-5_mittel_frei#4": {
+  "state": "won",
+  "t": 69.6,
+  "stars": 2,
+  "steps": 4176,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ]
+ },
+ "5-5_mittel_frei": {
+  "state": "won",
+  "t": 69.6,
+  "stars": 2,
+  "steps": 4101,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ],
+  "ts": [
+   68.3,
+   70.1,
+   67,
+   69.6,
+   69.6
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-5_schwer_frei#0": {
+  "state": "won",
+  "t": 67,
+  "stars": 2,
+  "steps": 4022,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ]
+ },
+ "5-5_schwer_frei#1": {
+  "state": "won",
+  "t": 61.2,
+  "stars": 2,
+  "steps": 3674,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ]
+ },
+ "5-5_schwer_frei#2": {
+  "state": "won",
+  "t": 68.4,
+  "stars": 2,
+  "steps": 4106,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ]
+ },
+ "5-5_schwer_frei#3": {
+  "state": "won",
+  "t": 68.5,
+  "stars": 2,
+  "steps": 4110,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ]
+ },
+ "5-5_schwer_frei#4": {
+  "state": "won",
+  "t": 68.5,
+  "stars": 2,
+  "steps": 4111,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ]
+ },
+ "5-5_schwer_frei": {
+  "state": "won",
+  "t": 68.4,
+  "stars": 2,
+  "steps": 4022,
+  "tasks": [
+   "stunts 3/3",
+   "fireflies 10/10"
+  ],
+  "ts": [
+   67,
+   61.2,
+   68.4,
+   68.5,
+   68.5
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-6_leicht_frei#0": {
+  "state": "won",
+  "t": 213.3,
+  "stars": 2,
+  "steps": 12799,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ]
+ },
+ "5-6_leicht_frei#1": {
+  "state": "won",
+  "t": 213.3,
+  "stars": 2,
+  "steps": 12799,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ]
+ },
+ "5-6_leicht_frei#2": {
+  "state": "won",
+  "t": 213.3,
+  "stars": 2,
+  "steps": 12799,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ]
+ },
+ "5-6_leicht_frei#3": {
+  "state": "won",
+  "t": 213.3,
+  "stars": 2,
+  "steps": 12799,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ]
+ },
+ "5-6_leicht_frei#4": {
+  "state": "won",
+  "t": 213.3,
+  "stars": 2,
+  "steps": 12799,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ]
+ },
+ "5-6_leicht_frei": {
+  "state": "won",
+  "t": 213.3,
+  "stars": 2,
+  "steps": 12799,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ],
+  "ts": [
+   213.3,
+   213.3,
+   213.3,
+   213.3,
+   213.3
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-6_mittel_frei#0": {
+  "state": "won",
+  "t": 144.9,
+  "stars": 2,
+  "steps": 8695,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ]
+ },
+ "5-6_mittel_frei#1": {
+  "state": "won",
+  "t": 144.9,
+  "stars": 2,
+  "steps": 8695,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ]
+ },
+ "5-6_mittel_frei#2": {
+  "state": "won",
+  "t": 144.9,
+  "stars": 2,
+  "steps": 8695,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ]
+ },
+ "5-6_mittel_frei#3": {
+  "state": "won",
+  "t": 144.9,
+  "stars": 2,
+  "steps": 8695,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ]
+ },
+ "5-6_mittel_frei#4": {
+  "state": "won",
+  "t": 144.9,
+  "stars": 2,
+  "steps": 8695,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ]
+ },
+ "5-6_mittel_frei": {
+  "state": "won",
+  "t": 144.9,
+  "stars": 2,
+  "steps": 8695,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ],
+  "ts": [
+   144.9,
+   144.9,
+   144.9,
+   144.9,
+   144.9
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-6_schwer_frei#0": {
+  "state": "won",
+  "t": 177.1,
+  "stars": 2,
+  "steps": 10624,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ]
+ },
+ "5-6_schwer_frei#1": {
+  "state": "won",
+  "t": 177.1,
+  "stars": 2,
+  "steps": 10624,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ]
+ },
+ "5-6_schwer_frei#2": {
+  "state": "won",
+  "t": 177.1,
+  "stars": 2,
+  "steps": 10624,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ]
+ },
+ "5-6_schwer_frei#3": {
+  "state": "won",
+  "t": 171.1,
+  "stars": 2,
+  "steps": 10263,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ]
+ },
+ "5-6_schwer_frei#4": {
+  "state": "won",
+  "t": 177.1,
+  "stars": 2,
+  "steps": 10624,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ]
+ },
+ "5-6_schwer_frei": {
+  "state": "won",
+  "t": 177.1,
+  "stars": 2,
+  "steps": 10624,
+  "tasks": [
+   "deliver 3/3",
+   "fireflies 8/8"
+  ],
+  "ts": [
+   177.1,
+   177.1,
+   177.1,
+   171.1,
+   177.1
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-7_leicht_frei#0": {
+  "state": "won",
+  "t": 35.1,
+  "stars": 3,
+  "steps": 2297,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_leicht_frei#1": {
+  "state": "won",
+  "t": 35.1,
+  "stars": 3,
+  "steps": 2297,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_leicht_frei#2": {
+  "state": "won",
+  "t": 35.1,
+  "stars": 3,
+  "steps": 2297,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_leicht_frei#3": {
+  "state": "won",
+  "t": 35.1,
+  "stars": 3,
+  "steps": 2297,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_leicht_frei#4": {
+  "state": "won",
+  "t": 35.1,
+  "stars": 3,
+  "steps": 2297,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_leicht_frei": {
+  "state": "won",
+  "t": 35.1,
+  "stars": 3,
+  "steps": 2297,
+  "tasks": [
+   "race 11/11"
+  ],
+  "ts": [
+   35.1,
+   35.1,
+   35.1,
+   35.1,
+   35.1
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-7_leicht_rennen#0": {
+  "state": "won",
+  "t": 35.1,
+  "stars": 3,
+  "steps": 2297,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_leicht_rennen#1": {
+  "state": "won",
+  "t": 35.1,
+  "stars": 3,
+  "steps": 2297,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_leicht_rennen#2": {
+  "state": "won",
+  "t": 35.1,
+  "stars": 3,
+  "steps": 2297,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_leicht_rennen#3": {
+  "state": "won",
+  "t": 35.1,
+  "stars": 3,
+  "steps": 2297,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_leicht_rennen#4": {
+  "state": "won",
+  "t": 35.1,
+  "stars": 3,
+  "steps": 2297,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_leicht_rennen": {
+  "state": "won",
+  "t": 35.1,
+  "stars": 3,
+  "steps": 2297,
+  "tasks": [
+   "race 11/11"
+  ],
+  "ts": [
+   35.1,
+   35.1,
+   35.1,
+   35.1,
+   35.1
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-7_mittel_frei#0": {
+  "state": "won",
+  "t": 32.8,
+  "stars": 3,
+  "steps": 2163,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_mittel_frei#1": {
+  "state": "won",
+  "t": 32.8,
+  "stars": 3,
+  "steps": 2163,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_mittel_frei#2": {
+  "state": "won",
+  "t": 32.8,
+  "stars": 3,
+  "steps": 2163,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_mittel_frei#3": {
+  "state": "won",
+  "t": 32.8,
+  "stars": 3,
+  "steps": 2163,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_mittel_frei#4": {
+  "state": "won",
+  "t": 32.8,
+  "stars": 3,
+  "steps": 2163,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_mittel_frei": {
+  "state": "won",
+  "t": 32.8,
+  "stars": 3,
+  "steps": 2163,
+  "tasks": [
+   "race 11/11"
+  ],
+  "ts": [
+   32.8,
+   32.8,
+   32.8,
+   32.8,
+   32.8
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-7_mittel_rennen#0": {
+  "state": "won",
+  "t": 32.8,
+  "stars": 3,
+  "steps": 2163,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_mittel_rennen#1": {
+  "state": "won",
+  "t": 32.8,
+  "stars": 3,
+  "steps": 2163,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_mittel_rennen#2": {
+  "state": "won",
+  "t": 32.8,
+  "stars": 3,
+  "steps": 2163,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_mittel_rennen#3": {
+  "state": "won",
+  "t": 32.8,
+  "stars": 3,
+  "steps": 2163,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_mittel_rennen#4": {
+  "state": "won",
+  "t": 32.8,
+  "stars": 3,
+  "steps": 2163,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_mittel_rennen": {
+  "state": "won",
+  "t": 32.8,
+  "stars": 3,
+  "steps": 2163,
+  "tasks": [
+   "race 11/11"
+  ],
+  "ts": [
+   32.8,
+   32.8,
+   32.8,
+   32.8,
+   32.8
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-7_schwer_frei#0": {
+  "state": "won",
+  "t": 29.5,
+  "stars": 3,
+  "steps": 1961,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_schwer_frei#1": {
+  "state": "won",
+  "t": 29.5,
+  "stars": 3,
+  "steps": 1961,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_schwer_frei#2": {
+  "state": "won",
+  "t": 29.5,
+  "stars": 3,
+  "steps": 1961,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_schwer_frei#3": {
+  "state": "won",
+  "t": 29.5,
+  "stars": 3,
+  "steps": 1961,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_schwer_frei#4": {
+  "state": "won",
+  "t": 29.5,
+  "stars": 3,
+  "steps": 1961,
+  "tasks": [
+   "race 11/11"
+  ]
+ },
+ "5-7_schwer_frei": {
+  "state": "won",
+  "t": 29.5,
+  "stars": 3,
+  "steps": 1961,
+  "tasks": [
+   "race 11/11"
+  ],
+  "ts": [
+   29.5,
+   29.5,
+   29.5,
+   29.5,
+   29.5
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-7_schwer_rennen#0": {
+  "state": "failed",
+  "t": 27.5,
+  "stars": 3,
+  "steps": 1841,
+  "tasks": [
+   "race 10/11"
+  ]
+ },
+ "5-7_schwer_rennen#1": {
+  "state": "failed",
+  "t": 27.5,
+  "stars": 3,
+  "steps": 1841,
+  "tasks": [
+   "race 10/11"
+  ]
+ },
+ "5-7_schwer_rennen#2": {
+  "state": "failed",
+  "t": 27.5,
+  "stars": 3,
+  "steps": 1841,
+  "tasks": [
+   "race 10/11"
+  ]
+ },
+ "5-7_schwer_rennen#3": {
+  "state": "failed",
+  "t": 27.5,
+  "stars": 3,
+  "steps": 1841,
+  "tasks": [
+   "race 10/11"
+  ]
+ },
+ "5-7_schwer_rennen#4": {
+  "state": "failed",
+  "t": 27.5,
+  "stars": 3,
+  "steps": 1841,
+  "tasks": [
+   "race 10/11"
+  ]
+ },
+ "5-7_schwer_rennen": {
+  "state": "failed",
+  "t": 27.5,
+  "stars": 3,
+  "steps": 1841,
+  "tasks": [
+   "race 10/11"
+  ],
+  "ts": [
+   27.5,
+   27.5,
+   27.5,
+   27.5,
+   27.5
+  ],
+  "states": [
+   "failed",
+   "failed",
+   "failed",
+   "failed",
+   "failed"
+  ]
+ },
+ "5-8_leicht_frei#0": {
+  "state": "won",
+  "t": 178.7,
+  "stars": 2,
+  "steps": 10721,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ]
+ },
+ "5-8_leicht_frei#1": {
+  "state": "won",
+  "t": 178.7,
+  "stars": 2,
+  "steps": 10721,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ]
+ },
+ "5-8_leicht_frei#2": {
+  "state": "won",
+  "t": 178.7,
+  "stars": 2,
+  "steps": 10721,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ]
+ },
+ "5-8_leicht_frei#3": {
+  "state": "won",
+  "t": 178.7,
+  "stars": 2,
+  "steps": 10721,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ]
+ },
+ "5-8_leicht_frei#4": {
+  "state": "won",
+  "t": 178.7,
+  "stars": 2,
+  "steps": 10721,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ]
+ },
+ "5-8_leicht_frei": {
+  "state": "won",
+  "t": 178.7,
+  "stars": 2,
+  "steps": 10721,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ],
+  "ts": [
+   178.7,
+   178.7,
+   178.7,
+   178.7,
+   178.7
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-8_mittel_frei#0": {
+  "state": "won",
+  "t": 129,
+  "stars": 2,
+  "steps": 7738,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ]
+ },
+ "5-8_mittel_frei#1": {
+  "state": "won",
+  "t": 129,
+  "stars": 2,
+  "steps": 7738,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ]
+ },
+ "5-8_mittel_frei#2": {
+  "state": "won",
+  "t": 129.3,
+  "stars": 2,
+  "steps": 7756,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ]
+ },
+ "5-8_mittel_frei#3": {
+  "state": "won",
+  "t": 129,
+  "stars": 2,
+  "steps": 7738,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ]
+ },
+ "5-8_mittel_frei#4": {
+  "state": "won",
+  "t": 129,
+  "stars": 2,
+  "steps": 7738,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ]
+ },
+ "5-8_mittel_frei": {
+  "state": "won",
+  "t": 129,
+  "stars": 2,
+  "steps": 7738,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ],
+  "ts": [
+   129,
+   129,
+   129.3,
+   129,
+   129
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ },
+ "5-8_schwer_frei#0": {
+  "state": "won",
+  "t": 104.8,
+  "stars": 2,
+  "steps": 6287,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ]
+ },
+ "5-8_schwer_frei#1": {
+  "state": "won",
+  "t": 104.8,
+  "stars": 2,
+  "steps": 6287,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ]
+ },
+ "5-8_schwer_frei#2": {
+  "state": "won",
+  "t": 104.8,
+  "stars": 2,
+  "steps": 6287,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ]
+ },
+ "5-8_schwer_frei#3": {
+  "state": "won",
+  "t": 104.8,
+  "stars": 2,
+  "steps": 6287,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ]
+ },
+ "5-8_schwer_frei#4": {
+  "state": "won",
+  "t": 104.8,
+  "stars": 2,
+  "steps": 6288,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ]
+ },
+ "5-8_schwer_frei": {
+  "state": "won",
+  "t": 104.8,
+  "stars": 2,
+  "steps": 6287,
+  "tasks": [
+   "fireflies 16/16",
+   "land 4/4"
+  ],
+  "ts": [
+   104.8,
+   104.8,
+   104.8,
+   104.8,
+   104.8
+  ],
+  "states": [
+   "won",
+   "won",
+   "won",
+   "won",
+   "won"
+  ]
+ }
+}

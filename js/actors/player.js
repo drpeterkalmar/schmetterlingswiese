@@ -10,6 +10,8 @@ import { kontaktParameter, KONTAKT_AN } from '../engine/schatten.js';
 const _sd = [0, 1, 0];
 import { showOffset, showOrient, showLift, liftAt, showBounds } from '../game/stunts.js';
 import { kunstMitte, kunstRadius, kunstEnde } from '../game/kunstflug.js';
+// v3.1 Flugschule: Schwung, Kurvenhilfe … (eine Parametergruppe, je Mechanik ein URL-Regler, 0 = wie v3.0)
+import { FLUG, tempoSchritt, tempoAlt, KurvenHilfe } from '../game/flugschule.js';
 
 const TAU = Math.PI * 2;
 // v2.5.1 Landen leichter: Fangbereich-Faktor gegenüber v2.5.0 (URL ?landen=<Faktor>, 1 = altes Verhalten ohne Einrasten)
@@ -36,6 +38,7 @@ export class Player {
     this.bounds = 108;
     this.critter = null;
     this.frozen = false;
+    this.diffId = 'mittel'; this.kurveH = new KurvenHilfe();
     // Blob-Schatten (v2.9: gerichteter Kontaktschatten, Quad 2×2 in xz, Größe/Richtung je Bild)
     if (KONTAKT_AN) {
       const g = new THREE.PlaneGeometry(2, 2); g.rotateX(-Math.PI / 2);
@@ -64,6 +67,7 @@ export class Player {
     this.landed = false; this.landSpot = null; this.landing = null; this.stunt = null; this.wetT = 0; this.dizzyT = 0; this.carry = null; this.showReset = true;
     this.airT = 9; this.seatTilt = null; this.seatOrbit = null;
     this.camInit = false; this.orbit = 0; this.hover = false; this.cheer = false; this.grandBlend = 0; this.camD = 1;
+    this.kurveH.reset();
   }
   emit(ev, a) { const f = this.on[ev]; if (f) f(a); }
   // o.grand = Sieger-Looping (länger, größerer Kreis, Seitenkamera)
@@ -215,7 +219,8 @@ export class Player {
       }
     } else {
       const dizzy = this.dizzyT > 0 ? 0.4 : 1;
-      this.yawRate += (-turn * this.turnRate * dizzy - this.yawRate) * Math.min(1, dt * 5.5);
+      const KH = this.kurveH.schritt(turn, dt); // v3.1 Eng-Kurve: nach 0,7 s Dauer-Drehen ×1,35 (?kurve=0: ×1)
+      this.yawRate += (-turn * this.turnRate * dizzy * KH.rate - this.yawRate) * Math.min(1, dt * 5.5);
       this.yaw += this.yawRate * dt;
       let tp = climb * 0.58;
       const alt = this.pos.y - gh;
@@ -267,11 +272,13 @@ export class Player {
       }
       this.pitch += (tp - this.pitch) * Math.min(1, dt * 4);
       const wet = this.wetT > 0 ? 0.7 : 1;
-      this.speed += (this.baseSpeed * (1 - this.pitch * 0.28) * wet * (this.landing ? 0.08 : 1) - this.speed) * Math.min(1, dt * (this.landing ? 5 : 2));
+      // v3.1 Schwung: Sturzflug bringt Tempo, Steigen kostet, zieht sanft zum Reisetempo zurück (?schwung=0: wie v3.0)
+      if (FLUG.schwung.an && !this.landing) this.speed = tempoSchritt(this.speed, this.baseSpeed * wet, this.pitch, dt, this.diffId === 'leicht');
+      else this.speed = tempoAlt(this.speed, this.baseSpeed * wet, this.pitch, dt, !!this.landing);
       this.forward(_v);
       this.pos.addScaledVector(_v, this.speed * dt);
       visPitch = this.pitch * 0.8;
-      visRoll = THREE.MathUtils.clamp(-this.yawRate * 0.36, -0.55, 0.55);
+      visRoll = KH.lage(this.yawRate); // v3.1 kräftigere Schräglage (?kurve=0: −0,36·Rate, höchstens 31°)
       // Boden & Decke
       const minY = height(this.pos.x, this.pos.z) + 0.9;
       if (this.pos.y < minY && !this.landed && !(climb < -0.3)) {

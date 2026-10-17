@@ -1,4 +1,5 @@
 // Eingabe: Tipp-Zonen (Kinderwunsch: Tippen & Halten statt Wischen), Joystick, Tastatur
+import { expoKurve } from './game/flugschule.js';
 export class Input {
   constructor(layer) {
     this.layer = layer;
@@ -45,7 +46,7 @@ export class Input {
     const t = x < w * 0.3 ? -1 : x > w * 0.7 ? 1 : 0;
     const dy = p.y - p.ay, DZ = 26, FULL = 42;
     let c;
-    if (Math.abs(dy) > DZ) c = -Math.sign(dy) * Math.min(1, (Math.abs(dy) - DZ) / FULL + 0.35);
+    if (Math.abs(dy) > DZ) c = expoKurve(-Math.sign(dy) * Math.min(1, (Math.abs(dy) - DZ) / FULL + 0.35)); // v3.1 ?expo= (Standard linear)
     else if (t === 0) c = p.y < innerHeight * 0.46 ? 1 : -1;
     else c = p.c0;
     return [t, c];
@@ -106,6 +107,7 @@ export class Input {
       t = Math.max(-1, Math.min(1, (this.stick.x - this.stick.x0) / R));
       c = Math.max(-1, Math.min(1, -(this.stick.y - this.stick.y0) / R));
       if (Math.abs(t) < 0.12) t = 0; if (Math.abs(c) < 0.12) c = 0;
+      t = expoKurve(t); c = expoKurve(c); // v3.1 ?expo=1.6: feiner um die Mitte (Standard 1 = linear wie v3.0)
     } else {
       let nL = 0, nR = 0, cU = 0, cD = 0;
       for (const p of this.ptr.values()) {

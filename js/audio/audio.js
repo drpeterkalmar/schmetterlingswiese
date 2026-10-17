@@ -3,6 +3,7 @@
 import { renderSfx, renderMusic, renderAmbience } from './synth.js';
 import { Music } from './music.js';
 import { BUILD } from '../build.js';
+import { FLUG, tempoSchritt, tempoAlt } from '../game/flugschule.js';
 
 // ---------------------------------------------------------------- IndexedDB-Cache der vorgerenderten Klänge
 const DBN = 'schmetterlingswiese-audio';
@@ -387,7 +388,8 @@ export async function renderFlight(bufs, world, kind, seconds = 30, diffSpeed = 
   for (let t = 0, dt = 1 / 15; t < seconds; t += dt) {
     const ph = t % 6, climb = ph < 2 ? 1 : ph > 4.5 && ph < 5.2 ? -0.25 : 0;
     pitch += (climb * 0.58 - pitch) * Math.min(1, dt * 4);
-    speed += (diffSpeed * (1 - pitch * 0.28) - speed) * Math.min(1, dt * 2);
+    // v3.1: dasselbe Tempo-Modell wie Player.update (Schwung bzw. ?schwung=0 wie bis v3.0) – Zwilling, nie getrennt ändern
+    speed = FLUG.schwung.an ? tempoSchritt(speed, diffSpeed, pitch, dt, diffSpeed < 6.5) : tempoAlt(speed, diffSpeed, pitch, dt);
     e.setFlight(Math.min(1, Math.max(0, speed / FLIGHT_NORM)), 0, t);
   }
   return ctx.startRendering();
