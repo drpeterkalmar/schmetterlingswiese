@@ -22,6 +22,8 @@ export class Input {
       if (e.repeat) return;
       this.keys[e.code] = true;
       if (e.code === 'ArrowUp' || e.code === 'KeyW') this.upT = e.timeStamp; // v3.1 kurz antippen = Flatter-Stoß
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') this.seite('L', e.timeStamp, true);   // v3.1 Doppeltipp = Rolle
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') this.seite('R', e.timeStamp, true);
       if (e.code === 'Space' || e.code === 'KeyL') this.actions.push('loop');
       if (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyR' || e.code === 'KeyK') this.actions.push('roll');
       if (e.code === 'Escape' || e.code === 'KeyP') this.actions.push('pause');
@@ -30,6 +32,8 @@ export class Input {
     });
     addEventListener('keyup', (e) => {
       this.keys[e.code] = false;
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') this.seite('L', e.timeStamp, false);
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') this.seite('R', e.timeStamp, false);
       if ((e.code === 'ArrowUp' || e.code === 'KeyW') && this.upT != null && istTipp((e.timeStamp - this.upT) / 1000, 0)) this.flap();
       if (e.code === 'ArrowUp' || e.code === 'KeyW') this.upT = null;
     });
@@ -39,6 +43,15 @@ export class Input {
   }
   // v3.1 Flatter-Stoß (?flatter=0: aus): kurzer Tipp ▲ (< 0,2 s, ohne Schieben) – Halten bleibt Dauer-Steigen
   flap() { if (FLUG.flatter.an && this.enabled) this.actions.push('flap'); }
+  // v3.1 Ausweich-Rolle (?rolle=0: aus): zweimal schnell dieselbe Seite tippen – der erste Druck kurz (< 0,2 s), der
+  // zweite höchstens 0,33 s nach dem ersten. Halten zum Drehen (auch kurz loslassen und neu drücken) löst nie aus.
+  seite(s, t, runter) {
+    if (!FLUG.rolle.an) return;
+    const L = this.seiten || (this.seiten = { L: { d: -1e9, u: -1e9 }, R: { d: -1e9, u: -1e9 } }), S = L[s];
+    if (!runter) { S.u = t; return; }
+    if (t - S.d < FLUG.rolle.fenster * 1000 && S.u > S.d && S.u - S.d < FLUG.flatter.tippMax * 1000) { this.actions.push(s === 'L' ? 'rolleL' : 'rolleR'); S.d = -1e9; return; }
+    S.d = t;
+  }
   zoneOf(x, y) {
     const w = innerWidth, h = innerHeight;
     if (x < w * 0.3) return 'L';
@@ -70,6 +83,7 @@ export class Input {
       return;
     }
     const z = this.zoneOf(e.clientX, e.clientY);
+    if (z === 'L' || z === 'R') this.seite(z, e.timeStamp, true);
     this.ptr.set(e.pointerId, { x: e.clientX, y: e.clientY, ay: e.clientY, y0: e.clientY, x0: e.clientX, t0: e.timeStamp, c0: z === 'U' ? 1 : z === 'D' ? -1 : 0, t: 0, c: 0 });
     this.paintZones();
   }
@@ -92,6 +106,7 @@ export class Input {
       this.stick = null; this.showStick(false);
     }
     const p = this.ptr.get(e.pointerId);
+    if (p && !p.tap && p.c0 === 0) this.seite(p.x0 < innerWidth * 0.5 ? 'L' : 'R', e.timeStamp, false);
     if (p && e.type === 'pointerup' && (p.tap || p.c0 === 1) && istTipp((e.timeStamp - p.t0) / 1000, Math.hypot(p.x - p.x0, p.y - p.y0))) this.flap();
     if (this.ptr.delete(e.pointerId)) this.paintZones();
   }

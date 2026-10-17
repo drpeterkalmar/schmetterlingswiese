@@ -226,6 +226,7 @@ export class Game {
       showDone: (id) => this.onShowDone(id),
       lock: (spot) => this.onLock(spot),
       aufwind: () => this.onAufwind(),
+      rolle: (dir) => this.onRolle(dir),
     };
     this.showAt = -99;
     this.app.player.critter.happyT = 0;
@@ -274,6 +275,14 @@ export class Game {
       if (frei(x, z)) add(x, z);
     }
     this.aufwind.setze(out);
+  }
+  // v3.1 Ausweich-Rolle: Wusch + Glitzer-Spirale, Zähler; Wespen prallen in der Rolle ab (hazards)
+  onRolle(dir) {
+    const pl = this.player;
+    this.rollen = (this.rollen || 0) + 1;
+    this.app.audio.sfx('swoosh', this.app.screenPan(pl.pos) * 0.5 + dir * 0.3, { gain: 0.7, rate: 1.25 });
+    this.bursts.emit({ n: 10, pos: pl.pos, colors: [0xffffff, 0xbfe6ff, 0xfff3b0], shape: 1, size: 0.3, speed: 2, up: 0.3, life: 0.6, grav: 0 });
+    if (!this.shownHints.rolle) { this.shownHints.rolle = true; this.app.ui.toast('🌀 Ausweich-Rolle! Wespen prallen ab'); }
   }
   onAufwind() {
     if (this.state !== 'play') return;
@@ -781,6 +790,7 @@ export class Game {
         if (a === 'pause') this.app.pause();
         if (a === 'show') this.showStunt();
         if (a === 'flap') this.flap();
+        if (a === 'rolleL' || a === 'rolleR') this.player.rolle(a === 'rolleL' ? -1 : 1);
       }
     }
     pl.update(dt, t, playing ? input : null);
@@ -825,6 +835,13 @@ export class Game {
     const pl = this.player, D = this.diffCfg;
     // Wespen
     this.wasps.update(dt, t, pl, (w, push) => {
+      if (pl.rolleS) { // v3.1 in der Ausweich-Rolle: Wespe prallt ab – kein Schubs, kein Schwindel, Kombo bleibt
+        this.bursts.emit({ n: 8, pos: pl.pos, colors: [0xfff3b0, 0xffffff], shape: 1, size: 0.3, speed: 3, up: 0.6, life: 0.6 });
+        this.app.audio.sfx('boing', this.app.screenPan(w.pos), { gain: 0.5, rate: 1.4 });
+        this.abgeprallt = (this.abgeprallt || 0) + 1;
+        if (!this.shownHints.abprall) { this.shownHints.abprall = true; this.app.ui.toast('✨ Ausgewichen! Die Wespe prallt ab'); }
+        return;
+      }
       pl.push(push); pl.dizzyT = 1.0; pl.critter && pl.critter.bump(6); pl.kick(3, 0.35);
       this.app.audio.sfx('boing', this.app.screenPan(w.pos)); this.app.haptics.buzz('bump');
       this.bursts.emit({ n: 8, pos: pl.pos, colors: [0xffe07a, 0xffffff], shape: 1, size: 0.3, speed: 3, up: 1, life: 0.8 });

@@ -155,6 +155,20 @@ def sz_landen(s, f):
         auto_bis(s, "!__app.player.landed", 30); auto(s, 1.0)
     return out
 
+def sz_rolle(s, f):
+    start(s, '1-3', 'mittel', 6); out = []
+    lauf(s, 0.4)
+    out.append((bild(s, 'ro0'), 'vor der Rolle'))
+    s.ev("(() => { __app.input.injected = { turn: 0, climb: 0 }; __app.player.rolleCd = 0; __app.player.rolle(1); window.__freeze = undefined; })()")
+    for k, p in enumerate([0.2, 0.45, 0.7]):
+        s.pg.wait_for_function(f"!__app.player.rolleS || __app.player.rolleS.t >= {p * 0.5}", polling=16, timeout=20000)
+        s.ev("window.__freeze = 1"); r = s.ev("({ a: __app.player.rolleS ? __app.player.rolleS.ang : 0, o: __app.player.rolleS ? __app.player.rolleS.off : 1.2 })")
+        out.append((bild(s, f'ro{k+1}'), f'Rolle {p * 100:.0f} %: {abs(r["a"]) * 57.3:.0f}°, {r["o"]:.2f} m'))
+        s.ev("window.__freeze = undefined")
+    s.pg.wait_for_function("!__app.player.rolleS", polling=16, timeout=20000); s.ev("window.__freeze = 1")
+    out.append((bild(s, 'ro9'), 'fertig: 1,2 m weiter rechts'))
+    return out
+
 SZENEN = {'kurve': sz_kurve, 'sturz': sz_sturz, 'flatter': sz_flatter}
 for extra in ['ringschub', 'kette', 'saugen', 'aufwind', 'schweif', 'landen', 'rolle']:
     fn = globals().get('sz_' + extra)

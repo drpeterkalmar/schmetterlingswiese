@@ -11,7 +11,7 @@ const _sd = [0, 1, 0];
 import { showOffset, showOrient, showLift, liftAt, showBounds } from '../game/stunts.js';
 import { kunstMitte, kunstRadius, kunstEnde } from '../game/kunstflug.js';
 // v3.1 Flugschule: Schwung, Kurvenhilfe … (eine Parametergruppe, je Mechanik ein URL-Regler, 0 = wie v3.0)
-import { FLUG, tempoSchritt, tempoAlt, KurvenHilfe, FlatterStapel, Rueckenwind, aufwindProfil } from '../game/flugschule.js';
+import { FLUG, tempoSchritt, tempoAlt, KurvenHilfe, FlatterStapel, Rueckenwind, aufwindProfil, rollVersatz } from '../game/flugschule.js';
 import { RM as RM_FS } from '../engine/deko.js';
 
 const TAU = Math.PI * 2;
@@ -39,7 +39,7 @@ export class Player {
     this.bounds = 108;
     this.critter = null;
     this.frozen = false;
-    this.diffId = 'mittel'; this.kurveH = new KurvenHilfe(); this.flat = new FlatterStapel(); this.wind = new Rueckenwind(); this.aufwinde = []; this.aufV = 0; this.imAufwind = null;
+    this.diffId = 'mittel'; this.kurveH = new KurvenHilfe(); this.flat = new FlatterStapel(); this.wind = new Rueckenwind(); this.aufwinde = []; this.aufV = 0; this.imAufwind = null; this.rolleS = null; this.rolleCd = 0;
     // Blob-Schatten (v2.9: gerichteter Kontaktschatten, Quad 2×2 in xz, Größe/Richtung je Bild)
     if (KONTAKT_AN) {
       const g = new THREE.PlaneGeometry(2, 2); g.rotateX(-Math.PI / 2);
@@ -68,7 +68,7 @@ export class Player {
     this.landed = false; this.landSpot = null; this.landing = null; this.stunt = null; this.wetT = 0; this.dizzyT = 0; this.carry = null; this.showReset = true;
     this.airT = 9; this.seatTilt = null; this.seatOrbit = null;
     this.camInit = false; this.orbit = 0; this.hover = false; this.cheer = false; this.grandBlend = 0; this.camD = 1;
-    this.kurveH.reset(); this.flat.reset(); this.wind.reset(); this.aufV = 0; this.imAufwind = null;
+    this.kurveH.reset(); this.flat.reset(); this.wind.reset(); this.aufV = 0; this.imAufwind = null; this.rolleS = null; this.rolleCd = 0;
   }
   emit(ev, a) { const f = this.on[ev]; if (f) f(a); }
   // o.grand = Sieger-Looping (länger, größerer Kreis, Seitenkamera)
@@ -171,6 +171,15 @@ export class Player {
     this.imAufwind = best;
     return hilfe;
   }
+  // v3.1 Ausweich-Rolle (Doppeltipp einer Seite): 0,5 s ganze Rolle + 1,2 m Versatz zur Seite, Pause 1 s; nur Mittel/Schwer
+  rolle(dir) {
+    const P = FLUG.rolle;
+    if (!P.an || !P.stufen.includes(this.diffId) || this.rolleS || this.rolleCd > 0) return false;
+    if (this.frozen || this.landed || this.stunt || this.hover || this.landing) return false;
+    this.rolleS = { t: 0, dir: dir < 0 ? -1 : 1, off: 0 };
+    this.emit('rolle', this.rolleS.dir);
+    return true;
+  }
   // Tempo samt Rückenwind (Anzeige/Messung: Ring-Schub-Verlauf)
   get tempo() { return this.speed + this.wind.wert * this.baseSpeed; }
   forward(out = _f) { const cp = Math.cos(this.pitch); return out.set(Math.sin(this.yaw) * cp, Math.sin(this.pitch), Math.cos(this.yaw) * cp); }
@@ -185,6 +194,7 @@ export class Player {
     this.wetT = Math.max(0, this.wetT - dt); this.dizzyT = Math.max(0, this.dizzyT - dt);
     if (!this.landed) this.airT += dt;
     const vFlat = this.flat.schritt(dt);
+    this.rolleCd = Math.max(0, this.rolleCd - dt);
     const vWind = this.wind.schritt(dt) * this.baseSpeed; // v3.1 Rückenwind (Ring-Schub, Ringkette), m/s zusätzlich
 
     if (this.hover) {
@@ -333,6 +343,13 @@ export class Player {
       if (this.aufV > 1e-3 && !this.landing) this.pos.y += this.aufV * dt;     // v3.1 Aufwind hebt (träge, ≈ 0,45 s)
       visPitch = this.pitch * 0.8 + Math.min(0.25, vFlat * 0.05);
       visRoll = KH.lage(this.yawRate); // v3.1 kräftigere Schräglage (?kurve=0: −0,36·Rate, höchstens 31°)
+      if (this.rolleS) { // v3.1 Ausweich-Rolle: seitlicher Versatz (Bildschirm-rechts = (−cos yaw, 0, sin yaw)) + volle Drehung
+        const R = this.rolleS, P = FLUG.rolle; R.t += dt;
+        const p = Math.min(1, R.t / P.dauer), off = rollVersatz(p), d = (off - R.off) * R.dir; R.off = off;
+        this.pos.x += -Math.cos(this.yaw) * d; this.pos.z += Math.sin(this.yaw) * d;
+        R.ang = R.dir * Math.PI * 2 * ease(p);
+        if (p >= 1) { this.rolleS = null; this.rolleCd = P.pause; }
+      }
       // Boden & Decke
       const minY = height(this.pos.x, this.pos.z) + 0.9;
       if (this.pos.y < minY && !this.landed && !(climb < -0.3)) {
@@ -379,7 +396,8 @@ export class Player {
       else {
       if (this.showReset || Math.abs(c.tilt.rotation.y) > 1e-6) { c.tilt.rotation.set(0, 0, 0); this.showReset = false; } // Einlage vorbei/abgebrochen: hart nullen
       c.tilt.rotation.x += (-visPitch - c.tilt.rotation.x) * (this.stunt ? 1 : Math.min(1, dt * 10));
-      c.tilt.rotation.z += (visRoll - c.tilt.rotation.z) * (this.stunt ? 1 : Math.min(1, dt * 8));
+      if (this.rolleS && this.rolleS.ang != null) { const a = visRoll + this.rolleS.ang; c.tilt.rotation.z = Math.atan2(Math.sin(a), Math.cos(a)); } // Rolle: direkt, Winkel gefaltet
+      else c.tilt.rotation.z += (visRoll - c.tilt.rotation.z) * (this.stunt ? 1 : Math.min(1, dt * 8));
       if (!this.stunt && Math.abs(c.tilt.rotation.x) > Math.PI) c.tilt.rotation.x = 0;
       if (!this.stunt && Math.abs(c.tilt.rotation.z) > Math.PI) c.tilt.rotation.z = 0;
       }

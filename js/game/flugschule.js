@@ -197,14 +197,6 @@ export function landeWertung(q, P = FLUG.landewertung) { return q < P.grenzen[0]
 export const LANDE_LOB = ['🌼 Gelandet!', '🌸 Sanft gelandet!', '🪶 Federleicht!'];
 
 // ------------------------------------------------------------------ #10 Ausweich-Rolle
-// Doppeltipp derselben Seite: zweiter Druck innerhalb fenster nach dem ersten
-export class DoppelTipp {
-  constructor(P = FLUG.rolle) { this.P = P; this.last = { L: -1e9, R: -1e9 }; }
-  druck(seite, t) {
-    const ok = t - this.last[seite] < this.P.fenster;
-    this.last[seite] = ok ? -1e9 : t; // nach einer Rolle zählt der nächste Druck wieder als erster
-    return ok;
-  }
-}
+// (Doppeltipp-Erkennung: Input.seite in js/input.js)
 // seitlicher Versatz der Rolle über die Dauer (0…1 → 0…versatz, weich)
 export function rollVersatz(p, P = FLUG.rolle) { return P.versatz * glatt(p); }

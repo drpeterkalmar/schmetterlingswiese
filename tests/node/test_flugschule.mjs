@@ -168,3 +168,20 @@ test('Aufwind: wer selbst lenkt oder sinkt, fliegt heraus (keine Falle)', async 
     assert.ok(raus !== null && raus < 4, `${JSON.stringify(inp)}: raus nach ${raus}`);
   }
 });
+
+test('Ausweich-Rolle: 1,2 m zur Seite in 0,5 s, volle Drehung, Pause 1 s, nur Mittel/Schwer', async () => {
+  const THREE = await import('three');
+  const { Player } = await import('../../js/actors/player.js');
+  const { height } = await import('../../js/world/terrain.js');
+  const mk = (diff) => { const pl = new Player(new THREE.Scene()); pl.baseSpeed = 7; pl.turnRate = 1.9; pl.speed = 7; pl.diffId = diff; pl.reset(new THREE.Vector3(0, height(0, 0) + 8, 0), 0); return pl; };
+  assert.equal(mk('leicht').rolle(1), false, 'Leicht: keine Rolle');
+  const a = mk('mittel'), b = mk('mittel');
+  assert.ok(a.rolle(1));
+  for (let i = 0; i < 40; i++) { a.update(dt, i * dt, { turn: 0, climb: 0 }); b.update(dt, i * dt, { turn: 0, climb: 0 }); }
+  // Bildschirm-rechts bei Blick +z ist −x
+  assert.ok(Math.abs((b.pos.x - a.pos.x) - 1.2) < 0.02 && Math.abs(a.pos.z - b.pos.z) < 0.02, `Versatz ${b.pos.x - a.pos.x}`);
+  assert.equal(a.rolleS, null); assert.equal(a.rolle(1), false, 'Pause');
+  for (let i = 0; i < 61; i++) a.update(dt, i * dt, { turn: 0, climb: 0 });
+  assert.ok(a.rolle(-1), 'nach 1 s wieder bereit');
+  assert.ok(Math.abs(FS.rollVersatz(1) - 1.2) < 1e-9 && FS.rollVersatz(0) === 0);
+});
