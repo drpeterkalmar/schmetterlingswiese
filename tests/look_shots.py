@@ -19,7 +19,7 @@ def fly(s, lid, sec=2.6, sun=False, tief=False):
     sim_wait(s, sec)
     s.ev("__game.freeze(true)"); time.sleep(0.5)
 
-def ui_aus(s): s.ev("(() => { const st = document.createElement('style'); st.id = 'uiaus'; st.textContent = 'body > *:not(canvas) { visibility: hidden !important }'; document.head.appendChild(st); })()"); time.sleep(0.2)
+def ui_aus(s): s.ev("(() => { const st = document.createElement('style'); st.id = 'uiaus'; st.textContent = 'body > *:not(canvas) { opacity: 0 !important; visibility: hidden !important } body > *:not(canvas) * { opacity: 0 !important }'; document.head.appendChild(st); })()"); time.sleep(0.2)
 
 def run(pw, device, orient, posen):
     s = Session(pw, device=device)

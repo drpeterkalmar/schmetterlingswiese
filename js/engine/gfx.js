@@ -132,7 +132,7 @@ vec3 applyFog(vec3 col, vec3 wp){
 uniform float uZeitL;
 vec3 wiesenTon(vec3 c, vec3 wp){
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
-  c = mix(c, c * vec3(1.10, 0.97, 0.78), smoothstep(0.0, 0.12, c.g - max(c.r, c.b)));
+  c = mix(c, c * vec3(1.14, 0.95, 0.70), smoothstep(0.0, 0.12, c.g - max(c.r, c.b)));
   float sh = sin(wp.x * 0.031 + uZeitL * 0.05 + sin(wp.z * 0.017) * 2.0) * sin(wp.z * 0.027 - uZeitL * 0.04 + sin(wp.x * 0.021) * 1.6);
   c *= 1.0 - 0.20 * smoothstep(0.15, 0.75, sh) * uFog.w;
   float d = length(wp.xz - uCam.xz);
@@ -665,12 +665,12 @@ ${LOONG ? `  // v3.2 Abend (v2-08-dusk): rosa-oranges Band über dem Horizont, z
   if (h > -0.02 && uClouds > 0.0) {
     vec2 cp = d.xz / (h + 0.09) * 0.42 + vec2(uTime * 0.012, uTime * 0.004);
     float dn = cumulus(cp);
-    float cov = smoothstep(0.50 - 0.12 * uClouds, 0.66, dn) * uClouds;
+    float cov = smoothstep(0.56 - 0.12 * uClouds, 0.72, dn) * uClouds;
     if (cov > 0.002) {
       vec2 sl = normalize(uSunDir.xz + 1e-4) * 0.22;
       float dl = cumulus(cp + sl);
-      float lit = clamp(0.55 + (dn - dl) * 2.6, 0.0, 1.0);
-      vec3 base = mix(uHorizon, uZenith, 0.35) * 0.78 + vec3(0.04, 0.03, 0.06);
+      float lit = clamp(0.68 + (dn - dl) * 2.6, 0.0, 1.0);
+      vec3 base = mix(uHorizon, uZenith, 0.5) * 0.9 + vec3(0.05, 0.04, 0.07);
       vec3 top = mix(vec3(1.0), uSunCol / max(max(uSunCol.r, uSunCol.g), 0.001), 0.35) * (1.05 + 0.25 * pow(sd, 6.0));
       vec3 cc = mix(base, top, lit);
       cc += uGlow * pow(sd, 8.0) * (1.0 - cov) * 1.4;           // Silberrand im Gegenlicht
@@ -927,7 +927,7 @@ ${LOONG ? `  // v3.2 Film-Grading nach crimson-loong (80_post): ACES-Kurve, Spli
   c *= 1.0 - 0.36 * smoothstep(0.10, 0.75, dot(q, q) * 1.25) * (uVig / 0.45);
   c = aces(c * uExpo);
   float l2 = dot(c, vec3(0.2126, 0.7152, 0.0722));
-  c = mix(vec3(l2), c, 1.22);
+  c = mix(vec3(l2), c, 1.12);
   c += vec3(-0.002, 0.003, 0.012) * (1.0 - l2) + vec3(0.014, 0.006, -0.010) * l2;
   c = mix(c, c * c * (3.0 - 2.0 * c), 0.6);
   c = max(c, 0.0);` : `  c *= 1.0 - uVig * dot(q, q) * 1.6;`}
