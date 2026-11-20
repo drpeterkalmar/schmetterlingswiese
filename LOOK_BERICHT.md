@@ -96,3 +96,7 @@ neue Look kommt ebenfalls ohne Dateien aus.
   auf dem alten Stand 3.1 genauso (Umgebung, kein Fehler von 3.2). Die übrigen Suiten (v30, v26, v25, v22, Audio, perf)
   wurden aus Zeitgründen nicht gefahren. Sie berühren keine geänderte Logik.
 - `perf_gate.py` hat jetzt eine Plattform-Weiche für Windows (D3D11), am Mac bleibt es unverändert.
+
+## Live
+
+Branch `rog-v32` (Commit 1083fca) ist zum Live-Bringen gemeldet (`.land` am 20.11. um 21:06). Bis 21:27 kam keine `.landed`-Antwort vom Server. Live steht deshalb **noch 3.1.0** (offen). Den neuen Build bitte nach dem Landen mit `?x=<zufall>` prüfen: Die Versionsanzeige muss 3.2.0 zeigen.
