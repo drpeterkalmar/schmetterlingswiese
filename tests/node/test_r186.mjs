@@ -6,9 +6,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
 
-const WURZEL = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
+const WURZEL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const alleJs = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? alleJs(path.join(d, e.name)) : e.name.endsWith('.js') ? [path.join(d, e.name)] : []);
 const QUELLEN = alleJs(path.join(WURZEL, 'js')).map((f) => [f, fs.readFileSync(f, 'utf8')]);
 

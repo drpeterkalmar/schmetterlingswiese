@@ -23,6 +23,8 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 HIER = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HIER)
 GPU_ARGS = ["--use-angle=metal", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl", "--mute-audio"]  # v3.0: stumm
+# v3.2 Plattform-Weiche (rog17, Windows): ANGLE/D3D11 statt Metal, Mac unverändert
+if sys.platform == 'win32': GPU_ARGS = ["--use-angle=d3d11", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu", "--enable-webgl", "--mute-audio"]
 UA = "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36"
 
 def profil(geraet, dpr):
