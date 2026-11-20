@@ -64,6 +64,7 @@ export class World {
     G.uLuft.value.copy(G.uSkyHor.value).lerp(G.uSkyZen.value, 0.55);
     // v2.3: Regenbogen, goldene Graslichter, Sternschnuppen
     su.uRainbow.value = w.sky.rainbow || 0; su.uShootT.value = -1;
+    su.uClouds.value = w.sky.wolken ?? 0.7; // v3.2 Cumulus-Menge je Welt
     const gd = w.gold || [0xffffff, 0]; _c.set(gd[0]); G.uGold.value.set(_c.r, _c.g, _c.b, gd[1]);
     this.himmelsLicht(w);
   }

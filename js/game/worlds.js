@@ -22,7 +22,7 @@ export const WORLDS = [
   {
     id: 'sonne', name: 'Sonnenblumenfeld', emoji: '🌻', tod: 'Mittag',
     sun: { az: 2.3, el: 0.72, col: 0xfff3d8, k: 1.35 },
-    sky: { zenith: 0x4c9fe0, horizon: 0xfff2d4, glow: 0xfff0c0, sunCol: 0xffffff, size: 0.045 },
+    sky: { zenith: 0x4c9fe0, horizon: 0xfff2d4, glow: 0xfff0c0, sunCol: 0xffffff, size: 0.045, wolken: 0.25 }, // v3.2: Mittag, wenig Cumulus
     amb: { sky: 0xa6c0ea, gnd: 0x8c8f4a, k: 0.6 }, rim: 0xfff2c0,
     fog: { col: 0xeae6d2, sun: 0xfff6dc, near: 60, far: 380, max: 0.68 },
     grass: [0x6a9630, 0x9cc446, 0xecd862], ground: [0x7aa63a, 0x98bd46, 0xc4c257],

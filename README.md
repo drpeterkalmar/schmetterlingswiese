@@ -109,6 +109,8 @@ Einhorn-Falter, Flugkatze, Regenbogen-Schweif, Pups-Wölkchen, Pizza-Hut …).
   Bloom nur noch auf Leuchtendem (Sonne, Glühwürmchen, Funken), fester Simulationstakt 60 Hz mit Interpolation (gleicher Flug
   auf 60/90/120-Hz-Schirmen). Jede Neuerung hat einen URL-Regler zum Vergleich: `?skala=0`, `?ringe=0`, `?cull=0`,
   `?himmel=0`, `?kontakt=0`, `?bloommaske=0`, `?takt=0`, `?startprobe=0`
+- **Look v3.2** (`LOOK_BERICHT.md`): Luftperspektive, Cumulus-Himmel, Film-Grading, Wake-Spur nach dem Vorbild
+  crimson-loong; `?look=alt` = Aussehen bis 3.1, `?expo=1.2` Belichtung vor der ACES-Kurve
 
 ### Entwickeln
 
@@ -147,6 +149,10 @@ Bericht: `V30_BERICHT.md`. Tests: `tests/node/test_kunstflug.mjs` (Bahn), `tests
 
 ## Changelog
 
+- **3.2.0 (20.11.2026) – Look nach „Crimson Loong“:** Luftperspektive mit zwei Medien (Wiesendunst + blaue Luft),
+  Cumulus-Himmel im Himmels-Shader, Film-Grading (ACES, Split-Tone, S-Kurve, Vignette), Wake-Spur (Halme und Blüten
+  federn hinter dem Falter nach), wärmeres Wiesengrün mit Halmfuß-Schatten und ziehenden Schattenfeldern, Abendband am
+  Horizont, weicher Aufwind-Schlauch. Alles aus Code, keine neuen Dateien. Alter Look: `?look=alt`. Details: `LOOK_BERICHT.md`
 - **3.1.0 (17.10.2026) – Flugschule:** Schwung im Sturzflug, Eng-Kurve, Flatter-Hüpfer per Tipp, Rückenwind je Ring und
   Ringkette, Einsaugen der Tropfen, Aufwind-Säulen, Lob beim Landen mit Album-Zähler, Blütenblatt-Schweif, Ausweich-Rolle.
   In Etappen ausgeliefert (3.1.0-e1 … -e6), jede mit eigenem URL-Regler. Details und Messwerte: `V31_VORLAGEN_BERICHT.md`
@@ -159,3 +165,8 @@ Bericht: `V30_BERICHT.md`. Tests: `tests/node/test_kunstflug.mjs` (Bahn), `tests
 ## Lizenz
 
 MIT – siehe [LICENSE](LICENSE). three.js: MIT (`lib/THREE_LICENSE.txt`).
+
+Herkunft v3.2-Look: Shader-Bausteine angepasst übernommen aus [crimson-loong](https://github.com/ChetasLua/crimson-loong)
+von ChetasLua (05_glsl Luftperspektive `clFog`, 80_post Grading mit ACES-Fit/Split-Tone/S-Kurve, 66_wake Idee der
+nachfedernden Pflanzen, 20_sky Cumulus-Licht über Dichte-Differenz zur Sonne – vereinfacht ohne 3D-Rauschen) –
+mit ausdrücklicher Erlaubnis des Projektinhabers, privates Projekt.

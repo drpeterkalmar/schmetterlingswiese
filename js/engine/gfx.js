@@ -667,17 +667,17 @@ ${LOONG ? `  // v3.2 Abend (v2-08-dusk): rosa-oranges Band über dem Horizont, z
   if (h > -0.02 && uClouds > 0.0) {
     vec2 cp = d.xz / (h + 0.09) * 0.42 + vec2(uTime * 0.012, uTime * 0.004);
     float dn = cumulus(cp);
-    float cov = smoothstep(0.56 - 0.12 * uClouds, 0.72, dn) * uClouds;
+    float cov = smoothstep(0.64 - 0.12 * uClouds, 0.78, dn) * uClouds;
     if (cov > 0.002) {
       vec2 sl = normalize(uSunDir.xz + 1e-4) * 0.22;
       float dl = cumulus(cp + sl);
       float lit = clamp(0.68 + (dn - dl) * 2.6, 0.0, 1.0);
-      vec3 base = mix(uHorizon, uZenith, 0.5) * 0.9 + vec3(0.05, 0.04, 0.07);
+      vec3 base = mix(mix(uHorizon, uZenith, 0.5) * 0.9 + vec3(0.05, 0.04, 0.07), vec3(0.93, 0.94, 0.98), 0.4 * (1.0 - uStars));
       vec3 top = mix(vec3(1.0), uSunCol / max(max(uSunCol.r, uSunCol.g), 0.001), 0.35) * (1.05 + 0.25 * pow(sd, 6.0));
       vec3 cc = mix(base, top, lit);
       cc += uGlow * pow(sd, 8.0) * (1.0 - cov) * 1.4;           // Silberrand im Gegenlicht
       cc = mix(cc, col * 1.15 + vec3(0.16, 0.06, 0.05) * (1.0 - lit), 0.45 * uStars); // abends: von unten warm angeleuchtet
-      cov *= smoothstep(0.02, 0.22, h);
+      cov *= smoothstep(0.08, 0.32, h); // flach am Horizont würde das Rauschen zu einem Grauschleier verschmieren
       col = mix(col, mix(uHorizon * 1.02, cc, smoothstep(0.0, 0.22, h)), cov);
     }
   }

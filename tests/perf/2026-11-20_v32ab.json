@@ -1,0 +1,117 @@
+{
+ "datum": "2026-11-20T20:21:22",
+ "stand": "v32ab",
+ "modus": "ab",
+ "runden": 3,
+ "varianten": [
+  {
+   "name": "alt",
+   "wurzel": "C:\\Users\\drpet\\dev\\butterfly-game",
+   "zusatz": "&look=alt"
+  },
+  {
+   "name": "neu",
+   "wurzel": "C:\\Users\\drpet\\dev\\butterfly-game",
+   "zusatz": ""
+  }
+ ],
+ "profil": {
+  "drossel": 4,
+  "dpr": 2.6,
+  "sek": 6.0,
+  "start": "direkt",
+  "vsync": false
+ },
+ "szenen": {
+  "wiese_mittel": {
+   "hoch": {
+    "alt": {
+     "p50": 14,
+     "p95": 30.5,
+     "fps": 60.3,
+     "calls": 94,
+     "tris": 279967,
+     "runden_p95": [
+      31.1,
+      29.9,
+      30.5
+     ],
+     "fehler": []
+    },
+    "neu": {
+     "p50": 13.5,
+     "p95": 29.6,
+     "fps": 53.9,
+     "calls": 94,
+     "tris": 282397,
+     "runden_p95": [
+      29.6,
+      30.7,
+      20.6
+     ],
+     "fehler": []
+    }
+   }
+  },
+  "wiese_hoch": {
+   "hoch": {
+    "alt": {
+     "p50": 13.9,
+     "p95": 31.1,
+     "fps": 56.8,
+     "calls": 91,
+     "tris": 346022,
+     "runden_p95": [
+      31,
+      31.1,
+      32
+     ],
+     "fehler": []
+    },
+    "neu": {
+     "p50": 13.6,
+     "p95": 31.6,
+     "fps": 47.1,
+     "calls": 91,
+     "tris": 348151,
+     "runden_p95": [
+      31.6,
+      26.8,
+      31.6
+     ],
+     "fehler": []
+    }
+   }
+  },
+  "mission_abend_mittel": {
+   "hoch": {
+    "alt": {
+     "p50": 13.3,
+     "p95": 26.9,
+     "fps": 53.9,
+     "calls": 74,
+     "tris": 241624,
+     "runden_p95": [
+      26.9,
+      32.5,
+      26.8
+     ],
+     "fehler": []
+    },
+    "neu": {
+     "p50": 11.7,
+     "p95": 27.6,
+     "fps": 61.6,
+     "calls": 72,
+     "tris": 239166,
+     "runden_p95": [
+      15.8,
+      28.6,
+      27.6
+     ],
+     "fehler": []
+    }
+   }
+  }
+ }
+}
