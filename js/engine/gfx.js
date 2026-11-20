@@ -135,6 +135,7 @@ vec3 wiesenTon(vec3 c, vec3 wp){
   c = mix(c, c * vec3(1.14, 0.95, 0.70), smoothstep(0.0, 0.12, c.g - max(c.r, c.b)));
   float sh = sin(wp.x * 0.031 + uZeitL * 0.05 + sin(wp.z * 0.017) * 2.0) * sin(wp.z * 0.027 - uZeitL * 0.04 + sin(wp.x * 0.021) * 1.6);
   c *= 1.0 - 0.20 * smoothstep(0.15, 0.75, sh) * uFog.w;
+  c *= 0.93 + 0.07 * sin(wp.x * 0.83 + sin(wp.z * 0.61) * 2.0) * sin(wp.z * 0.77 - sin(wp.x * 0.53) * 1.7); // feine Fleckung
   float d = length(wp.xz - uCam.xz);
   c = mix(vec3(l), c, 1.0 + 0.10 * (1.0 - smoothstep(4.0, 30.0, d))) * (0.90 + 0.10 * smoothstep(4.0, 30.0, d));
   return c;
@@ -463,7 +464,7 @@ void main(){
   // v2.9 gebackene Baumschatten (nur das Sonnenlicht fehlt dort – genähert als Abdunkeln)
   if (uBaumShP.y > 0.0) c *= 1.0 - texture2D(uBaumSh, vWP.xz / uBaumShP.x + 0.5).r * uBaumShP.y;
   c *= 1.0 - cloudShade(vWP.xz);
-  c = wiesenTon(c, vWP);
+  c = wiesenTon(c * ${LOONG ? '0.84' : '1.0'}, vWP); // v3.2: Boden zwischen den Halmen dunkler
   c = applyFog(c, vWP);
   gl_FragColor = vec4(c, 1.0);
   #include <tonemapping_fragment>
@@ -590,6 +591,7 @@ void main(){
   c += uSunCol * tip * back * vH * vH * 0.9;
   c *= 1.0 - vBs;
   c *= 1.0 - cloudShade(vWP.xz);
+${LOONG ? `  c *= 0.6 + 0.4 * smoothstep(0.0, 0.75, vH); // v3.2: Halmfuß im Schatten der Nachbarhalme` : ''}
   c = wiesenTon(c, vWP);
   c = applyFog(c, vWP);
   gl_FragColor = vec4(c, 1.0);
@@ -675,7 +677,7 @@ ${LOONG ? `  // v3.2 Abend (v2-08-dusk): rosa-oranges Band über dem Horizont, z
       vec3 cc = mix(base, top, lit);
       cc += uGlow * pow(sd, 8.0) * (1.0 - cov) * 1.4;           // Silberrand im Gegenlicht
       cc = mix(cc, col * 1.15 + vec3(0.16, 0.06, 0.05) * (1.0 - lit), 0.45 * uStars); // abends: von unten warm angeleuchtet
-      cov *= smoothstep(-0.02, 0.12, h);
+      cov *= smoothstep(0.02, 0.22, h);
       col = mix(col, mix(uHorizon * 1.02, cc, smoothstep(0.0, 0.22, h)), cov);
     }
   }
@@ -775,11 +777,16 @@ void main(){ vec4 wp = modelMatrix * vec4(position, 1.0); vCol = color; vY = uv.
 const FAR_F = /* glsl */`
 uniform vec3 uFogCol, uFogSun, uSunDir, uCam, uRim;
 varying vec3 vCol; varying float vY; varying vec3 vWP;
+${LOONG ? 'uniform vec3 uLuft;' : ''}
 void main(){
   vec3 dv = normalize(vWP - uCam);
   float s = pow(max(dot(dv, uSunDir), 0.0), 4.0);
   vec3 mist = mix(uFogCol, uFogSun, s);
-  vec3 c = mix(mist, vCol, smoothstep(0.0, 1.0, vY) * 0.85 + 0.15);
+${LOONG ? `  // v3.2 Luftperspektive: je weiter die Hügelkette, desto blauer und heller; am Fuß liegt Dunst
+  float fern = smoothstep(80.0, 420.0, length(vWP.xz - uCam.xz));
+  mist = mix(mist, uLuft, 0.55);
+  vec3 c = mix(mist, vCol, (smoothstep(0.0, 1.0, vY) * 0.7 + 0.12) * (1.0 - 0.45 * fern));` :
+`  vec3 c = mix(mist, vCol, smoothstep(0.0, 1.0, vY) * 0.85 + 0.15);`}
   c += uRim * 0.25 * s * smoothstep(0.8, 1.0, vY);
   gl_FragColor = vec4(c, 1.0);
   #include <tonemapping_fragment>

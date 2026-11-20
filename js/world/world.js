@@ -8,7 +8,7 @@ const _c = new THREE.Color(), _v = new THREE.Vector3();
 import { Ambient } from './particles.js';
 import { Life } from './life.js';
 import { Deko } from './deko.js';
-import { DEKO } from '../engine/deko.js';
+import { DEKO, LOONG } from '../engine/deko.js';
 import { RINGE, RING_ANZAHL, RING_MAX, RING_VOR, wickelMitte } from './grasringe.js';
 import { himmelsLicht, auswerten } from '../engine/himmelslicht.js';
 import { backeBaumschatten, KONTAKT_AN } from '../engine/schatten.js';
@@ -51,13 +51,15 @@ export class World {
     G.uWind.value.set(w.wind[0], w.wind[1], 0);
     const su = this.sky.material.uniforms;
     su.uZenith.value.set(w.sky.zenith); su.uHorizon.value.set(w.sky.horizon);
+    // v3.2 Look: Tageshorizont klarer und blauer (Vorbild-Himmel), Dunst leicht bläulich
+    if (LOONG && !w.sky.stars) { su.uHorizon.value.lerp(_c.set(0xdcecff), 0.45); G.uFogCol.value.lerp(_c.set(0xd4e4f4), 0.3); }
     su.uGlow.value.set(w.sky.glow); su.uSunCol.value.set(w.sky.sunCol); su.uSunSize.value = w.sky.size;
     su.uStars.value = w.sky.stars || 0; su.uMoon.value = w.sky.moon || 0;
     if (w.sky.moon) su.uMoonDir.value.copy(G.uSunDir.value);
     G.uWaterY.value = w.terrain.pond ? 0 : -99;
     // v2.8 Deko: Nachtblüten glimmen, Wasser spiegelt den Himmel
     G.uNight.value = DEKO && w.sky.stars ? 1 : 0;
-    G.uSkyZen.value.set(w.sky.zenith); G.uSkyHor.value.set(w.sky.horizon);
+    G.uSkyZen.value.set(w.sky.zenith); G.uSkyHor.value.copy(su.uHorizon.value);
     // v3.2 Luftperspektive: Farbe der Luft = Himmel knapp über dem Horizont
     G.uLuft.value.copy(G.uSkyHor.value).lerp(G.uSkyZen.value, 0.55);
     // v2.3: Regenbogen, goldene Graslichter, Sternschnuppen
