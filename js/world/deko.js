@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import { G, V_COMMON, F_LIGHT, GLSL_TERRAIN } from '../engine/gfx.js';
 import { PX } from './particles.js';
-import { RM } from '../engine/deko.js';
+import { RM, LOONG } from '../engine/deko.js';
 
 // je Qualitätsstufe: Wiesenblüten, Lichtstrahlen, Schirmchen/Staub
 const COUNTS = [{ bloom: 0, shaft: 0, fluff: 0 }, { bloom: 1500, shaft: 7, fluff: 70 }, { bloom: 2600, shaft: 10, fluff: 120 }];
@@ -260,8 +260,9 @@ export class Deko {
     const C = COUNTS[q.id] || COUNTS[1];
     const n = (v) => Math.round(v * k);
     this.bloom.geometry.instanceCount = n(C.bloom); this.bloom.visible = C.bloom > 0;
-    if (this.shaft) { this.shaft.geometry.instanceCount = n(C.shaft); this.shaft.visible = C.shaft > 0; }
-    if (this.fluff) { this.fluff.geometry.setDrawRange(0, n(C.fluff * (RM ? 0.5 : 1))); this.fluff.visible = C.fluff > 0; }
+    // v3.2 Look: keine Lichtsäulen-Körper (harte Kanten), halb so viele Schirmchen
+    if (this.shaft) { this.shaft.geometry.instanceCount = n(C.shaft); this.shaft.visible = C.shaft > 0 && !LOONG; }
+    if (this.fluff) { this.fluff.geometry.setDrawRange(0, n(C.fluff * (RM ? 0.5 : 1) * (LOONG ? 0.45 : 1))); this.fluff.visible = C.fluff > 0; }
   }
   update(dt, cam, focus, grassCenter) {
     this.bloom.material.uniforms.uCenter.value.copy(grassCenter);

@@ -3,7 +3,7 @@
 // Physik (Hub, Wirbel, Lenkhilfe) steckt in Player.update + flugschule.js (aufwindProfil).
 import * as THREE from 'three';
 import { G } from '../engine/gfx.js';
-import { RM } from '../engine/deko.js';
+import { RM, LOONG } from '../engine/deko.js';
 import { PX } from './particles.js';
 import { FLUG } from '../game/flugschule.js';
 
@@ -79,7 +79,10 @@ void main(){
   float band = smoothstep(0.55, 1.0, sin(vAng * 3.0 + vH * 0.55 - t * 2.2) * 0.5 + 0.5);
   float fade = smoothstep(0.0, 0.06, h) * (1.0 - smoothstep(0.55, 1.0, h));
   float near = smoothstep(4.0, 12.0, length(uCam - vW)); // drinnen/ganz nah: fast unsichtbar (kein Schleier vor der Figur)
-  float a = (0.03 + 0.12 * rim + 0.1 * band * (0.4 + rim)) * fade * near * vOn;
+${LOONG ? `  // v3.2 Look: weicher Luftschlauch ohne harte Silhouette (Kante blendet aus, Bänder tragen die Form)
+  float nv = abs(dot(V, vN));
+  float a = (0.012 + 0.05 * (1.0 - nv) + 0.09 * band) * smoothstep(0.03, 0.35, nv) * fade * near * vOn;` :
+`  float a = (0.03 + 0.12 * rim + 0.1 * band * (0.4 + rim)) * fade * near * vOn;`}
   gl_FragColor = vec4(vec3(1.0, 0.99, 0.94) * (0.85 + 0.3 * uSunCol), a);
   if (gl_FragColor.a < 0.004) discard;
 }`;

@@ -54,6 +54,7 @@ export const G = {
   uLuft: { value: new THREE.Color(0.6, 0.72, 0.9) },
   uWake: { value: [0, 1, 2, 3, 4, 5].map(() => new THREE.Vector4(0, -99, 0, 0)) },
 };
+G.uZeitL = G.uTime; // v3.2: Zeit im Pixel-Shader (Wiesenton), gleiches Objekt wie uTime
 // Wolkenschatten: weiche dunkle Flecken, die mit dem Wind über die Wiese ziehen (nur Boden + Gras, kein Draw-Call)
 const CLOUD_SH = /* glsl */`
 uniform vec4 uCloudSh[6];
@@ -118,7 +119,7 @@ vec3 applyFog(vec3 col, vec3 wp){
   float y0 = max(uCam.y, -4.0), y1 = max(wp.y, -4.0), dy = y1 - y0;
   float e0 = exp(-b * y0), e1 = exp(-b * y1);
   float avg = abs(dy) > 0.02 ? (e0 - e1) / (b * dy) : e0;
-  float tm = 0.0026 * dist * avg * uFog.w, ta = 0.0011 * dist * uFog.w;
+  float tm = 0.0022 * dist * avg * uFog.w, ta = 0.0009 * dist * uFog.w;
   float fw = max(dot(v, uSunDir), 0.0), f2 = fw * fw, f14 = f2 * f2 * f2; f14 *= f14 * f2;
   vec3 mist = mix(uFogCol, uFogSun, 0.25 + 0.5 * f2 + 0.6 * f14) * 1.02;
   vec3 air = uLuft + uFogSun * (0.08 + 0.35 * f2 + 0.8 * f14);
@@ -126,7 +127,19 @@ vec3 applyFog(vec3 col, vec3 wp){
   col = mix(col, fc, 1.0 - exp(-(tm + ta)));
   float s = pow(fw, 5.0);
   return mix(col, mix(uFogCol, uFogSun, s), f);
-}` : `vec3 applyFog(vec3 col, vec3 wp){
+}
+// v3.2 Wiesenton: Grün wärmer (gelbgrün statt neon), große ziehende Wolkenschatten-Felder, vorn satter und dunkler
+uniform float uZeitL;
+vec3 wiesenTon(vec3 c, vec3 wp){
+  float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+  c = mix(c, c * vec3(1.10, 0.97, 0.78), smoothstep(0.0, 0.12, c.g - max(c.r, c.b)));
+  float sh = sin(wp.x * 0.031 + uZeitL * 0.05 + sin(wp.z * 0.017) * 2.0) * sin(wp.z * 0.027 - uZeitL * 0.04 + sin(wp.x * 0.021) * 1.6);
+  c *= 1.0 - 0.20 * smoothstep(0.15, 0.75, sh) * uFog.w;
+  float d = length(wp.xz - uCam.xz);
+  c = mix(vec3(l), c, 1.0 + 0.10 * (1.0 - smoothstep(4.0, 30.0, d))) * (0.90 + 0.10 * smoothstep(4.0, 30.0, d));
+  return c;
+}` : `vec3 wiesenTon(vec3 c, vec3 wp){ return c; }
+vec3 applyFog(vec3 col, vec3 wp){
   vec3 dv = wp - uCam; float dist = length(dv);
   float f = clamp((dist - uFog.x) / (uFog.y - uFog.x), 0.0, 1.0);
   f = f * f * (3.0 - 2.0 * f) * uFog.w;
@@ -450,6 +463,7 @@ void main(){
   // v2.9 gebackene Baumschatten (nur das Sonnenlicht fehlt dort – genähert als Abdunkeln)
   if (uBaumShP.y > 0.0) c *= 1.0 - texture2D(uBaumSh, vWP.xz / uBaumShP.x + 0.5).r * uBaumShP.y;
   c *= 1.0 - cloudShade(vWP.xz);
+  c = wiesenTon(c, vWP);
   c = applyFog(c, vWP);
   gl_FragColor = vec4(c, 1.0);
   #include <tonemapping_fragment>
@@ -576,6 +590,7 @@ void main(){
   c += uSunCol * tip * back * vH * vH * 0.9;
   c *= 1.0 - vBs;
   c *= 1.0 - cloudShade(vWP.xz);
+  c = wiesenTon(c, vWP);
   c = applyFog(c, vWP);
   gl_FragColor = vec4(c, 1.0);
   #include <tonemapping_fragment>
@@ -643,7 +658,9 @@ ${LOONG ? `  // v3.2: tieferes Blau im Zenit (Vorbild-Himmel), Horizont bleibt h
   col += uGlow * (pow(sd, 10.0) * 0.2 + pow(sd, 64.0) * 0.35);
   col += uGlow * 0.25 * pow(1.0 - abs(h), 6.0) * pow(sd * 0.5 + 0.5, 4.0);
   float disk = smoothstep(cos(uSunSize * 1.15), cos(uSunSize), dot(d, uSunDir));
-${LOONG ? `  // v3.2 Cumulus nach crimson-loong (20_sky, vereinfacht ohne 3D-Rauschen): Wolkenebene über der Wiese, Dichte als fbm,
+${LOONG ? `  // v3.2 Abend (v2-08-dusk): rosa-oranges Band über dem Horizont, zur Mond-/Sonnenseite stärker
+  col += vec3(0.55, 0.22, 0.16) * uStars * pow(1.0 - clamp(h, 0.0, 1.0), 7.0) * (0.45 + 0.55 * pow(sd * 0.5 + 0.5, 3.0)) * smoothstep(-0.03, 0.02, h);
+  // v3.2 Cumulus nach crimson-loong (20_sky, vereinfacht ohne 3D-Rauschen): Wolkenebene über der Wiese, Dichte als fbm,
   // Licht aus der Dichte-Differenz zur Sonne (Silberrand, dunkle Bäuche), am Horizont im Dunst verschwindend
   if (h > -0.02 && uClouds > 0.0) {
     vec2 cp = d.xz / (h + 0.09) * 0.42 + vec2(uTime * 0.012, uTime * 0.004);
@@ -657,7 +674,7 @@ ${LOONG ? `  // v3.2 Cumulus nach crimson-loong (20_sky, vereinfacht ohne 3D-Rau
       vec3 top = mix(vec3(1.0), uSunCol / max(max(uSunCol.r, uSunCol.g), 0.001), 0.35) * (1.05 + 0.25 * pow(sd, 6.0));
       vec3 cc = mix(base, top, lit);
       cc += uGlow * pow(sd, 8.0) * (1.0 - cov) * 1.4;           // Silberrand im Gegenlicht
-      cc = mix(cc, col, 0.35 * uStars);                          // nachts nur zarte Schleier
+      cc = mix(cc, col * 1.15 + vec3(0.16, 0.06, 0.05) * (1.0 - lit), 0.45 * uStars); // abends: von unten warm angeleuchtet
       cov *= smoothstep(-0.02, 0.12, h);
       col = mix(col, mix(uHorizon * 1.02, cc, smoothstep(0.0, 0.22, h)), cov);
     }

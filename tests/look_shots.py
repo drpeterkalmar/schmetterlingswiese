@@ -19,17 +19,17 @@ def fly(s, lid, sec=2.6, sun=False, tief=False):
     sim_wait(s, sec)
     s.ev("__game.freeze(true)"); time.sleep(0.5)
 
-def ui_aus(s): s.ev("document.querySelectorAll('body > *:not(canvas)').forEach(e => e.style.visibility = 'hidden')")
+def ui_aus(s): s.ev("(() => { const st = document.createElement('style'); st.id = 'uiaus'; st.textContent = 'body > *:not(canvas) { visibility: hidden !important }'; document.head.appendChild(st); })()"); time.sleep(0.2)
 
 def run(pw, device, orient, posen):
     s = Session(pw, device=device)
     s.open(Q); s.ev("__game.setQuality(1)"); time.sleep(2.5)
-    if 'start' in posen: s.pg.screenshot(path=f'{OUT}/{LABEL}_start_{orient}.png')
+    if 'start' in posen: s.pg.screenshot(path=f'{OUT}/{LABEL}_start_{orient}.jpg', quality=82)
     s.tap('#title'); s.pg.fill('input.name', 'Bild'); s.tap('[data-a=create]'); s.ev("__game.setQuality(1)"); time.sleep(1.0)
     for name, lid, kw in posen.get('flug', []):
         fly(s, lid, **kw); ui_aus(s)
-        s.pg.screenshot(path=f'{OUT}/{LABEL}_{name}_{orient}.png')
-        s.ev("__game.freeze(false); document.querySelectorAll('body > *').forEach(e => e.style.visibility = '')")
+        s.pg.screenshot(path=f'{OUT}/{LABEL}_{name}_{orient}.jpg', quality=82)
+        s.ev("__game.freeze(false); document.getElementById('uiaus').remove()")
     print(orient, 'errors', s.errors[:5], flush=True)
     s.close()
 
