@@ -40,6 +40,7 @@ void main(){
   vec2 dp = p - uPlayer.xz;
   float push = (1.0 - smoothstep(0.0, 2.6, length(dp))) * (1.0 - smoothstep(0.5, 3.0, uPlayer.y - gh));
   bend += normalize(dp + 0.001) * push * 0.9;
+  bend += wakeBend(p, gh) * 0.75;
   vec3 g0 = vec3(p.x, gh, p.y);
   vec3 top = g0 + vec3(bend.x * H, H - length(bend) * H * 0.22, bend.y * H);
   vec3 toC = normalize(uCam - top);

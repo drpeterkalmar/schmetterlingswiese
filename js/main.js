@@ -407,11 +407,32 @@ class App {
     this.renderer.sample(raw * 1000, now, c2 - c0);
   }
 
+  // v3.2 Wake-Spur (?look=alt: aus): alle 0,14 s ein Ort der Figur, Stärke = gedämpfte Schwingung über das Alter
+  wake(dt) {
+    const W = G.uWake.value;
+    if (!this._wake) this._wake = { t: 0, n: 0, ort: W.map(() => ({ x: 0, y: -99, z: 0, a: 9 })) };
+    const k = this._wake, f = this.focus;
+    k.t += dt;
+    for (const o of k.ort) o.a += dt;
+    if (k.t > 0.14) {
+      k.t = 0;
+      const o = k.ort[k.n++ % k.ort.length];
+      o.x = f.x; o.y = f.y; o.z = f.z; o.a = 0;
+    }
+    for (let i = 0; i < W.length; i++) {
+      const o = k.ort[i], a = o.a;
+      // erst Anlauf (der aktuelle Druck kommt von uPlayer), dann Nachfedern 1,8 s lang
+      const s = a > 1.8 ? 0 : Math.exp(-a * 2.2) * Math.cos(a * 7.5) * Math.min(1, a * 6);
+      W[i].set(o.x, o.y, o.z, s);
+    }
+  }
+
   // Welt, Wind, Gras-Druck, Flugklang – nach der Simulation, je Bild
   nachSim(dt) {
     G.uWind.value.z = this.world.windBoost || 0;
     this.world.update(dt, this.camera, this.focus);
     G.uPlayer.value.copy(this.focus);
+    this.wake(dt);
     if ((this.frames & 3) === 0 && this.audio.ctx) {
       const pl = this.player;
       const playing = this.mode === 'game' && (this.game.state === 'play' || this.game.state === 'won');

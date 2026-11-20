@@ -1,6 +1,6 @@
 // Grafik-Kern: gemeinsame Uniforms, Toon-Shader, Himmel, Post-Processing.
 import * as THREE from 'three';
-import { DEF } from './deko.js';
+import { DEF, LOONG } from './deko.js';
 import { KANTEN_SR, rtGroesse } from './kern/hochskalieren.js';
 // v2.9 Bloom nur auf Glanz (Audit #9): Alpha im Szenen-Ziel = Leucht-Maske (Emission, Sonne, Glühen) statt Helligkeits-
 // Schwelle → die helle Wiese glüht nicht mehr mit. ?bloommaske=0 = Schwelle wie bis v2.8.
@@ -50,6 +50,9 @@ export const G = {
   // v2.9 gebackene Baumschatten (schatten.js): R8-Textur über die Welt, x = Weltbreite (m), y = Stärke (0 = aus)
   uBaumSh: { value: null },
   uBaumShP: { value: new THREE.Vector4(320, 0, 0, 0) },
+  // v3.2 Look: Farbe der Luft (Luftperspektive, aus dem Himmel der Welt) und Wake-Spur (letzte Orte der Figur: xyz, Stärke)
+  uLuft: { value: new THREE.Color(0.6, 0.72, 0.9) },
+  uWake: { value: [0, 1, 2, 3, 4, 5].map(() => new THREE.Vector4(0, -99, 0, 0)) },
 };
 // Wolkenschatten: weiche dunkle Flecken, die mit dem Wind über die Wiese ziehen (nur Boden + Gras, kein Draw-Call)
 const CLOUD_SH = /* glsl */`
@@ -85,6 +88,13 @@ export const V_COMMON = /* glsl */`
 uniform float uTime; uniform float uBend; uniform vec3 uCam; uniform vec3 uWind; uniform vec3 uPlayer;
 vec4 bendW(vec4 wp){ vec2 d = wp.xz - uCam.xz; wp.y -= uBend * dot(d, d); return wp; }
 float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+${LOONG ? `// v3.2 Wake nach crimson-loong (66_wake): Halme und Blüten an den letzten Orten der Figur biegen sich weg und federn
+// gedämpft zurück (w = Stärke, vom Spiel je Ort mit Alter·Schwingung gesetzt)
+uniform vec4 uWake[6];
+vec2 wakeBend(vec2 p, float gh){ vec2 b = vec2(0.0);
+  for (int i = 0; i < 6; i++) { vec4 w = uWake[i]; vec2 dp = p - w.xz; float l = length(dp);
+    b += dp / max(l, 0.05) * w.w * (1.0 - smoothstep(0.0, 2.3, l)) * (1.0 - smoothstep(0.4, 2.6, w.y - gh)); }
+  return b; }` : `vec2 wakeBend(vec2 p, float gh){ return vec2(0.0); }`}
 `;
 
 export const F_LIGHT = /* glsl */`
@@ -96,13 +106,33 @@ vec3 shIrr(vec3 n){
        + uSH[4] * (1.092548 * n.x * n.y) + uSH[5] * (1.092548 * n.y * n.z) + uSH[6] * (0.315392 * (3.0 * n.z * n.z - 1.0))
        + uSH[7] * (1.092548 * n.x * n.z) + uSH[8] * (0.546274 * (n.x * n.x - n.y * n.y));
 }
+${LOONG ? `uniform vec3 uLuft;
+// v3.2 Luftperspektive nach crimson-loong (05_glsl clFog): zwei Medien – tiefer Wiesendunst (Höhe exponentiell, nimmt die
+// Sonnenfarbe an) und blaue Luft, die sich mit der Entfernung stapelt (jede Hügelreihe heller, blauer, flacher).
+// Dazu der bisherige Fernnebel (Übergang in den Himmel am Weltrand).
 vec3 applyFog(vec3 col, vec3 wp){
+  vec3 dv = wp - uCam; float dist = length(dv); vec3 v = dv / max(dist, 0.001);
+  float f = clamp((dist - uFog.x) / (uFog.y - uFog.x), 0.0, 1.0);
+  f = f * f * (3.0 - 2.0 * f) * uFog.w;
+  const float b = 1.0 / 9.0;
+  float y0 = max(uCam.y, -4.0), y1 = max(wp.y, -4.0), dy = y1 - y0;
+  float e0 = exp(-b * y0), e1 = exp(-b * y1);
+  float avg = abs(dy) > 0.02 ? (e0 - e1) / (b * dy) : e0;
+  float tm = 0.0026 * dist * avg * uFog.w, ta = 0.0011 * dist * uFog.w;
+  float fw = max(dot(v, uSunDir), 0.0), f2 = fw * fw, f14 = f2 * f2 * f2; f14 *= f14 * f2;
+  vec3 mist = mix(uFogCol, uFogSun, 0.25 + 0.5 * f2 + 0.6 * f14) * 1.02;
+  vec3 air = uLuft + uFogSun * (0.08 + 0.35 * f2 + 0.8 * f14);
+  vec3 fc = (mist * tm + air * ta) / max(tm + ta, 1e-6);
+  col = mix(col, fc, 1.0 - exp(-(tm + ta)));
+  float s = pow(fw, 5.0);
+  return mix(col, mix(uFogCol, uFogSun, s), f);
+}` : `vec3 applyFog(vec3 col, vec3 wp){
   vec3 dv = wp - uCam; float dist = length(dv);
   float f = clamp((dist - uFog.x) / (uFog.y - uFog.x), 0.0, 1.0);
   f = f * f * (3.0 - 2.0 * f) * uFog.w;
   float s = pow(max(dot(dv / max(dist, 0.001), uSunDir), 0.0), 5.0);
   return mix(col, mix(uFogCol, uFogSun, s), f);
-}
+}`}
 vec3 toon(vec3 alb, vec3 N, vec3 V, float rimAmt, float gloss, float soft){
   float ndl = dot(N, uSunDir);
   float l = smoothstep(-0.08 - soft, 0.12 + soft, ndl);
@@ -486,6 +516,7 @@ void main(){
   float pd = length(dp);
   float push = (1.0 - smoothstep(0.0, 2.6, pd)) * (1.0 - smoothstep(0.5, 3.0, uPlayer.y - gh));
   bend += normalize(dp + 0.001) * push * 1.4;
+  bend += wakeBend(p, gh) * 1.1;
   lp.xz += bend * t * t * s;
   lp.y -= length(bend) * t * t * s * 0.25;
   vec4 wp = vec4(p.x + lp.x, gh + lp.y, p.y + lp.z, 1.0);
@@ -594,14 +625,44 @@ float h3(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * 
 #ifdef DEKO
 varying vec2 vMw;
 #endif
+${LOONG ? `uniform float uClouds;
+float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  float a = h3(vec3(i, 0.0)), b = h3(vec3(i + vec2(1.0, 0.0), 0.0)), c = h3(vec3(i + vec2(0.0, 1.0), 0.0)), e = h3(vec3(i + vec2(1.0, 1.0), 0.0));
+  return mix(mix(a, b, f.x), mix(c, e, f.x), f.y); }
+float cumulus(vec2 p){
+  float v = 0.0, a = 0.55; mat2 m = mat2(1.6, 1.2, -1.2, 1.6);
+  for (int i = 0; i < 4; i++) { v += a * n2(p); p = m * p; a *= 0.47; }
+  return v; }` : ''}
 void main(){
   vec3 d = normalize(vDir);
   float h = d.y;
   vec3 col = mix(uHorizon, uZenith, pow(smoothstep(-0.05, 0.75, h), 0.8));
+${LOONG ? `  // v3.2: tieferes Blau im Zenit (Vorbild-Himmel), Horizont bleibt hell
+  col = mix(col, uZenith * vec3(0.72, 0.86, 1.08), smoothstep(0.02, 0.6, h) * 0.75 * (1.0 - uStars));` : ''}
   float sd = max(dot(d, uSunDir), 0.0);
   col += uGlow * (pow(sd, 10.0) * 0.2 + pow(sd, 64.0) * 0.35);
   col += uGlow * 0.25 * pow(1.0 - abs(h), 6.0) * pow(sd * 0.5 + 0.5, 4.0);
   float disk = smoothstep(cos(uSunSize * 1.15), cos(uSunSize), dot(d, uSunDir));
+${LOONG ? `  // v3.2 Cumulus nach crimson-loong (20_sky, vereinfacht ohne 3D-Rauschen): Wolkenebene über der Wiese, Dichte als fbm,
+  // Licht aus der Dichte-Differenz zur Sonne (Silberrand, dunkle Bäuche), am Horizont im Dunst verschwindend
+  if (h > -0.02 && uClouds > 0.0) {
+    vec2 cp = d.xz / (h + 0.09) * 0.42 + vec2(uTime * 0.012, uTime * 0.004);
+    float dn = cumulus(cp);
+    float cov = smoothstep(0.50 - 0.12 * uClouds, 0.66, dn) * uClouds;
+    if (cov > 0.002) {
+      vec2 sl = normalize(uSunDir.xz + 1e-4) * 0.22;
+      float dl = cumulus(cp + sl);
+      float lit = clamp(0.55 + (dn - dl) * 2.6, 0.0, 1.0);
+      vec3 base = mix(uHorizon, uZenith, 0.35) * 0.78 + vec3(0.04, 0.03, 0.06);
+      vec3 top = mix(vec3(1.0), uSunCol / max(max(uSunCol.r, uSunCol.g), 0.001), 0.35) * (1.05 + 0.25 * pow(sd, 6.0));
+      vec3 cc = mix(base, top, lit);
+      cc += uGlow * pow(sd, 8.0) * (1.0 - cov) * 1.4;           // Silberrand im Gegenlicht
+      cc = mix(cc, col, 0.35 * uStars);                          // nachts nur zarte Schleier
+      cov *= smoothstep(-0.02, 0.12, h);
+      col = mix(col, mix(uHorizon * 1.02, cc, smoothstep(0.0, 0.22, h)), cov);
+    }
+  }
+` : ''}
   col += uSunCol * disk * 5.0;
   if (uStars > 0.0) {
     vec3 p = d * 180.0; vec3 cell = floor(p); float r = h3(cell);
@@ -682,7 +743,7 @@ export function skyMat() {
       uSunDir: G.uSunDir, uSunCol: { value: new THREE.Color() }, uGlow: { value: new THREE.Color() },
       uSunSize: { value: 0.045 }, uStars: { value: 0 }, uTime: G.uTime,
       uMoonDir: { value: new THREE.Vector3(-0.5, 0.4, -0.6).normalize() }, uMoon: { value: 0 },
-      uRainbow: { value: 0 }, uDq: G.uDq, uShootT: { value: -1 }, uShootA: { value: new THREE.Vector3(0, 0.5, 1) }, uShootB: { value: new THREE.Vector3(0.3, 0.4, 1) },
+      uRainbow: { value: 0 }, uClouds: { value: 0.7 }, uDq: G.uDq, uShootT: { value: -1 }, uShootA: { value: new THREE.Vector3(0, 0.5, 1) }, uShootB: { value: new THREE.Vector3(0.3, 0.4, 1) },
     },
     vertexShader: DEF + SKY_V, fragmentShader: (BLOOMMASKE ? '#define MASKE\n' : '') + DEF + SKY_F, side: THREE.BackSide, depthWrite: false,
   });
@@ -815,6 +876,12 @@ uniform vec3 uLift, uGain; uniform float uFlash; uniform vec3 uFlashCol;
 uniform vec2 uWisch; uniform float uRgb; // v3.0 Fan-Cam-Clip: Wisch-Unschärfe (Richtung·Länge in UV) und RGB-Versatz; 0 = aus
 varying vec2 vUv;
 ${KANTEN_SR}
+${LOONG ? `uniform float uExpo;
+vec3 RRTAndODTFit(vec3 v){ vec3 a = v * (v + 0.0245786) - 0.000090537; vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081; return a / b; }
+vec3 aces(vec3 c){
+  const mat3 I = mat3(vec3(0.59719, 0.07600, 0.02840), vec3(0.35458, 0.90834, 0.13383), vec3(0.04823, 0.01566, 0.83777));
+  const mat3 O = mat3(vec3(1.60475, -0.10208, -0.00327), vec3(-0.53108, 1.10813, -0.07276), vec3(-0.07367, -0.00605, 1.07602));
+  c = I * c; c = RRTAndODTFit(c); return clamp(O * c, 0.0, 1.0); }` : ''}
 float linDepth(float d){ float z = d * 2.0 - 1.0; return 2.0 * uNF.x * uNF.y / (uNF.y + uNF.x - z * (uNF.y - uNF.x)); }
 void main(){
   // v2.9: kantenbewusstes Hochskalieren aus der Renderskala (+ Kantenglättung/Schärfen je Stufe; ohne defines = wie bisher)
@@ -839,13 +906,23 @@ void main(){
   c = mix(vec3(l), c, uSat);
   c = c * uGain + uLift * (1.0 - clamp(c, 0.0, 1.0)) * 0.08;
   vec2 q = vUv - 0.5;
-  c *= 1.0 - uVig * dot(q, q) * 1.6;
+${LOONG ? `  // v3.2 Film-Grading nach crimson-loong (80_post): ACES-Kurve, Split-Tone (Schatten bläulich, Licht bernstein), S-Kurve
+  c *= 1.0 - 0.36 * smoothstep(0.10, 0.75, dot(q, q) * 1.25) * (uVig / 0.45);
+  c = aces(c * uExpo);
+  float l2 = dot(c, vec3(0.2126, 0.7152, 0.0722));
+  c = mix(vec3(l2), c, 1.22);
+  c += vec3(-0.002, 0.003, 0.012) * (1.0 - l2) + vec3(0.014, 0.006, -0.010) * l2;
+  c = mix(c, c * c * (3.0 - 2.0 * c), 0.6);
+  c = max(c, 0.0);` : `  c *= 1.0 - uVig * dot(q, q) * 1.6;`}
   c = mix(c, uFlashCol, uFlash);
   c += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
   gl_FragColor = vec4(c, 1.0);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }`;
+
+// v3.2 Belichtung vor der ACES-Kurve (?expo= zum Abstimmen)
+const LOOK_EXPO = typeof location !== 'undefined' && +new URLSearchParams(location.search).get('expo') || 1.2;
 
 export class Post {
   constructor(renderer) {
@@ -872,10 +949,11 @@ export class Post {
         uSat: { value: 1.12 }, uLift: { value: new THREE.Color(0.35, 0.3, 0.55) }, uGain: { value: new THREE.Vector3(1, 1, 1) },
         uFlash: { value: 0 }, uFlashCol: { value: new THREE.Color(1, 0.97, 0.85) }, uUseDepth: { value: 1 },
         uSrcTexel: { value: new THREE.Vector2(1, 1) }, uSharp: { value: 0 },
-        uWisch: { value: new THREE.Vector2(0, 0) }, uRgb: { value: 0 },
+        uWisch: { value: new THREE.Vector2(0, 0) }, uRgb: { value: 0 }, uExpo: { value: LOOK_EXPO },
       },
       vertexShader: FS_V, fragmentShader: COMP_F, depthTest: false, depthWrite: false,
     });
+    if (LOONG) this.mComp.toneMapped = false; // v3.2: ACES im Grading selbst (sonst zweimal Tonemapping)
     this.rtMain = null;
     // v2.9 Bloom-Maske: Schwelle auf der gewichteten Quelle (TODO Heavy-Job am Bild abstimmen; ohne Maske 0,9)
     this.maske = BLOOMMASKE; this.schwelle = this.maske ? 0.35 : 0.9;

@@ -5,4 +5,6 @@ export const DEKO = q.get('deko') !== '0';
 // prefers-reduced-motion: weniger Schweben/Wackeln, kein Kamera-Ruckeln, weniger Partikelregen
 export const RM = q.get('rm') === '1' || !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 // Präfix für Shader: neue Teile nur mit #ifdef DEKO (ohne Deko bleiben die Shader wie bis v2.7)
+// v3.2 Look nach „Crimson Loong“ (Luftperspektive, Cumulus-Himmel, Film-Grading, Wake-Spur); ?look=alt = Aussehen bis v3.1
+export const LOONG = q.get('look') !== 'alt';
 export const DEF = DEKO ? '#define DEKO\n' : '';

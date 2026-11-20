@@ -58,6 +58,8 @@ export class World {
     // v2.8 Deko: Nachtblüten glimmen, Wasser spiegelt den Himmel
     G.uNight.value = DEKO && w.sky.stars ? 1 : 0;
     G.uSkyZen.value.set(w.sky.zenith); G.uSkyHor.value.set(w.sky.horizon);
+    // v3.2 Luftperspektive: Farbe der Luft = Himmel knapp über dem Horizont
+    G.uLuft.value.copy(G.uSkyHor.value).lerp(G.uSkyZen.value, 0.3);
     // v2.3: Regenbogen, goldene Graslichter, Sternschnuppen
     su.uRainbow.value = w.sky.rainbow || 0; su.uShootT.value = -1;
     const gd = w.gold || [0xffffff, 0]; _c.set(gd[0]); G.uGold.value.set(_c.r, _c.g, _c.b, gd[1]);
